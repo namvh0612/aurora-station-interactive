@@ -43,7 +43,7 @@
         const points = Array.from({ length: count }, (_value, index) =>
           pointAt(index, count, ringRadius, settings.centre),
         );
-        return `<polygon points="${pointsString(points)}" fill="none" stroke="#d8dcda" stroke-width="1"/>`;
+        return `<polygon points="${pointsString(points)}" fill="none" stroke="#cbd2cf" stroke-width="1"/>`;
       })
       .join("");
 
@@ -55,7 +55,7 @@
           settings.radius,
           settings.centre,
         );
-        return `<line x1="${settings.centre}" y1="${settings.centre}" x2="${end.x.toFixed(1)}" y2="${end.y.toFixed(1)}" stroke="#d8dcda" stroke-width="1"/>`;
+        return `<line x1="${settings.centre}" y1="${settings.centre}" x2="${end.x.toFixed(1)}" y2="${end.y.toFixed(1)}" stroke="#cbd2cf" stroke-width="1"/>`;
       })
       .join("");
 
@@ -73,7 +73,7 @@
     const nodes = valuePoints
       .map((point, index) => {
         const colour = results[index].colour;
-        return `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="5.5" fill="${escapeXml(colour)}" stroke="#fbfaf7" stroke-width="2"/>`;
+        return `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="5.5" fill="${escapeXml(colour)}" stroke="#f1f0e9" stroke-width="2"/>`;
       })
       .join("");
 
@@ -93,9 +93,9 @@
               : "middle";
         const score =
           settings.showScores && result.score !== null
-            ? `<tspan x="${point.x.toFixed(1)}" dy="17" fill="#68727a" font-size="12">${result.score.toFixed(2)}</tspan>`
+            ? `<tspan x="${point.x.toFixed(1)}" dy="17" fill="#5c6b70" font-size="12">${result.score.toFixed(2)}</tspan>`
             : "";
-        return `<text x="${point.x.toFixed(1)}" y="${point.y.toFixed(1)}" text-anchor="${anchor}" fill="#17202a" font-family="Roboto, Arial, sans-serif" font-size="14" font-weight="700">${escapeXml(result.element)}${score}</text>`;
+        return `<text x="${point.x.toFixed(1)}" y="${point.y.toFixed(1)}" text-anchor="${anchor}" fill="#172d35" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600">${escapeXml(result.element)}${score}</text>`;
       })
       .join("");
 
@@ -105,7 +105,7 @@
       `<desc id="radar-description">The relative response shape of Wood, Fire, Earth, Metal and Water in this Aurora Station journey.</desc>` +
       grid +
       axes +
-      `<polygon points="${pointsString(valuePoints)}" fill="#2d6378" fill-opacity="0.16" stroke="#2d6378" stroke-width="3" stroke-linejoin="round"/>` +
+      `<polygon points="${pointsString(valuePoints)}" fill="#315f69" fill-opacity="0.14" stroke="#315f69" stroke-width="3" stroke-linejoin="round"/>` +
       nodes +
       labels +
       `</svg>`

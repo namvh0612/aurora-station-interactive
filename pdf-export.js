@@ -1,6 +1,29 @@
 (function attachAuroraPdf(globalScope) {
   "use strict";
 
+  const PDF_FONTS = {
+    StorySerif: {
+      normal:
+        "https://cdn.jsdelivr.net/gh/adobe-fonts/source-serif@release/TTF/SourceSerif4-Regular.ttf",
+      bold:
+        "https://cdn.jsdelivr.net/gh/adobe-fonts/source-serif@release/TTF/SourceSerif4-Semibold.ttf",
+      italics:
+        "https://cdn.jsdelivr.net/gh/adobe-fonts/source-serif@release/TTF/SourceSerif4-It.ttf",
+      bolditalics:
+        "https://cdn.jsdelivr.net/gh/adobe-fonts/source-serif@release/TTF/SourceSerif4-SemiboldIt.ttf",
+    },
+    SystemMono: {
+      normal:
+        "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/ibmplexmono/IBMPlexMono-Regular.ttf",
+      bold:
+        "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/ibmplexmono/IBMPlexMono-SemiBold.ttf",
+      italics:
+        "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/ibmplexmono/IBMPlexMono-Italic.ttf",
+      bolditalics:
+        "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/ibmplexmono/IBMPlexMono-SemiBoldItalic.ttf",
+    },
+  };
+
   function cleanText(value) {
     return String(value || "")
       .replace(/[\u2010\u2011\u2012\u2013\u2014]/g, "-")
@@ -261,6 +284,7 @@
           ],
           margin: [58, 28, 58, 0],
           color: "#788086",
+          font: "SystemMono",
           fontSize: 7,
           characterSpacing: 1.2,
         };
@@ -273,19 +297,21 @@
           text: `${currentPage} / ${pageCount}`,
           alignment: "center",
           color: "#8b9195",
+          font: "SystemMono",
           fontSize: 8,
           margin: [0, 18, 0, 0],
         };
       },
       content,
       defaultStyle: {
-        font: "Roboto",
+        font: "StorySerif",
         fontSize: 10.3,
         lineHeight: 1.52,
         color: "#17202a",
       },
       styles: {
         coverEyebrow: {
+          font: "SystemMono",
           fontSize: 10,
           bold: true,
           color: "#2d6378",
@@ -310,6 +336,7 @@
           color: "#2d6378",
         },
         coverFooter: {
+          font: "SystemMono",
           fontSize: 8,
           bold: true,
           color: "#788086",
@@ -322,6 +349,7 @@
           margin: [0, 32, 0, 24],
         },
         chapterEyebrow: {
+          font: "SystemMono",
           fontSize: 8,
           bold: true,
           color: "#2d6378",
@@ -360,6 +388,7 @@
           bold: true,
         },
         elementTrait: {
+          font: "SystemMono",
           fontSize: 8.5,
           color: "#69737a",
         },
@@ -374,6 +403,7 @@
           lineHeight: 1.35,
         },
         methodNote: {
+          font: "SystemMono",
           fontSize: 8.5,
           color: "#6a7378",
           lineHeight: 1.4,
@@ -521,6 +551,7 @@
               text: "AURORA STATION  |  PERSONAL PROFILE",
               margin: [58, 28, 58, 0],
               color: "#788086",
+              font: "SystemMono",
               fontSize: 7,
               characterSpacing: 1.1,
             };
@@ -530,19 +561,21 @@
           text: `${currentPage} / ${pageCount}`,
           alignment: "center",
           color: "#8b9195",
+          font: "SystemMono",
           fontSize: 8,
           margin: [0, 18, 0, 0],
         };
       },
       content,
       defaultStyle: {
-        font: "Roboto",
+        font: "StorySerif",
         fontSize: 10.3,
         lineHeight: 1.48,
         color: "#17202a",
       },
       styles: {
         eyebrow: {
+          font: "SystemMono",
           fontSize: 9,
           bold: true,
           color: "#2d6378",
@@ -582,6 +615,7 @@
           bold: true,
         },
         elementTrait: {
+          font: "SystemMono",
           fontSize: 8.5,
           color: "#69737a",
         },
@@ -596,6 +630,7 @@
           lineHeight: 1.35,
         },
         method: {
+          font: "SystemMono",
           fontSize: 8.5,
           color: "#6a7378",
           lineHeight: 1.4,
@@ -613,7 +648,7 @@
     return new Promise((resolve, reject) => {
       try {
         globalScope.pdfMake
-          .createPdf(definition)
+          .createPdf(definition, null, PDF_FONTS)
           .download(filename || "Aurora_Station_Journey.pdf", resolve);
       } catch (error) {
         reject(error);

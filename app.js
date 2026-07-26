@@ -81,7 +81,7 @@
   function updateProgress() {
     const answered = state.answers.length;
     const percent = (answered / data.assessment.scoredItemCount) * 100;
-    progressFill.style.width = `${percent}%`;
+    progressFill.style.transform = `scaleX(${percent / 100})`;
     progressBar.setAttribute("aria-valuenow", String(answered));
 
     if (answered === data.assessment.scoredItemCount) {
@@ -124,34 +124,70 @@
     }, 20);
   }
 
-  function commitAnswer(raw) {
-    if (interactionLocked) {
-      return;
-    }
-    interactionLocked = true;
-    state = core.answerCurrent(data, state, raw);
-    persist();
-    render();
-    announce("Choice saved. The story continues.");
-    scrollToCurrent();
-    window.setTimeout(() => {
-      interactionLocked = false;
-    }, 180);
+  function prefersReducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
-  function commitReserve(optionId) {
-    if (interactionLocked) {
-      return;
-    }
-    interactionLocked = true;
-    state = core.chooseReserve(data, state, optionId);
+  function completeSignalTransition(nextState, message) {
+    state = nextState;
     persist();
     render();
-    announce("Decision saved. The final watch continues.");
+
+    const chosenPaths = storyRoot.querySelectorAll(".chosen-path");
+    const latestPath = chosenPaths[chosenPaths.length - 1];
+    if (latestPath) {
+      latestPath.classList.add("signal-arrival");
+    }
+
+    announce(message);
     scrollToCurrent();
     window.setTimeout(() => {
       interactionLocked = false;
-    }, 180);
+    }, prefersReducedMotion() ? 0 : 220);
+  }
+
+  function commitAnswer(raw, sourceButton) {
+    if (interactionLocked) {
+      return;
+    }
+
+    interactionLocked = true;
+    const currentMoment = sourceButton?.closest(".current-moment");
+    sourceButton?.classList.add("is-selected");
+    currentMoment?.classList.add("is-transmitting");
+    announce("Signal locked. The story is responding.");
+
+    const nextState = core.answerCurrent(data, state, raw);
+    window.setTimeout(
+      () =>
+        completeSignalTransition(
+          nextState,
+          "Choice saved. The story continues.",
+        ),
+      prefersReducedMotion() ? 0 : 360,
+    );
+  }
+
+  function commitReserve(optionId, sourceButton) {
+    if (interactionLocked) {
+      return;
+    }
+
+    interactionLocked = true;
+    const currentMoment = sourceButton?.closest(".current-moment");
+    sourceButton?.classList.add("is-selected");
+    currentMoment?.classList.add("is-transmitting");
+    announce("Reserve channel locked. The story is responding.");
+
+    const nextState = core.chooseReserve(data, state, optionId);
+    window.setTimeout(
+      () =>
+        completeSignalTransition(
+          nextState,
+          "Decision saved. The final watch continues.",
+        ),
+      prefersReducedMotion() ? 0 : 360,
+    );
   }
 
   function goBack() {
@@ -198,6 +234,12 @@
     anchors.appendChild(element("span", "", spectrum.rightAnchor));
     group.appendChild(anchors);
 
+    const tuner = element("div", "signal-tuner");
+    tuner.setAttribute("aria-hidden", "true");
+    tuner.appendChild(element("span", "", "RESPONSE SIGNAL"));
+    tuner.appendChild(element("span", "", "CHOOSE A POSITION"));
+    group.appendChild(tuner);
+
     const choices = element("div", "spectrum-choices");
     spectrum.positions.forEach((raw) => {
       const button = element("button", "spectrum-choice");
@@ -205,7 +247,7 @@
       button.setAttribute("aria-label", responseLabels[raw - 1]);
       button.title = responseLabels[raw - 1];
       button.appendChild(chevronIcon(raw));
-      button.addEventListener("click", () => commitAnswer(raw));
+      button.addEventListener("click", () => commitAnswer(raw, button));
       choices.appendChild(button);
     });
     group.appendChild(choices);
@@ -230,6 +272,9 @@
     current.dataset.current = "true";
     appendParagraphs(current, item.context);
     appendParagraphs(current, item.statement, "inner-voice prompt");
+    const signalLine = element("div", "signal-line");
+    signalLine.setAttribute("aria-hidden", "true");
+    current.appendChild(signalLine);
     renderSpectrum(current);
     parent.appendChild(current);
   }
@@ -246,7 +291,9 @@
       button.setAttribute("aria-label", `${option.title}. ${option.text}`);
       button.appendChild(element("strong", "", option.title));
       button.appendChild(element("span", "", option.text));
-      button.addEventListener("click", () => commitReserve(option.id));
+      button.addEventListener("click", () =>
+        commitReserve(option.id, button),
+      );
       options.appendChild(button);
     });
     current.appendChild(options);
@@ -312,7 +359,9 @@
     section.dataset.current = "true";
 
     const hero = element("header", "profile-hero");
-    hero.appendChild(element("p", "eyebrow", "Your Aurora profile"));
+    hero.appendChild(
+      element("p", "eyebrow", "Dawn debrief · Final watch complete"),
+    );
     hero.appendChild(
       element("h1", "", narrative ? narrative.title : "Your response pattern"),
     );
@@ -330,16 +379,27 @@
     elementsTab.type = "button";
     profileTab.setAttribute("role", "tab");
     elementsTab.setAttribute("role", "tab");
+    profileTab.id = "profile-tab";
+    elementsTab.id = "elements-tab";
+    profileTab.setAttribute("aria-controls", "profile-panel");
+    elementsTab.setAttribute("aria-controls", "elements-panel");
     profileTab.setAttribute("aria-selected", "true");
     elementsTab.setAttribute("aria-selected", "false");
+    profileTab.tabIndex = 0;
+    elementsTab.tabIndex = -1;
     tabs.append(profileTab, elementsTab);
     section.appendChild(tabs);
 
     const profilePanel = element("div", "result-panel");
+    profilePanel.id = "profile-panel";
     profilePanel.setAttribute("role", "tabpanel");
+    profilePanel.setAttribute("aria-labelledby", "profile-tab");
 
     const chartFigure = element("figure", "radar-figure profile-radar");
-    chartFigure.appendChild(element("h2", "", "Your response shape"));
+    const chartHeading = element("header", "radar-heading");
+    chartHeading.appendChild(element("p", "technical-label", "SIGNAL MAP"));
+    chartHeading.appendChild(element("h2", "", "Your response shape"));
+    chartFigure.appendChild(chartHeading);
     const chart = element("div", "radar-chart");
     chart.innerHTML = visuals.radarSvg(assessment, { showScores: false });
     chartFigure.appendChild(chart);
@@ -353,12 +413,19 @@
     profilePanel.appendChild(chartFigure);
 
     if (narrative?.rhythm) {
-      const rhythmCard = element("section", "insight-card insight-card-wide");
-      rhythmCard.appendChild(element("h2", "", "Your decision rhythm"));
-      rhythmCard.appendChild(element("p", "", narrative.rhythm));
-      profilePanel.appendChild(rhythmCard);
+      const rhythm = element("section", "debrief-section decision-rhythm");
+      rhythm.appendChild(element("p", "section-index", "01"));
+      const rhythmCopy = element("div");
+      rhythmCopy.appendChild(element("h2", "", "Your decision rhythm"));
+      rhythmCopy.appendChild(element("p", "", narrative.rhythm));
+      rhythm.appendChild(rhythmCopy);
+      profilePanel.appendChild(rhythm);
     }
 
+    const insightLedger = element("section", "insight-ledger");
+    insightLedger.appendChild(element("p", "section-index", "02"));
+    const insightContentRoot = element("div", "insight-ledger-content");
+    insightContentRoot.appendChild(element("h2", "", "Reading the pattern"));
     const insightGrid = element("div", "insight-grid");
     const insightContent = [
       ["Natural strengths", narrative?.strengths || []],
@@ -367,22 +434,28 @@
       ["Working with others", narrative?.collaboration || ""],
     ];
     insightContent.forEach(([title, content]) => {
-      const card = element("section", "insight-card");
-      card.appendChild(element("h2", "", title));
+      const insight = element("section", "insight-item");
+      insight.appendChild(element("h3", "", title));
       if (Array.isArray(content)) {
         const list = element("ul");
         content.forEach((line) => list.appendChild(element("li", "", line)));
-        card.appendChild(list);
+        insight.appendChild(list);
       } else {
-        card.appendChild(element("p", "", content));
+        insight.appendChild(element("p", "", content));
       }
-      insightGrid.appendChild(card);
+      insightGrid.appendChild(insight);
     });
-    profilePanel.appendChild(insightGrid);
+    insightContentRoot.appendChild(insightGrid);
+    insightLedger.appendChild(insightContentRoot);
+    profilePanel.appendChild(insightLedger);
 
-    const pattern = element("section", "element-pattern");
-    pattern.appendChild(element("h2", "", "How your five currents showed up"));
-    pattern.appendChild(
+    const pattern = element("section", "debrief-section element-pattern");
+    pattern.appendChild(element("p", "section-index", "03"));
+    const patternContent = element("div");
+    patternContent.appendChild(
+      element("h2", "", "How your five currents showed up"),
+    );
+    patternContent.appendChild(
       element(
         "p",
         "",
@@ -394,7 +467,10 @@
       const row = element("article", "pattern-row");
       row.style.setProperty("--result-colour", result.colour);
       const heading = element("div");
-      heading.appendChild(element("h3", "", result.element));
+      const namedElement = element("h3", "");
+      namedElement.appendChild(element("span", "element-marker"));
+      namedElement.appendChild(document.createTextNode(result.element));
+      heading.appendChild(namedElement);
       heading.appendChild(
         element("p", "", `${result.trait} · ${result.lens}`),
       );
@@ -413,12 +489,15 @@
       row.appendChild(details);
       patternList.appendChild(row);
     });
-    pattern.appendChild(patternList);
+    patternContent.appendChild(patternList);
+    pattern.appendChild(patternContent);
     profilePanel.appendChild(pattern);
 
     const elementsPanel = element("div", "result-panel", "");
+    elementsPanel.id = "elements-panel";
     elementsPanel.hidden = true;
     elementsPanel.setAttribute("role", "tabpanel");
+    elementsPanel.setAttribute("aria-labelledby", "elements-tab");
     elementsPanel.appendChild(
       element("h2", "", "Understanding the five elements"),
     );
@@ -433,9 +512,12 @@
     assessment.elements.forEach((result) => {
       const item = element("article", "definition-item");
       item.style.setProperty("--result-colour", result.colour);
-      item.appendChild(
-        element("h3", "", `${result.element} · ${result.lens}`),
+      const definitionHeading = element("h3");
+      definitionHeading.appendChild(element("span", "element-marker"));
+      definitionHeading.appendChild(
+        document.createTextNode(`${result.element} · ${result.lens}`),
       );
+      item.appendChild(definitionHeading);
       item.appendChild(
         labelledParagraph(
           "Big Five foundation:",
@@ -470,17 +552,33 @@
       ),
     );
 
-    function activatePanel(showProfile) {
+    function activatePanel(showProfile, moveFocus) {
       profilePanel.hidden = !showProfile;
       elementsPanel.hidden = showProfile;
       profileTab.classList.toggle("active", showProfile);
       elementsTab.classList.toggle("active", !showProfile);
       profileTab.setAttribute("aria-selected", String(showProfile));
       elementsTab.setAttribute("aria-selected", String(!showProfile));
+      profileTab.tabIndex = showProfile ? 0 : -1;
+      elementsTab.tabIndex = showProfile ? -1 : 0;
+      if (moveFocus) {
+        (showProfile ? profileTab : elementsTab).focus();
+      }
     }
 
     profileTab.addEventListener("click", () => activatePanel(true));
     elementsTab.addEventListener("click", () => activatePanel(false));
+    [profileTab, elementsTab].forEach((tab) => {
+      tab.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+          return;
+        }
+        event.preventDefault();
+        const showProfile =
+          event.key === "ArrowLeft" || event.key === "Home";
+        activatePanel(showProfile, true);
+      });
+    });
     section.append(profilePanel, elementsPanel);
 
     const actions = element("div", "completion-actions");
@@ -576,8 +674,10 @@
 
   function render() {
     storyRoot.replaceChildren();
+    const complete = core.currentStep(data, state).type === "complete";
+    document.body.classList.toggle("debrief-mode", complete);
 
-    if (core.currentStep(data, state).type === "complete") {
+    if (complete) {
       storyRoot.classList.add("profile-mode");
       renderResults(storyRoot);
       updateProgress();

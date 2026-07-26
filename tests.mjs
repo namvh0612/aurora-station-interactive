@@ -56,7 +56,8 @@ const storyPdf = JSON.stringify(pdf.buildStoryDefinition(data, state, core));
 assert.doesNotMatch(storyPdf, /YOUR AURORA PROFILE/);
 assert.doesNotMatch(storyPdf, /Natural strengths/);
 assert.equal(storyPdf.includes(data.finalReserve.prompt), false);
-assert.match(storyPdf, /"font":"Roboto"/);
+assert.match(storyPdf, /"font":"StorySerif"/);
+assert.match(storyPdf, /"font":"SystemMono"/);
 core.flattenItems(data).forEach((item) => {
   assert.equal(storyPdf.includes(item.statement), false);
 });
@@ -72,7 +73,7 @@ assert.doesNotMatch(profilePdf, /PART 1/);
 
 const radar = visuals.radarSvg(profile, { showScores: false });
 assert.match(radar, /^<svg/);
-assert.match(radar, /font-family="Roboto, Arial, sans-serif"/);
+assert.match(radar, /font-family="IBM Plex Mono, monospace"/);
 assert.doesNotMatch(radar, /<tspan/);
 assert.equal(typeof imageExporter.downloadProfile, "function");
 
@@ -80,6 +81,8 @@ const appSource = fs.readFileSync("./app.js", "utf8");
 const indexSource = fs.readFileSync("./index.html", "utf8");
 const stylesSource = fs.readFileSync("./styles.css", "utf8");
 assert.match(appSource, /function chevronIcon/);
+assert.match(appSource, /is-transmitting/);
+assert.match(appSource, /debrief-mode/);
 assert.match(appSource, /visuals\.radarSvg/);
 assert.match(appSource, /imageExporter\.downloadProfile/);
 assert.match(appSource, /Download your story/);
@@ -88,8 +91,13 @@ assert.doesNotMatch(appSource, /pdfExporter\.downloadProfile/);
 assert.doesNotMatch(appSource, /result-score/);
 assert.match(indexSource, /visuals\.js/);
 assert.match(indexSource, /image-export\.js/);
-assert.match(indexSource, /family=Roboto/);
-assert.match(stylesSource, /--serif: Roboto/);
+assert.match(indexSource, /family=IBM\+Plex\+Mono/);
+assert.match(indexSource, /family=Source\+Serif\+4/);
+assert.doesNotMatch(indexSource, /vfs_fonts/);
+assert.match(stylesSource, /--serif: "Source Serif 4"/);
+assert.match(stylesSource, /--technical: "IBM Plex Mono"/);
+assert.match(stylesSource, /@keyframes signal-transmit/);
+assert.match(stylesSource, /body\.debrief-mode/);
 assert.match(stylesSource, /\.spectrum-symbol\.level-1,\s*\n\.spectrum-symbol\.level-6/);
 
 console.log("Aurora Station checks passed.");
