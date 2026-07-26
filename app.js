@@ -4,6 +4,8 @@
   const data = window.AURORA_STATION_DATA;
   const core = window.AuroraCore;
   const pdfExporter = window.AuroraPdf;
+  const visuals = window.AuroraVisuals;
+  const imageExporter = window.AuroraImage;
   const storyRoot = document.getElementById("story");
   const progressFill = document.getElementById("progress-fill");
   const progressBar = document.querySelector(".reader-progress");
@@ -35,6 +37,45 @@
     core.splitParagraphs(text).forEach((paragraph) => {
       parent.appendChild(element("p", className || "", paragraph));
     });
+  }
+
+  function labelledParagraph(label, text, className) {
+    const paragraph = element("p", className || "");
+    paragraph.appendChild(element("strong", "", label));
+    paragraph.appendChild(document.createTextNode(` ${text}`));
+    return paragraph;
+  }
+
+  function chevronIcon(raw) {
+    const namespace = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(namespace, "svg");
+    const direction = raw <= 3 ? "left" : "right";
+    const count = raw <= 3 ? 4 - raw : raw - 3;
+    const spacing = 10;
+    const start = 24 - ((count - 1) * spacing) / 2;
+
+    svg.setAttribute("viewBox", "0 0 48 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    svg.classList.add(
+      "spectrum-symbol",
+      `level-${raw}`,
+      `direction-${direction}`,
+    );
+
+    for (let index = 0; index < count; index += 1) {
+      const centre = start + index * spacing;
+      const path = document.createElementNS(namespace, "path");
+      path.setAttribute(
+        "d",
+        direction === "left"
+          ? `M ${centre + 3.5} 5 L ${centre - 3.5} 12 L ${centre + 3.5} 19`
+          : `M ${centre - 3.5} 5 L ${centre + 3.5} 12 L ${centre - 3.5} 19`,
+      );
+      svg.appendChild(path);
+    }
+
+    return svg;
   }
 
   function updateProgress() {
@@ -145,7 +186,6 @@
       "Mostly like how I would respond",
       "Very much like how I would respond",
     ];
-    const responseSymbols = ["○", "◔", "◑", "◕", "●", "✦"];
     const group = element("div", "spectrum");
     group.setAttribute("role", "group");
     group.setAttribute(
@@ -164,9 +204,7 @@
       button.type = "button";
       button.setAttribute("aria-label", responseLabels[raw - 1]);
       button.title = responseLabels[raw - 1];
-      button.appendChild(
-        element("span", `spectrum-symbol level-${raw}`, responseSymbols[raw - 1]),
-      );
+      button.appendChild(chevronIcon(raw));
       button.addEventListener("click", () => commitAnswer(raw));
       choices.appendChild(button);
     });
@@ -299,6 +337,28 @@
 
     const profilePanel = element("div", "result-panel");
     profilePanel.setAttribute("role", "tabpanel");
+
+    const chartFigure = element("figure", "radar-figure profile-radar");
+    chartFigure.appendChild(element("h2", "", "Your response shape"));
+    const chart = element("div", "radar-chart");
+    chart.innerHTML = visuals.radarSvg(assessment, { showScores: false });
+    chartFigure.appendChild(chart);
+    chartFigure.appendChild(
+      element(
+        "figcaption",
+        "",
+        "A point farther from the centre means that response style appeared more consistently in this journey. The shape is not a percentage, ranking or comparison with other people.",
+      ),
+    );
+    profilePanel.appendChild(chartFigure);
+
+    if (narrative?.rhythm) {
+      const rhythmCard = element("section", "insight-card insight-card-wide");
+      rhythmCard.appendChild(element("h2", "", "Your decision rhythm"));
+      rhythmCard.appendChild(element("p", "", narrative.rhythm));
+      profilePanel.appendChild(rhythmCard);
+    }
+
     const insightGrid = element("div", "insight-grid");
     const insightContent = [
       ["Natural strengths", narrative?.strengths || []],
@@ -341,6 +401,16 @@
       row.appendChild(heading);
       row.appendChild(element("strong", "", result.expression));
       row.appendChild(element("p", "pattern-description", result.description));
+      const details = element("div", "pattern-details");
+      [
+        ["In practice:", result.practicalReading],
+        ["Within this element:", result.facetPattern],
+        ["Possible trade-off:", result.tradeOff],
+        ["Useful balance:", result.balancePrompt],
+      ].forEach(([label, text]) => {
+        details.appendChild(labelledParagraph(label, text));
+      });
+      row.appendChild(details);
       patternList.appendChild(row);
     });
     pattern.appendChild(patternList);
@@ -367,7 +437,18 @@
         element("h3", "", `${result.element} · ${result.lens}`),
       );
       item.appendChild(
-        element("p", "", `Big Five foundation: ${result.trait}.`),
+        labelledParagraph(
+          "Big Five foundation:",
+          `${result.trait}.`,
+          "element-foundation",
+        ),
+      );
+      item.appendChild(element("p", "", result.plainMeaning));
+      item.appendChild(
+        labelledParagraph("Not the same as:", result.notSameAs),
+      );
+      item.appendChild(
+        labelledParagraph("Both ends can work:", result.adaptiveRange),
       );
       result.facets.forEach((facet) => {
         item.appendChild(
@@ -439,15 +520,14 @@
       reportButton.disabled = true;
       reportButton.textContent = "Building your profile…";
       try {
-        await pdfExporter.downloadProfile(
-          data,
-          state,
-          core,
-          "Aurora_Station_Profile.pdf",
+        await imageExporter.downloadProfile(
+          assessment,
+          visuals,
+          "Aurora_Station_Profile.png",
         );
-        announce("Your personal profile has been downloaded.");
+        announce("Your personal profile image has been downloaded.");
       } catch {
-        announce("The profile PDF could not be created. Please try again.");
+        announce("The profile image could not be created. Please try again.");
       } finally {
         reportButton.disabled = false;
         reportButton.textContent = "Download your profile";
@@ -530,7 +610,7 @@
     updateProgress();
   }
 
-  if (!data || !core || !pdfExporter) {
+  if (!data || !core || !pdfExporter || !visuals || !imageExporter) {
     storyRoot.textContent =
       "Aurora Station could not load its story data. Keep the content file beside this page and try again.";
     return;

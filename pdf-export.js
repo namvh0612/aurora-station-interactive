@@ -125,6 +125,27 @@
           ),
           style: "definitionBody",
         },
+        {
+          text: cleanText(result.plainMeaning),
+          style: "definitionBody",
+          margin: [0, 3, 0, 0],
+        },
+        {
+          text: [
+            { text: "Not the same as. ", bold: true },
+            { text: cleanText(result.notSameAs) },
+          ],
+          style: "definitionBody",
+          margin: [0, 3, 0, 0],
+        },
+        {
+          text: [
+            { text: "Both ends can work. ", bold: true },
+            { text: cleanText(result.adaptiveRange) },
+          ],
+          style: "definitionBody",
+          margin: [0, 3, 0, 0],
+        },
         ...facetDefinitions.map((entry) => ({
           ...entry,
           style: "definitionBody",
@@ -200,10 +221,6 @@
       content.push(...paragraphs(core, act.closing));
 
       if (act.id === data.finalReserve.insertAfterActId && reserve) {
-        content.push({
-          text: cleanText(data.finalReserve.prompt),
-          style: "innerVoice",
-        });
         content.push(chosenBlock(reserve.immediate));
         content.push(...paragraphs(core, reserve.act12Opening));
       }
@@ -437,6 +454,34 @@
             text: cleanText(result.description),
             style: "body",
             margin: [0, 7, 0, 0],
+          },
+          {
+            text: [
+              { text: "In practice. ", bold: true },
+              { text: cleanText(result.practicalReading) },
+            ],
+            style: "body",
+          },
+          {
+            text: [
+              { text: "Within this element. ", bold: true },
+              { text: cleanText(result.facetPattern) },
+            ],
+            style: "body",
+          },
+          {
+            text: [
+              { text: "Possible trade-off. ", bold: true },
+              { text: cleanText(result.tradeOff) },
+            ],
+            style: "body",
+          },
+          {
+            text: [
+              { text: "Useful balance. ", bold: true },
+              { text: cleanText(result.balancePrompt) },
+            ],
+            style: "body",
           },
         ],
       })),

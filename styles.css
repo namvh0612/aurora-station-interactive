@@ -6,9 +6,8 @@
   --accent: #2d6378;
   --accent-soft: rgba(45, 99, 120, 0.1);
   --choice-soft: rgba(45, 99, 120, 0.075);
-  --serif: Georgia, "Times New Roman", Times, serif;
-  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  --serif: Roboto, Arial, sans-serif;
+  --sans: Roboto, Arial, sans-serif;
 }
 
 * {
@@ -231,37 +230,32 @@ button {
 }
 
 .spectrum-symbol {
+  width: 2.45rem;
+  height: 1.25rem;
   color: #687880;
-  font-family: var(--sans);
-  font-size: 1.12rem;
-  line-height: 1;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.15;
   transition:
     color 150ms ease,
     transform 150ms ease;
 }
 
-.spectrum-symbol.level-1 {
-  opacity: 0.58;
+.spectrum-symbol.level-1,
+.spectrum-symbol.level-6 {
+  opacity: 0.98;
 }
 
-.spectrum-symbol.level-2 {
-  opacity: 0.68;
-}
-
-.spectrum-symbol.level-3 {
-  opacity: 0.78;
-}
-
-.spectrum-symbol.level-4 {
+.spectrum-symbol.level-2,
+.spectrum-symbol.level-5 {
   opacity: 0.86;
 }
 
-.spectrum-symbol.level-5 {
-  opacity: 0.94;
-}
-
-.spectrum-symbol.level-6 {
-  color: var(--accent);
+.spectrum-symbol.level-3,
+.spectrum-symbol.level-4 {
+  opacity: 0.74;
 }
 
 .spectrum-choice:hover,
@@ -456,6 +450,10 @@ button {
   gap: 1rem;
 }
 
+.insight-card-wide {
+  margin-bottom: 1rem;
+}
+
 .insight-card {
   padding: 1.3rem 1.4rem;
   border: 1px solid var(--line);
@@ -539,6 +537,26 @@ button {
   line-height: 1.6;
 }
 
+.pattern-details {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 1.5rem;
+  margin-top: 0.45rem;
+}
+
+.pattern-details p {
+  margin: 0;
+  color: #536168;
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.pattern-details strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .results-intro,
 .radar-figure figcaption,
 .profile-overview,
@@ -556,6 +574,23 @@ button {
 .radar-figure {
   width: min(100%, 34rem);
   margin: 2.5rem auto 2rem;
+}
+
+.profile-radar {
+  margin-top: 0;
+  margin-bottom: 2.7rem;
+  padding: 1.25rem 1.5rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.profile-radar h2 {
+  margin: 0 0 0.6rem;
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+  text-align: center;
 }
 
 .radar-chart {
@@ -697,7 +732,7 @@ button {
   border-left: 2px solid var(--result-colour);
 }
 
-.definition-item h4 {
+.definition-item h3 {
   margin: 0 0 0.45rem;
   font-family: var(--serif);
   font-size: 1.1rem;
@@ -713,6 +748,15 @@ button {
 
 .definition-facet {
   color: #45545b !important;
+}
+
+.definition-item p strong {
+  color: var(--ink);
+}
+
+.element-foundation {
+  color: var(--result-colour) !important;
+  font-weight: 500;
 }
 
 .completion-actions {
@@ -811,6 +855,10 @@ button {
     min-height: 2.75rem;
   }
 
+  .spectrum-symbol {
+    width: 1.85rem;
+  }
+
   .insight-grid {
     grid-template-columns: 1fr;
   }
@@ -821,6 +869,11 @@ button {
 
   .pattern-description {
     grid-column: 1;
+  }
+
+  .pattern-details {
+    grid-column: 1;
+    grid-template-columns: 1fr;
   }
 
   .facet-list {

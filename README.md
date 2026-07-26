@@ -5,14 +5,17 @@ GitHub Pages.
 
 ## Experience
 
-- Six unnumbered visual spectrum choices with accessible response labels.
+- Six unnumbered, mirrored chevron choices with accessible response labels.
 - Completed moments retain the narrative context and selected action while the
   assessment statement disappears from the reading flow.
 - On completion, the story closes and the interface switches to a separate
   personal profile.
-- Profile language focuses on strengths, pressure response, counterbalances and
-  collaboration rather than percentages or fixed personality types.
-- Separate PDF downloads for the completed story and the personal profile.
+- A radar chart shows the shape of the five response currents without presenting
+  percentages or population rankings.
+- Profile language explains strengths, pressure response, facet patterns,
+  trade-offs and useful counterbalances rather than fixed personality types.
+- The completed story downloads as a PDF ebook; the personal profile downloads
+  directly as a shareable PNG.
 
 The Five Elements are narrative labels for Big Five dimensions. Results describe
 story-based tendencies, not diagnoses or population percentiles.

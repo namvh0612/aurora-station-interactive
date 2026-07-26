@@ -2,7 +2,6 @@
   "use strict";
 
   const STORAGE_KEY = "aurora-station-journey-v2";
-
   function flattenItems(data) {
     return data.story.acts
       .flatMap((act) => act.items)
@@ -291,6 +290,41 @@
     return "Used selectively";
   }
 
+  function elementSide(result) {
+    return result.score >= 3.5 ? "higher" : "lower";
+  }
+
+  function describeFacetPattern(result, guide) {
+    const available = result.facets.filter((facet) => facet.score !== null);
+    if (available.length !== 2 || !guide) {
+      return "";
+    }
+
+    const [first, second] = available;
+    const difference = Math.abs(first.score - second.score);
+    const firstFocus = guide.facetFocus[first.name] || first.name.toLowerCase();
+    const secondFocus =
+      guide.facetFocus[second.name] || second.name.toLowerCase();
+
+    if (difference < 0.6) {
+      return (
+        `The two facets moved together: ${firstFocus} and ${secondFocus} ` +
+        "appeared at a similar level across the station scenarios."
+      );
+    }
+
+    const leading = first.score > second.score ? first : second;
+    const quieter = leading === first ? second : first;
+    const leadingFocus =
+      guide.facetFocus[leading.name] || leading.name.toLowerCase();
+
+    return (
+      `${leading.name} came forward more consistently than ${quieter.name}. ` +
+      `In this journey, ${leadingFocus} was more readily available, while ` +
+      `${quieter.name.toLowerCase()} depended more on context.`
+    );
+  }
+
   function buildProfileNarrative(data, ranked) {
     const primary = ranked[0];
     const secondary = ranked[1];
@@ -302,6 +336,9 @@
     const primaryDefinition = data.assessment.elements[primary.code];
     const secondaryDefinition = data.assessment.elements[secondary.code];
     const quieterDefinition = data.assessment.elements[quieter.code];
+    const primaryGuide = primaryDefinition.interpretation.guide;
+    const secondaryGuide = secondaryDefinition.interpretation.guide;
+    const closePair = Math.abs(primary.score - secondary.score) < 0.35;
     const titleWords = {
       WO: "Explorer",
       FI: "Catalyst",
@@ -312,27 +349,31 @@
 
     return {
       title: `The ${titleWords[primary.code]}–${titleWords[secondary.code]}`,
-      strapline:
-        `${primary.element} leads with ${primaryDefinition.interpretation.lens.toLowerCase()}, ` +
-        `supported by ${secondary.element}'s ${secondaryDefinition.interpretation.lens.toLowerCase()}.`,
+      strapline: closePair
+        ? `${primary.element} and ${secondary.element} appeared as a closely matched pair across this journey.`
+        : `${primary.element}'s ${primaryDefinition.interpretation.lens.toLowerCase()} appeared most readily, supported by ${secondary.element}.`,
       summary:
-        `You are likely to approach uncertain situations by first drawing on ${primaryDefinition.interpretation.lens.toLowerCase()}, ` +
-        `then reinforcing it with ${secondaryDefinition.interpretation.lens.toLowerCase()}. ` +
-        `${quieter.element} is not missing; its ${quieterDefinition.interpretation.lens.toLowerCase()} tends to appear when the situation clearly calls for it rather than as your automatic first move.`,
+        `Across Aurora Station, your choices most often combined ${primaryDefinition.interpretation.lens.toLowerCase()} ` +
+        `with ${secondaryDefinition.interpretation.lens.toLowerCase()}. ` +
+        `${quieter.element} is not absent or weak; its ${quieterDefinition.interpretation.lens.toLowerCase()} was simply more dependent on context. ` +
+        "This is a pattern in these scenarios, not a fixed personality type.",
+      rhythm:
+        `Your likely decision rhythm is to ${primaryGuide.action}, then ` +
+        `${secondaryGuide.action}. Under different stakes or with more time, that order may change.`,
       strengths: [
-        `You naturally bring ${primaryDefinition.interpretation.higher}.`,
-        `You can support that instinct with ${secondaryDefinition.interpretation.higher}.`,
-        `Your responses suggest more than one usable style, rather than a single fixed way of acting.`,
+        `${primary.element}: ${primaryGuide[`${elementSide(primary)}Use`]}`,
+        `${secondary.element}: ${secondaryGuide[`${elementSide(secondary)}Use`]}`,
+        "Together, these currents give you more than one route into an uncertain decision.",
       ],
       pressure:
-        `Under pressure, your first move may become more strongly ${primary.element.toLowerCase()}-led. ` +
-        `That can create clarity and momentum, but it may also narrow attention before the quieter ${quieter.element.toLowerCase()} perspective has been considered.`,
+        `When time contracts, you may lean harder on ${primary.element.toLowerCase()} and move quickly into ${primaryGuide.action}. ` +
+        `That can be effective, but it can also reduce the chance that ${quieter.element.toLowerCase()}-style ${quieterDefinition.interpretation.lens.toLowerCase()} enters the decision early enough.`,
       watchOut:
         `The useful counterbalance is to pause briefly and ask what ${quieterDefinition.interpretation.lens.toLowerCase()} would add before committing. ` +
-        `This is not about suppressing your strongest style; it is about choosing when it should lead.`,
+        `This is not about suppressing ${primary.element}; it is about choosing when it should lead and when another current should take the first turn.`,
       collaboration:
-        `You are likely to contribute best when others recognise your preference for ${primaryDefinition.interpretation.lens.toLowerCase()}. ` +
-        `You may work especially well with people who make ${quieterDefinition.interpretation.lens.toLowerCase()} explicit, because they surface information your first instinct may leave implicit.`,
+        `Others are likely to experience you most clearly through ${primaryDefinition.interpretation.lens.toLowerCase()} and ${secondaryDefinition.interpretation.lens.toLowerCase()}. ` +
+        `Collaboration improves when someone is explicitly invited to contribute the quieter ${quieterDefinition.interpretation.lens.toLowerCase()} perspective before the group closes.`,
     };
   }
 
@@ -352,12 +393,21 @@
       overview,
       elements: assessment.elements.map((result) => {
         const definition = data.assessment.elements[result.code];
+        const guide = definition.interpretation?.guide;
+        const side = elementSide(result);
         return {
           ...result,
           lens: definition.interpretation?.lens || result.trait,
           description: describeElement(result, definition),
           expression: expressionBand(result.score),
           facetDefinitions: definition.interpretation?.facets || {},
+          facetPattern: describeFacetPattern(result, guide),
+          practicalReading: guide?.[`${side}Use`] || "",
+          tradeOff: guide?.[`${side}TradeOff`] || "",
+          balancePrompt: guide?.[`${side}Balance`] || "",
+          plainMeaning: guide?.plainMeaning || "",
+          notSameAs: guide?.notSameAs || "",
+          adaptiveRange: guide?.adaptiveRange || "",
         };
       }),
       narrative,

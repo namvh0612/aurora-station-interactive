@@ -10,7 +10,7 @@ window.AURORA_STATION_DATA = {
     "platform": "Static HTML/CSS/JavaScript",
     "dataLoading": "Classic script; works from file:// and GitHub Pages",
     "persistence": "Browser localStorage with in-memory fallback",
-    "export": "Browser print dialog / Save as PDF"
+    "export": "Direct story PDF and personal profile PNG downloads"
   },
   "assessment": {
     "model": "Big Five OCEAN",
@@ -72,6 +72,22 @@ window.AURORA_STATION_DATA = {
           "facets": {
             "Ideas": "How readily you explore alternatives, patterns and unfamiliar explanations.",
             "Aesthetics": "How strongly colour, rhythm, atmosphere and sensory detail enter your attention."
+          },
+          "guide": {
+            "action": "open the frame before choosing an explanation",
+            "plainMeaning": "Wood describes how much room you give unfamiliar possibilities, patterns and sensory detail before closing on an explanation.",
+            "notSameAs": "It is not a measure of intelligence, artistic talent or how imaginative you ought to be.",
+            "adaptiveRange": "More Wood widens the frame; less Wood protects focus. Either can be useful depending on whether the situation needs discovery or closure.",
+            "higherUse": "You tend to keep alternatives visible and let patterns or atmosphere inform the picture before you commit.",
+            "lowerUse": "You tend to filter possibilities quickly and concentrate on evidence that can support a decision now.",
+            "higherTradeOff": "Exploration can delay closure or give weak signals more attention than they deserve.",
+            "lowerTradeOff": "Fast filtering can make an unfamiliar but useful possibility disappear too early.",
+            "higherBalance": "Set a stopping rule: decide what evidence would be enough to move from exploration to commitment.",
+            "lowerBalance": "Before closing, name one plausible explanation or sensory cue that has not yet been considered.",
+            "facetFocus": {
+              "Ideas": "exploring alternatives and unfamiliar explanations",
+              "Aesthetics": "letting atmosphere and sensory detail shape attention"
+            }
           }
         }
       },
@@ -91,6 +107,22 @@ window.AURORA_STATION_DATA = {
           "facets": {
             "Assertiveness": "How readily you state direction, challenge assumptions and take visible control.",
             "Enthusiasm": "How readily you create energy, expression and connection around a shared task."
+          },
+          "guide": {
+            "action": "make energy and direction visible",
+            "plainMeaning": "Fire describes how readily you put energy into the room through visible direction, expression and social momentum.",
+            "notSameAs": "It is not a measure of popularity, leadership ability or how loud a person is.",
+            "adaptiveRange": "More Fire mobilises people quickly; less Fire uses quieter influence and timing. Both can move a group forward.",
+            "higherUse": "You tend to state direction, create momentum and make your engagement visible to other people.",
+            "lowerUse": "You tend to influence more quietly, conserve social energy and choose carefully when to step forward.",
+            "higherTradeOff": "Visible momentum can occupy space that others needed in order to think or contribute.",
+            "lowerTradeOff": "Waiting for the right moment can leave your view unheard until the decision has nearly closed.",
+            "higherBalance": "After setting direction, create a deliberate pause in which someone else can change or refine it.",
+            "lowerBalance": "State your position once, clearly and early, before deciding whether quieter influence is enough.",
+            "facetFocus": {
+              "Assertiveness": "stating direction and challenging assumptions",
+              "Enthusiasm": "creating shared energy and expressive connection"
+            }
           }
         }
       },
@@ -110,6 +142,22 @@ window.AURORA_STATION_DATA = {
           "facets": {
             "Empathy": "How readily you notice and respond to another person’s emotional experience.",
             "Cooperation": "How readily you coordinate, accommodate and build a shared way forward."
+          },
+          "guide": {
+            "action": "bring the human stakes into the decision",
+            "plainMeaning": "Earth describes how strongly another person's experience, cooperation and relationship continuity enter your decisions.",
+            "notSameAs": "It is not a score for kindness, morality or whether you avoid disagreement.",
+            "adaptiveRange": "More Earth protects connection; less Earth protects task boundaries and candour. Sound decisions often need both.",
+            "higherUse": "You tend to notice the human impact, invite input and preserve cooperation while action is still possible.",
+            "lowerUse": "You tend to keep the task boundary firm and resist allowing interpersonal pressure to overtake the decision.",
+            "higherTradeOff": "Protecting harmony can soften a necessary disagreement or delay a difficult boundary.",
+            "lowerTradeOff": "Task clarity can come at the cost of information that people reveal only when they feel heard.",
+            "higherBalance": "Separate care from agreement: name the human impact and the boundary that still has to hold.",
+            "lowerBalance": "Before finalising, ask whose experience contains information the task view may have missed.",
+            "facetFocus": {
+              "Empathy": "noticing and responding to emotional experience",
+              "Cooperation": "coordinating and building a shared way forward"
+            }
           }
         }
       },
@@ -129,6 +177,22 @@ window.AURORA_STATION_DATA = {
           "facets": {
             "Orderliness": "How readily you create clear sequence, criteria, limits and records.",
             "Industriousness": "How readily you sustain effort, complete checks and continue purposeful action."
+          },
+          "guide": {
+            "action": "turn intent into sequence and follow-through",
+            "plainMeaning": "Metal describes how readily you create structure, standards and sustained action when conditions are uncertain.",
+            "notSameAs": "It is not a measure of intelligence, obedience or personal worth, and it does not require rigidity.",
+            "adaptiveRange": "More Metal protects reliability; less Metal protects adaptability and effort. The useful level depends on the cost of error and the cost of procedure.",
+            "higherUse": "You tend to create sequence, checks and clear ownership, then keep effort moving toward completion.",
+            "lowerUse": "You tend to adapt structure to the moment and stop routines when their cost exceeds their likely value.",
+            "higherTradeOff": "A reliable process can continue after it has stopped serving the purpose it was designed for.",
+            "lowerTradeOff": "Useful flexibility can leave critical checks, records or finishing work without a clear owner.",
+            "higherBalance": "Ask whether the procedure still serves the goal, and identify the one step that can safely be removed.",
+            "lowerBalance": "Name one non-negotiable check and one explicit finish point before improvising the rest.",
+            "facetFocus": {
+              "Orderliness": "creating sequence, criteria, limits and records",
+              "Industriousness": "sustaining effort and completing purposeful action"
+            }
           }
         }
       },
@@ -148,6 +212,22 @@ window.AURORA_STATION_DATA = {
           "facets": {
             "Calmness": "How steadily you regulate immediate tension, alarm and uncertainty.",
             "Resilience": "How readily you recover focus and re-enter a useful rhythm after strain."
+          },
+          "guide": {
+            "action": "steady attention before returning to action",
+            "plainMeaning": "Water describes how steadily attention remains usable during stress and how readily it returns after strain.",
+            "notSameAs": "It is not emotional depth, courage or the absence of feeling. A calm response can still contain strong concern.",
+            "adaptiveRange": "More Water supports steadiness and recovery; less Water registers threat and emotional intensity earlier. Both carry useful information.",
+            "higherUse": "You tend to keep attention steady in the first wave of pressure and re-enter a useful rhythm after strain.",
+            "lowerUse": "You tend to register threat and emotional intensity strongly before attention settles and action becomes easier again.",
+            "higherTradeOff": "Composure can make strain less visible to others or postpone recognising your own need for recovery.",
+            "lowerTradeOff": "A strong alarm response can narrow working attention before the signal has been interpreted.",
+            "higherBalance": "Make strain explicit even when you look calm, and schedule recovery before capacity quietly runs out.",
+            "lowerBalance": "Create a brief physical or procedural pause so that alarm can become information before it becomes the decision.",
+            "facetFocus": {
+              "Calmness": "regulating immediate tension, alarm and uncertainty",
+              "Resilience": "recovering focus and rhythm after sustained strain"
+            }
           }
         }
       }

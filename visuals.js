@@ -30,7 +30,7 @@
         size: 480,
         radius: 145,
         centre: 240,
-        showScores: true,
+        showScores: false,
       },
       options || {},
     );
@@ -95,14 +95,14 @@
           settings.showScores && result.score !== null
             ? `<tspan x="${point.x.toFixed(1)}" dy="17" fill="#68727a" font-size="12">${result.score.toFixed(2)}</tspan>`
             : "";
-        return `<text x="${point.x.toFixed(1)}" y="${point.y.toFixed(1)}" text-anchor="${anchor}" fill="#17202a" font-family="Arial, sans-serif" font-size="14" font-weight="700">${escapeXml(result.element)}${score}</text>`;
+        return `<text x="${point.x.toFixed(1)}" y="${point.y.toFixed(1)}" text-anchor="${anchor}" fill="#17202a" font-family="Roboto, Arial, sans-serif" font-size="14" font-weight="700">${escapeXml(result.element)}${score}</text>`;
       })
       .join("");
 
     return (
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${settings.size} ${settings.size}" role="img" aria-labelledby="radar-title radar-description">` +
       `<title id="radar-title">Five Elements profile</title>` +
-      `<desc id="radar-description">A radar chart showing Wood, Fire, Earth, Metal and Water scores on a one to six scale.</desc>` +
+      `<desc id="radar-description">The relative response shape of Wood, Fire, Earth, Metal and Water in this Aurora Station journey.</desc>` +
       grid +
       axes +
       `<polygon points="${pointsString(valuePoints)}" fill="#2d6378" fill-opacity="0.16" stroke="#2d6378" stroke-width="3" stroke-linejoin="round"/>` +
