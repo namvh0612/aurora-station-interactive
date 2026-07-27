@@ -15,37 +15,37 @@ const auroraConfig = {
 
 const phasePresets = {
   "station-drift": {
-    speed: 0.042,
-    intensity: 0.32,
-    brightness: 0.46,
+    speed: 0.052,
+    intensity: 0.42,
+    brightness: 0.58,
     distortion: 0.14,
     palette: ["#123747", "#347987", "#386c60"],
   },
   "system-pressure": {
-    speed: 0.058,
-    intensity: 0.35,
-    brightness: 0.43,
+    speed: 0.064,
+    intensity: 0.46,
+    brightness: 0.58,
     distortion: 0.17,
     palette: ["#102c3d", "#2f6b77", "#486e5d"],
   },
   "the-silence-between": {
-    speed: 0.024,
-    intensity: 0.24,
-    brightness: 0.38,
+    speed: 0.035,
+    intensity: 0.36,
+    brightness: 0.52,
     distortion: 0.11,
     palette: ["#0d2938", "#315d68", "#36584f"],
   },
   "under-ice-pulse": {
-    speed: 0.052,
-    intensity: 0.4,
-    brightness: 0.52,
+    speed: 0.058,
+    intensity: 0.52,
+    brightness: 0.64,
     distortion: 0.2,
     palette: ["#113244", "#397f89", "#4f8b6f"],
   },
   "under-the-ice": {
-    speed: 0.034,
-    intensity: 0.29,
-    brightness: 0.45,
+    speed: 0.042,
+    intensity: 0.4,
+    brightness: 0.56,
     distortion: 0.13,
     palette: ["#183746", "#3d727b", "#587a66"],
   },
@@ -120,7 +120,7 @@ const fragmentShader = `
     vec2 point = vUv * 2.0 - 1.0;
     point.x *= aspect;
 
-    float time = uTime * uSpeed;
+    float time = uTime * uSpeed * 4.0;
     float broadNoise = layeredNoise(
       vec2(point.x * 0.55 + time * 0.13, point.y * 0.38 - time * 0.035)
     );
@@ -151,7 +151,7 @@ const fragmentShader = `
     float heightMask = smoothstep(-0.92, 0.76, point.y);
     float centreDistance = length(point * vec2(0.72, 0.92));
     float readingMask = mix(
-      0.31,
+      0.48,
       1.0,
       smoothstep(0.16, 1.22, centreDistance)
     );
@@ -164,7 +164,7 @@ const fragmentShader = `
 
     vec3 colour = mix(uColourA, uColourB, broadNoise);
     colour = mix(colour, uColourC, smoothstep(0.5, 0.9, fineNoise) * 0.42);
-    float alpha = clamp(light * uIntensity * 0.72, 0.0, 0.46);
+    float alpha = clamp(light * uIntensity * 0.95, 0.0, 0.55);
 
     gl_FragColor = vec4(colour * uBrightness, alpha);
   }
@@ -379,6 +379,7 @@ function handleContextLost(event) {
   event.preventDefault();
   stopAnimation();
   background?.classList.add("is-fallback");
+  background?.classList.remove("is-webgl");
 }
 
 function initAurora() {
@@ -428,6 +429,9 @@ function initAurora() {
         uColourC: { value: hexToRgb("#386c60") },
       },
     });
+    if (!gl.getProgramParameter(program.program, gl.LINK_STATUS)) {
+      throw new Error("Aurora shader could not be linked.");
+    }
     mesh = new Mesh(gl, {
       geometry: new Triangle(gl),
       program,
@@ -445,6 +449,9 @@ function initAurora() {
     window.dispatchEvent(new CustomEvent("aurora-ready"));
   } catch {
     background.classList.add("is-fallback");
+    background.classList.remove("is-webgl");
+    program?.remove?.();
+    renderer?.gl?.getExtension("WEBGL_lose_context")?.loseContext();
     renderer = null;
     program = null;
     mesh = null;

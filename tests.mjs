@@ -159,8 +159,15 @@ assert.match(auroraSource, /uniform float uTime/);
 assert.match(auroraSource, /uniform vec2 uResolution/);
 assert.match(auroraSource, /maxPixelRatio: 1\.5/);
 assert.match(auroraSource, /webgl: 1/);
+assert.match(auroraSource, /uSpeed \* 4\.0/);
+assert.match(auroraSource, /gl\.LINK_STATUS/);
 assert.match(auroraSource, /prefers-reduced-motion: reduce/);
 assert.match(auroraSource, /destroyAurora/);
 assert.doesNotMatch(auroraSource, /mousemove|pointermove|click/);
+assert.match(stylesSource, /#aurora-canvas[\s\S]*opacity: 0\.66/);
+assert.match(
+  stylesSource,
+  /\.aurora-background\.is-fallback::before[\s\S]*opacity: 0\.48/,
+);
 
 console.log("Aurora Station checks passed.");
