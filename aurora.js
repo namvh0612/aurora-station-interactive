@@ -413,7 +413,7 @@ function initAurora() {
     program = new Program(gl, {
       vertex: vertexShader,
       fragment: fragmentShader,
-      transparent: true,
+      transparent: false,
       depthTest: false,
       depthWrite: false,
       cullFace: null,
