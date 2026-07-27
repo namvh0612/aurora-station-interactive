@@ -404,6 +404,7 @@ function initAurora() {
         auroraConfig.maxPixelRatio,
       ),
       powerPreference: "low-power",
+      webgl: 1,
     });
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);

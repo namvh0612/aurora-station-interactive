@@ -158,6 +158,7 @@ assert.match(auroraSource, /npm\/ogl@1\.0\.11\/\+esm/);
 assert.match(auroraSource, /uniform float uTime/);
 assert.match(auroraSource, /uniform vec2 uResolution/);
 assert.match(auroraSource, /maxPixelRatio: 1\.5/);
+assert.match(auroraSource, /webgl: 1/);
 assert.match(auroraSource, /prefers-reduced-motion: reduce/);
 assert.match(auroraSource, /destroyAurora/);
 assert.doesNotMatch(auroraSource, /mousemove|pointermove|click/);
