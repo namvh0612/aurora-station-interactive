@@ -3,7 +3,7 @@ import {
   Program,
   Renderer,
   Triangle,
-} from "https://cdn.jsdelivr.net/npm/ogl@1.0.11/dist/ogl.mjs";
+} from "https://cdn.jsdelivr.net/npm/ogl@1.0.11/+esm";
 
 const auroraConfig = {
   speed: 0.05,

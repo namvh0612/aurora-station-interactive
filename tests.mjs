@@ -154,7 +154,7 @@ audio.PHASES.forEach((phase) => {
 assert.match(audioSource, /const DEFAULT_VOLUME = 0\.07/);
 assert.match(audioSource, /audio\.loop = true/);
 assert.match(audioSource, /visibilitychange/);
-assert.match(auroraSource, /npm\/ogl@1\.0\.11\/dist\/ogl\.mjs/);
+assert.match(auroraSource, /npm\/ogl@1\.0\.11\/\+esm/);
 assert.match(auroraSource, /uniform float uTime/);
 assert.match(auroraSource, /uniform vec2 uResolution/);
 assert.match(auroraSource, /maxPixelRatio: 1\.5/);
