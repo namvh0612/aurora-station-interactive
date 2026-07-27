@@ -8,6 +8,7 @@
       content="Aurora Station — an interactive story and Big Five reflection."
     />
     <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#06131d" />
     <title>Aurora Station — Your Journey</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,6 +17,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./aurora.js"></script>
     <script defer src="./content/Aurora_Station_Content.js"></script>
     <script defer src="./core.js"></script>
     <script
@@ -25,9 +27,16 @@
     <script defer src="./pdf-export.js"></script>
     <script defer src="./visuals.js"></script>
     <script defer src="./image-export.js"></script>
+    <script defer src="./audio.js"></script>
     <script defer src="./app.js"></script>
   </head>
   <body>
+    <div class="aurora-background" aria-hidden="true">
+      <canvas id="aurora-canvas"></canvas>
+      <div class="aurora-dimming-layer"></div>
+      <div class="aurora-vignette"></div>
+    </div>
+
     <header class="reader-bar" aria-label="Reading progress">
       <a class="reader-brand" href="#story-start">Aurora Station</a>
       <div
@@ -41,9 +50,24 @@
         <span id="progress-fill"></span>
       </div>
       <span id="progress-label" class="progress-label">The final watch</span>
+      <button
+        id="sound-toggle"
+        class="sound-toggle"
+        type="button"
+        aria-pressed="true"
+        aria-label="Mute background soundtrack"
+        title="The soundtrack begins after your first interaction."
+      >
+        <span class="sound-meter" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+        <span class="sound-label">Sound on</span>
+      </button>
     </header>
 
-    <main id="main-content">
+    <main id="main-content" class="story-content">
       <article id="story" class="story" aria-live="polite">
         <p class="loading-copy">Receiving the final watch…</p>
       </article>

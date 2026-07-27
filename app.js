@@ -6,10 +6,12 @@
   const pdfExporter = window.AuroraPdf;
   const visuals = window.AuroraVisuals;
   const imageExporter = window.AuroraImage;
+  const audioManager = window.AuroraAudio;
   const storyRoot = document.getElementById("story");
   const progressFill = document.getElementById("progress-fill");
   const progressBar = document.querySelector(".reader-progress");
   const progressLabel = document.getElementById("progress-label");
+  const soundToggle = document.getElementById("sound-toggle");
   const liveStatus = document.getElementById("screen-reader-status");
   let interactionLocked = false;
   let state;
@@ -676,6 +678,15 @@
     storyRoot.replaceChildren();
     const complete = core.currentStep(data, state).type === "complete";
     document.body.classList.toggle("debrief-mode", complete);
+    const audioPhase =
+      audioManager?.sync(data, state, core) || "station-drift";
+    const visualPhase = complete ? "dawn" : audioPhase;
+    document.body.dataset.storyPhase = visualPhase;
+    window.dispatchEvent(
+      new CustomEvent("aurora-phase-change", {
+        detail: { phase: visualPhase },
+      }),
+    );
 
     if (complete) {
       storyRoot.classList.add("profile-mode");
@@ -716,6 +727,7 @@
     return;
   }
 
+  audioManager?.init({ toggleButton: soundToggle });
   state = core.sanitiseState(data, core.loadState(data, safeStorage()));
   render();
 })();

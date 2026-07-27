@@ -13,11 +13,13 @@ await import("./core.js");
 await import("./pdf-export.js");
 await import("./visuals.js");
 await import("./image-export.js");
+await import("./audio.js");
 
 const core = globalThis.AuroraCore;
 const pdf = globalThis.AuroraPdf;
 const visuals = globalThis.AuroraVisuals;
 const imageExporter = globalThis.AuroraImage;
+const audio = globalThis.AuroraAudio;
 let state = core.emptyState();
 
 for (let index = 0; index < 55; index += 1) {
@@ -78,6 +80,8 @@ assert.doesNotMatch(radar, /<tspan/);
 assert.equal(typeof imageExporter.downloadProfile, "function");
 
 const appSource = fs.readFileSync("./app.js", "utf8");
+const audioSource = fs.readFileSync("./audio.js", "utf8");
+const auroraSource = fs.readFileSync("./aurora.js", "utf8");
 const indexSource = fs.readFileSync("./index.html", "utf8");
 const stylesSource = fs.readFileSync("./styles.css", "utf8");
 assert.match(appSource, /function chevronIcon/);
@@ -85,12 +89,22 @@ assert.match(appSource, /is-transmitting/);
 assert.match(appSource, /debrief-mode/);
 assert.match(appSource, /visuals\.radarSvg/);
 assert.match(appSource, /imageExporter\.downloadProfile/);
+assert.match(appSource, /audioManager\?\.sync/);
+assert.match(appSource, /aurora-phase-change/);
 assert.match(appSource, /Download your story/);
 assert.match(appSource, /Download your profile/);
 assert.doesNotMatch(appSource, /pdfExporter\.downloadProfile/);
 assert.doesNotMatch(appSource, /result-score/);
+assert.equal(
+  appSource.match(/appendParagraphs\(moment, item\.context\);/g)?.length,
+  1,
+);
 assert.match(indexSource, /visuals\.js/);
 assert.match(indexSource, /image-export\.js/);
+assert.match(indexSource, /audio\.js/);
+assert.match(indexSource, /aurora\.js/);
+assert.match(indexSource, /id="aurora-canvas"/);
+assert.match(indexSource, /id="sound-toggle"/);
 assert.match(indexSource, /family=IBM\+Plex\+Mono/);
 assert.match(indexSource, /family=Source\+Serif\+4/);
 assert.doesNotMatch(indexSource, /vfs_fonts/);
@@ -98,6 +112,54 @@ assert.match(stylesSource, /--serif: "Source Serif 4"/);
 assert.match(stylesSource, /--technical: "IBM Plex Mono"/);
 assert.match(stylesSource, /@keyframes signal-transmit/);
 assert.match(stylesSource, /body\.debrief-mode/);
+assert.match(
+  stylesSource,
+  /\.aurora-background\s*\{[\s\S]*position: fixed;[\s\S]*pointer-events: none;/,
+);
 assert.match(stylesSource, /\.spectrum-symbol\.level-1,\s*\n\.spectrum-symbol\.level-6/);
+
+let phaseState = core.emptyState();
+assert.equal(audio.phaseForState(data, phaseState, core), "station-drift");
+for (let index = 0; index < 15; index += 1) {
+  phaseState = core.answerCurrent(data, phaseState, 4);
+}
+assert.equal(audio.phaseForState(data, phaseState, core), "system-pressure");
+for (let index = 15; index < 30; index += 1) {
+  phaseState = core.answerCurrent(data, phaseState, 4);
+}
+assert.equal(
+  audio.phaseForState(data, phaseState, core),
+  "the-silence-between",
+);
+for (let index = 30; index < 40; index += 1) {
+  phaseState = core.answerCurrent(data, phaseState, 4);
+}
+assert.equal(audio.phaseForState(data, phaseState, core), "under-ice-pulse");
+for (let index = 40; index < 55; index += 1) {
+  phaseState = core.answerCurrent(data, phaseState, 4);
+}
+assert.equal(audio.phaseForState(data, phaseState, core), "under-ice-pulse");
+phaseState = core.chooseReserve(data, phaseState, "bounded");
+assert.equal(audio.phaseForState(data, phaseState, core), "under-the-ice");
+for (let index = 55; index < 60; index += 1) {
+  phaseState = core.answerCurrent(data, phaseState, 4);
+}
+assert.equal(audio.phaseForState(data, phaseState, core), null);
+
+audio.PHASES.forEach((phase) => {
+  const assetPath = phase.src.replace("./", "");
+  assert.equal(fs.existsSync(assetPath), true, `${assetPath} is missing`);
+  assert.ok(fs.statSync(assetPath).size > 1000, `${assetPath} is empty`);
+});
+assert.match(audioSource, /const DEFAULT_VOLUME = 0\.07/);
+assert.match(audioSource, /audio\.loop = true/);
+assert.match(audioSource, /visibilitychange/);
+assert.match(auroraSource, /npm\/ogl@1\.0\.11\/dist\/ogl\.mjs/);
+assert.match(auroraSource, /uniform float uTime/);
+assert.match(auroraSource, /uniform vec2 uResolution/);
+assert.match(auroraSource, /maxPixelRatio: 1\.5/);
+assert.match(auroraSource, /prefers-reduced-motion: reduce/);
+assert.match(auroraSource, /destroyAurora/);
+assert.doesNotMatch(auroraSource, /mousemove|pointermove|click/);
 
 console.log("Aurora Station checks passed.");
