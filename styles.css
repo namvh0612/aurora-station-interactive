@@ -94,15 +94,15 @@ body.debrief-mode::before {
       transparent 84%
     );
   content: "";
-  opacity: 0.42;
+  opacity: 0.72;
 }
 
 .aurora-background.is-webgl::before {
-  opacity: 0.28;
+  opacity: 0.18;
 }
 
 .aurora-background.is-fallback::before {
-  opacity: 0.48;
+  opacity: 0.82;
 }
 
 #aurora-canvas {
@@ -111,7 +111,7 @@ body.debrief-mode::before {
   display: block;
   width: 100%;
   height: 100%;
-  opacity: 0.66;
+  opacity: 0.94;
   transition: opacity 320ms ease;
 }
 
@@ -129,10 +129,10 @@ body.debrief-mode::before {
   background:
     radial-gradient(
       ellipse at center,
-      rgba(2, 7, 13, 0.46) 0%,
-      rgba(2, 7, 13, 0.4) 42%,
-      rgba(2, 7, 13, 0.31) 78%,
-      rgba(2, 7, 13, 0.38) 100%
+      rgba(2, 7, 13, 0.16) 0%,
+      rgba(2, 7, 13, 0.18) 42%,
+      rgba(2, 7, 13, 0.12) 78%,
+      rgba(2, 7, 13, 0.2) 100%
     );
 }
 
@@ -140,9 +140,9 @@ body.debrief-mode::before {
   background:
     radial-gradient(
       ellipse at center,
-      transparent 27%,
-      rgba(0, 4, 8, 0.27) 69%,
-      rgba(0, 3, 7, 0.68) 100%
+      transparent 30%,
+      rgba(0, 4, 8, 0.14) 72%,
+      rgba(0, 3, 7, 0.46) 100%
     );
 }
 
