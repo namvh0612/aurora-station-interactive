@@ -6,10 +6,10 @@ import {
 } from "https://cdn.jsdelivr.net/npm/ogl@1.0.11/+esm";
 
 const auroraConfig = {
-  speed: 0.05,
-  intensity: 0.42,
-  brightness: 0.55,
-  distortion: 0.18,
+  speed: 0.085,
+  intensity: 0.72,
+  brightness: 0.92,
+  distortion: 0.2,
   maxPixelRatio: 1.5,
 };
 
@@ -120,7 +120,7 @@ const fragmentShader = `
     vec2 point = vUv * 2.0 - 1.0;
     point.x *= aspect;
 
-    float time = uTime * uSpeed * 4.0;
+    float time = uTime * uSpeed * 7.0;
     float broadNoise = layeredNoise(
       vec2(point.x * 0.55 + time * 0.13, point.y * 0.38 - time * 0.035)
     );
@@ -164,7 +164,7 @@ const fragmentShader = `
 
     vec3 colour = mix(uColourA, uColourB, broadNoise);
     colour = mix(colour, uColourC, smoothstep(0.5, 0.9, fineNoise) * 0.42);
-    float alpha = clamp(light * uIntensity * 0.95, 0.0, 0.55);
+    float alpha = clamp(light * uIntensity * 1.3, 0.015, 0.82);
 
     gl_FragColor = vec4(colour * uBrightness, alpha);
   }
@@ -275,7 +275,11 @@ function stopAnimation() {
 }
 
 function setAuroraIntensity(value) {
-  auroraConfig.intensity = Math.max(0, Math.min(0.65, Number(value) || 0));
+  auroraConfig.intensity = Math.max(
+    0,
+    Math.min(0.95, Number(value) || 0),
+  );
+
   if (program) {
     program.uniforms.uIntensity.value = auroraConfig.intensity;
     renderFrame();
@@ -283,7 +287,11 @@ function setAuroraIntensity(value) {
 }
 
 function setAuroraSpeed(value) {
-  auroraConfig.speed = Math.max(0.005, Math.min(0.12, Number(value) || 0.05));
+  auroraConfig.speed = Math.max(
+    0.005,
+    Math.min(0.2, Number(value) || 0.085),
+  );
+
   if (program) {
     program.uniforms.uSpeed.value = auroraConfig.speed;
   }
@@ -292,8 +300,9 @@ function setAuroraSpeed(value) {
 function setAuroraBrightness(value) {
   auroraConfig.brightness = Math.max(
     0.18,
-    Math.min(0.72, Number(value) || 0.55),
+    Math.min(1.15, Number(value) || 0.92),
   );
+
   if (program) {
     program.uniforms.uBrightness.value = auroraConfig.brightness;
     renderFrame();
