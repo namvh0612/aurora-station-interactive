@@ -1,0 +1,22 @@
+warning: in the working copy of '.nojekyll', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'audio.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'aurora.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'content/Aurora_Station_Content.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'core.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'pdf-export.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'styles.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests.mjs', LF will be replaced by CRLF the next time Git touches it
+ README.md                         |  132 [32m+[m[31m-[m
+ app.js                            | 1428 [32m++++++++++++++++[m[31m-----[m
+ audio.js                          |    2 [32m+[m[31m-[m
+ aurora.js                         |  358 [32m++++[m[31m--[m
+ content/Aurora_Station_Content.js |   10 [32m+[m[31m-[m
+ core.js                           |  703 [32m++++++++[m[31m--[m
+ index.html                        |   12 [31m-[m
+ pdf-export.js                     | 1726 [32m++++++++++++++++++++++[m[31m---[m
+ styles.css                        | 2553 [32m+++++++++++++++++++++++++++++++++++[m[31m--[m
+ tests.mjs                         |  339 [32m+++[m[31m--[m
+ 10 files changed, 6302 insertions(+), 961 deletions(-)

@@ -1,53 +1,106 @@
-import {
-  Mesh,
-  Program,
-  Renderer,
-  Triangle,
-} from "https://cdn.jsdelivr.net/npm/ogl@1.0.11/+esm";
+let Mesh;
+let Program;
+let Renderer;
+let Triangle;
+let oglLoadPromise = null;
+
+function loadOgl() {
+  if (Renderer && Program && Mesh && Triangle) {
+    return Promise.resolve();
+  }
+  if (!oglLoadPromise) {
+    const moduleRequest = import("https://cdn.jsdelivr.net/npm/ogl@1.0.11/+esm");
+    const timeout = new Promise((_, reject) => {
+      window.setTimeout(
+        () => reject(new Error("OGL did not load within the startup window.")),
+        2800,
+      );
+    });
+    oglLoadPromise = Promise.race([moduleRequest, timeout]).then((module) => {
+      ({ Mesh, Program, Renderer, Triangle } = module);
+    });
+  }
+  return oglLoadPromise;
+}
 
 const auroraConfig = {
-  speed: 0.085,
-  intensity: 0.72,
-  brightness: 0.92,
-  distortion: 0.2,
-  maxPixelRatio: 1.5,
+  speed: 0.036,
+  intensity: 0.92,
+  brightness: 1.02,
+  distortion: 0.24,
+  maxPixelRatio: 1.75,
 };
 
 const phasePresets = {
   "station-drift": {
-    speed: 0.052,
-    intensity: 0.42,
-    brightness: 0.58,
-    distortion: 0.14,
-    palette: ["#123747", "#347987", "#386c60"],
+    speed: 0.03,
+    intensity: 0.78,
+    brightness: 0.9,
+    distortion: 0.18,
+    palette: [
+      "#58e5ef",
+      "#31cbb7",
+      "#66d88a",
+      "#468ee8",
+      "#8b72e8",
+      "#d36da8",
+    ],
   },
   "system-pressure": {
-    speed: 0.064,
-    intensity: 0.46,
-    brightness: 0.58,
-    distortion: 0.17,
-    palette: ["#102c3d", "#2f6b77", "#486e5d"],
+    speed: 0.036,
+    intensity: 0.86,
+    brightness: 0.96,
+    distortion: 0.22,
+    palette: [
+      "#5be9ef",
+      "#2acbb6",
+      "#5bd783",
+      "#417fe0",
+      "#8768df",
+      "#c85f9f",
+    ],
   },
   "the-silence-between": {
-    speed: 0.035,
-    intensity: 0.36,
-    brightness: 0.52,
-    distortion: 0.11,
-    palette: ["#0d2938", "#315d68", "#36584f"],
+    speed: 0.028,
+    intensity: 0.74,
+    brightness: 0.88,
+    distortion: 0.17,
+    palette: [
+      "#65ddea",
+      "#36bda9",
+      "#64c982",
+      "#4c79cf",
+      "#7867cf",
+      "#b96398",
+    ],
   },
   "under-ice-pulse": {
-    speed: 0.058,
-    intensity: 0.52,
-    brightness: 0.64,
-    distortion: 0.2,
-    palette: ["#113244", "#397f89", "#4f8b6f"],
+    speed: 0.044,
+    intensity: 1.04,
+    brightness: 1.12,
+    distortion: 0.3,
+    palette: [
+      "#61f0f2",
+      "#2bd9c0",
+      "#75e58d",
+      "#4a98f1",
+      "#987bf0",
+      "#db6cae",
+    ],
   },
   "under-the-ice": {
-    speed: 0.042,
-    intensity: 0.4,
-    brightness: 0.56,
-    distortion: 0.13,
-    palette: ["#183746", "#3d727b", "#587a66"],
+    speed: 0.036,
+    intensity: 0.96,
+    brightness: 1.04,
+    distortion: 0.26,
+    palette: [
+      "#5ae9f0",
+      "#30cdb8",
+      "#68d98a",
+      "#4b8be5",
+      "#876fe6",
+      "#c566a3",
+    ],
   },
 };
 
@@ -74,6 +127,9 @@ const fragmentShader = `
   uniform vec3 uColourA;
   uniform vec3 uColourB;
   uniform vec3 uColourC;
+  uniform vec3 uColourD;
+  uniform vec3 uColourE;
+  uniform vec3 uColourF;
 
   float hash(vec2 point) {
     return fract(
@@ -110,9 +166,9 @@ const fragmentShader = `
     return value;
   }
 
-  float curtain(float x, float centre, float width) {
-    float distanceFromCurtain = abs(x - centre);
-    return exp(-distanceFromCurtain * distanceFromCurtain / width);
+  float ribbonBand(float y, float centre, float width) {
+    float distanceFromRibbon = y - centre;
+    return exp(-(distanceFromRibbon * distanceFromRibbon) / width);
   }
 
   void main() {
@@ -120,54 +176,93 @@ const fragmentShader = `
     vec2 point = vUv * 2.0 - 1.0;
     point.x *= aspect;
 
-    float time = uTime * uSpeed * 7.0;
+    float time = uTime * uSpeed * 3.25;
     float broadNoise = layeredNoise(
-      vec2(point.x * 0.55 + time * 0.13, point.y * 0.38 - time * 0.035)
+      vec2(point.x * 0.36 + time * 0.075, point.y * 0.22 - time * 0.018)
     );
     float fineNoise = layeredNoise(
-      vec2(point.x * 1.18 - time * 0.08, point.y * 0.7 + time * 0.025)
+      vec2(point.x * 1.28 - time * 0.055, point.y * 0.72 + time * 0.026)
     );
-    float deformation =
-      (broadNoise - 0.5) * uDistortion +
-      sin(point.y * 1.35 + time * 0.34) * 0.045;
-    float shiftedX = point.x + deformation;
+    float slowNoise = layeredNoise(
+      vec2(point.x * 0.24 + time * 0.024, point.y * 0.18 + time * 0.012)
+    );
 
-    float firstCurtain = curtain(
-      shiftedX,
-      -0.82 + sin(point.y * 0.9 + time * 0.18) * 0.12,
-      0.24
-    );
-    float secondCurtain = curtain(
-      shiftedX,
-      0.78 + sin(point.y * 1.05 - time * 0.15) * 0.15,
-      0.31
-    );
-    float distantCurtain = curtain(
-      shiftedX,
-      0.08 + sin(point.y * 0.72 + time * 0.11) * 0.23,
-      0.52
-    ) * 0.32;
+    float warp =
+      (broadNoise - 0.5) * uDistortion * 0.48 +
+      (fineNoise - 0.5) * uDistortion * 0.22;
+    float diagonalY = point.y + point.x * 0.055 + warp;
 
-    float heightMask = smoothstep(-0.92, 0.76, point.y);
-    float centreDistance = length(point * vec2(0.72, 0.92));
+    float centreA =
+      0.42 +
+      sin(point.x * 0.72 + time * 0.30) * 0.14 +
+      sin(point.x * 1.64 - time * 0.15 + 1.2) * 0.045;
+    float centreB =
+      0.08 +
+      sin(point.x * 0.58 - time * 0.23 + 2.1) * 0.17 +
+      sin(point.x * 1.35 + time * 0.12) * 0.05;
+    float centreC =
+      0.68 +
+      sin(point.x * 0.46 + time * 0.18 + 3.2) * 0.11 +
+      sin(point.x * 1.05 - time * 0.11) * 0.035;
+    float centreD =
+      -0.18 +
+      sin(point.x * 0.66 + time * 0.16 + 0.5) * 0.14;
+
+    float ribbonA = ribbonBand(diagonalY, centreA, 0.058);
+    float ribbonB = ribbonBand(diagonalY, centreB, 0.082);
+    float ribbonC = ribbonBand(diagonalY, centreC, 0.048);
+    float ribbonD = ribbonBand(diagonalY, centreD, 0.105);
+
+    float striation = mix(
+      0.7,
+      1.28,
+      layeredNoise(vec2(point.x * 7.8 - time * 0.13, time * 0.08))
+    );
+    float shimmer = mix(0.82, 1.18, fineNoise);
+    float pulse = 0.92 + sin(time * 0.46 + slowNoise * 6.2831) * 0.08;
+    float skyMask = smoothstep(-1.04, -0.7, point.y) *
+      (1.0 - smoothstep(0.9, 1.16, point.y));
+    float sideMask = 1.0 - smoothstep(aspect * 0.72, aspect * 1.02, abs(point.x));
+
+    ribbonA *= striation * shimmer;
+    ribbonB *= mix(0.76, 1.18, broadNoise);
+    ribbonC *= mix(0.72, 1.24, slowNoise) * striation;
+    ribbonD *= mix(0.7, 1.1, fineNoise);
+
+    vec3 colourA = mix(uColourA, uColourB, broadNoise);
+    vec3 colourB = mix(uColourC, uColourD, fineNoise);
+    vec3 colourC = mix(uColourE, uColourF, slowNoise);
+    vec3 colourD = mix(uColourD, uColourA, broadNoise * 0.7);
+
+    vec3 aurora =
+      colourA * ribbonA * 0.98 +
+      colourB * ribbonB * 0.86 +
+      colourC * ribbonC * 0.82 +
+      colourD * ribbonD * 0.55;
+
+    float energy =
+      ribbonA * 0.82 +
+      ribbonB * 0.66 +
+      ribbonC * 0.58 +
+      ribbonD * 0.34;
+
+    float centreDistance = length(point * vec2(0.62, 0.95));
     float readingMask = mix(
-      0.48,
+      0.76,
       1.0,
-      smoothstep(0.16, 1.22, centreDistance)
+      smoothstep(0.22, 1.16, centreDistance)
     );
-    float variation = mix(0.9, 1.06, fineNoise);
-    float light =
-      (firstCurtain + secondCurtain + distantCurtain) *
-      heightMask *
-      readingMask *
-      variation;
+    aurora *= skyMask * sideMask * readingMask * pulse * uIntensity;
 
-    vec3 colour = mix(uColourA, uColourB, broadNoise);
-    colour = mix(colour, uColourC, smoothstep(0.5, 0.9, fineNoise) * 0.42);
-    float alpha = clamp(light * uIntensity * 1.3, 0.015, 0.82);
+    vec3 night = vec3(0.006, 0.026, 0.043);
+    vec3 atmosphericBlue = vec3(0.014, 0.054, 0.082) *
+      smoothstep(-1.0, 0.78, point.y) * 0.28;
+    vec3 finalColour = night + atmosphericBlue + aurora * uBrightness;
+    finalColour += colourC * pow(max(energy * skyMask, 0.0), 2.35) * 0.11;
 
-    gl_FragColor = vec4(colour * uBrightness, alpha);
+    gl_FragColor = vec4(finalColour, 1.0);
   }
+
 `;
 
 let renderer = null;
@@ -179,10 +274,11 @@ let frameId = 0;
 let lastFrameTime = 0;
 let startTime = 0;
 let manualPaused = false;
-let phasePaused = false;
+let phasePaused = true;
 let hidden = false;
 let initialised = false;
 let destroyed = false;
+let surgeActive = false;
 
 const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 let reducedMotion = motionQuery.matches;
@@ -208,6 +304,7 @@ function canAnimate() {
   return (
     initialised &&
     !destroyed &&
+    surgeActive &&
     !manualPaused &&
     !phasePaused &&
     !hidden &&
@@ -230,7 +327,7 @@ function resize() {
     renderer.gl.canvas.width,
     renderer.gl.canvas.height,
   ];
-  renderFrame(reducedMotion ? 18 : undefined);
+  renderFrame(reducedMotion ? 26 : undefined);
 }
 
 function renderFrame(staticTime) {
@@ -250,7 +347,7 @@ function animate(now) {
   }
 
   frameId = window.requestAnimationFrame(animate);
-  if (now - lastFrameTime < 32) {
+  if (now - lastFrameTime < 28) {
     return;
   }
   lastFrameTime = now;
@@ -275,11 +372,7 @@ function stopAnimation() {
 }
 
 function setAuroraIntensity(value) {
-  auroraConfig.intensity = Math.max(
-    0,
-    Math.min(0.95, Number(value) || 0),
-  );
-
+  auroraConfig.intensity = Math.max(0, Math.min(1.25, Number(value) || 0));
   if (program) {
     program.uniforms.uIntensity.value = auroraConfig.intensity;
     renderFrame();
@@ -287,11 +380,7 @@ function setAuroraIntensity(value) {
 }
 
 function setAuroraSpeed(value) {
-  auroraConfig.speed = Math.max(
-    0.005,
-    Math.min(0.2, Number(value) || 0.085),
-  );
-
+  auroraConfig.speed = Math.max(0.008, Math.min(0.12, Number(value) || 0.036));
   if (program) {
     program.uniforms.uSpeed.value = auroraConfig.speed;
   }
@@ -299,10 +388,9 @@ function setAuroraSpeed(value) {
 
 function setAuroraBrightness(value) {
   auroraConfig.brightness = Math.max(
-    0.18,
-    Math.min(1.15, Number(value) || 0.92),
+    0.35,
+    Math.min(1.35, Number(value) || 1.02),
   );
-
   if (program) {
     program.uniforms.uBrightness.value = auroraConfig.brightness;
     renderFrame();
@@ -311,8 +399,8 @@ function setAuroraBrightness(value) {
 
 function setAuroraDistortion(value) {
   auroraConfig.distortion = Math.max(
-    0.04,
-    Math.min(0.28, Number(value) || 0.18),
+    0.06,
+    Math.min(0.4, Number(value) || 0.24),
   );
   if (program) {
     program.uniforms.uDistortion.value = auroraConfig.distortion;
@@ -321,12 +409,12 @@ function setAuroraDistortion(value) {
 }
 
 function setAuroraPalette(palette) {
-  if (!program || !Array.isArray(palette) || palette.length < 3) {
+  if (!program || !Array.isArray(palette) || palette.length < 6) {
     return;
   }
-  program.uniforms.uColourA.value = hexToRgb(palette[0]);
-  program.uniforms.uColourB.value = hexToRgb(palette[1]);
-  program.uniforms.uColourC.value = hexToRgb(palette[2]);
+  ["A", "B", "C", "D", "E", "F"].forEach((key, index) => {
+    program.uniforms[`uColour${key}`].value = hexToRgb(palette[index]);
+  });
   renderFrame();
 }
 
@@ -340,29 +428,42 @@ function resumeAurora() {
   ensureAnimation();
 }
 
-function applyPhase(phase) {
-  const preset = phasePresets[phase];
-  phasePaused = phase === "dawn";
+function applyPhase(phase, nextSurgeActive, nextStrength = 1) {
+  const preset = phasePresets[phase] || phasePresets["under-ice-pulse"];
+  surgeActive = Boolean(nextSurgeActive);
+  const strength = Math.max(0, Math.min(1, Number(nextStrength) || 0));
+  phasePaused = phase === "dawn" || !surgeActive;
   background?.setAttribute("data-phase", phase || "station-drift");
+  background?.setAttribute("data-active", String(surgeActive));
 
-  if (preset) {
-    setAuroraSpeed(preset.speed);
-    setAuroraIntensity(preset.intensity);
-    setAuroraBrightness(preset.brightness);
-    setAuroraDistortion(preset.distortion);
-    setAuroraPalette(preset.palette);
-  }
+  setAuroraSpeed(preset.speed);
+  setAuroraIntensity(preset.intensity * strength);
+  setAuroraBrightness(preset.brightness * (0.72 + strength * 0.28));
+  setAuroraDistortion(preset.distortion);
+  setAuroraPalette(preset.palette);
 
   if (phasePaused || reducedMotion) {
     stopAnimation();
-    renderFrame(reducedMotion ? 18 : undefined);
+    if (surgeActive) {
+      renderFrame(reducedMotion ? 26 : undefined);
+    }
   } else {
     ensureAnimation();
   }
 }
 
 function handlePhaseChange(event) {
-  applyPhase(event.detail?.phase || document.body.dataset.storyPhase);
+  applyPhase(
+    event.detail?.phase || document.body.dataset.storyPhase,
+    event.detail?.surgeActive ??
+      document.body.classList.contains("aurora-surge-active"),
+    event.detail?.strength ??
+      (document.body.classList.contains("aurora-rescue-faint")
+        ? 0.28
+        : document.body.classList.contains("aurora-rescue-contact")
+          ? 0.58
+          : 1),
+  );
 }
 
 function handleVisibility() {
@@ -378,7 +479,9 @@ function handleMotionPreference(event) {
   reducedMotion = event.matches;
   if (reducedMotion) {
     stopAnimation();
-    renderFrame(18);
+    if (surgeActive) {
+      renderFrame(26);
+    }
   } else {
     ensureAnimation();
   }
@@ -391,7 +494,7 @@ function handleContextLost(event) {
   background?.classList.remove("is-webgl");
 }
 
-function initAurora() {
+async function initAurora() {
   if (initialised || destroyed) {
     return;
   }
@@ -402,7 +505,10 @@ function initAurora() {
     return;
   }
 
+  background.classList.add("is-fallback");
+
   try {
+    await loadOgl();
     renderer = new Renderer({
       canvas,
       alpha: true,
@@ -413,12 +519,13 @@ function initAurora() {
         window.devicePixelRatio || 1,
         auroraConfig.maxPixelRatio,
       ),
-      powerPreference: "low-power",
+      powerPreference: "high-performance",
       webgl: 1,
     });
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
 
+    const defaultPalette = phasePresets["under-ice-pulse"].palette;
     program = new Program(gl, {
       vertex: vertexShader,
       fragment: fragmentShader,
@@ -433,9 +540,12 @@ function initAurora() {
         uBrightness: { value: auroraConfig.brightness },
         uDistortion: { value: auroraConfig.distortion },
         uResolution: { value: [1, 1] },
-        uColourA: { value: hexToRgb("#123747") },
-        uColourB: { value: hexToRgb("#347987") },
-        uColourC: { value: hexToRgb("#386c60") },
+        uColourA: { value: hexToRgb(defaultPalette[0]) },
+        uColourB: { value: hexToRgb(defaultPalette[1]) },
+        uColourC: { value: hexToRgb(defaultPalette[2]) },
+        uColourD: { value: hexToRgb(defaultPalette[3]) },
+        uColourE: { value: hexToRgb(defaultPalette[4]) },
+        uColourF: { value: hexToRgb(defaultPalette[5]) },
       },
     });
     if (!gl.getProgramParameter(program.program, gl.LINK_STATUS)) {
@@ -447,6 +557,7 @@ function initAurora() {
     });
 
     initialised = true;
+    background.classList.remove("is-fallback");
     background.classList.add("is-webgl");
     canvas.addEventListener("webglcontextlost", handleContextLost);
     window.addEventListener("resize", resize, { passive: true });
@@ -454,9 +565,18 @@ function initAurora() {
     document.addEventListener("visibilitychange", handleVisibility);
     motionQuery.addEventListener?.("change", handleMotionPreference);
     resize();
-    applyPhase(document.body.dataset.storyPhase || "station-drift");
+    applyPhase(
+      document.body.dataset.storyPhase || "station-drift",
+      document.body.classList.contains("aurora-surge-active"),
+      document.body.classList.contains("aurora-rescue-faint")
+        ? 0.28
+        : document.body.classList.contains("aurora-rescue-contact")
+          ? 0.58
+          : 1,
+    );
     window.dispatchEvent(new CustomEvent("aurora-ready"));
-  } catch {
+  } catch (error) {
+    console.error("[Aurora] WebGL initialisation failed:", error);
     background.classList.add("is-fallback");
     background.classList.remove("is-webgl");
     program?.remove?.();

@@ -81,7 +81,7 @@
 
   function phaseForState(data, state, core) {
     const step = core.currentStep(data, state);
-    if (step.type === "complete") {
+    if (step.type === "complete" || step.type === "ending") {
       return null;
     }
     if (step.type === "reserve") {

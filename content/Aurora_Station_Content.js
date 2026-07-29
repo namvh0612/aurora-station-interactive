@@ -1,7 +1,7 @@
 /* Edit this data file to update the story; no rebuild is required. */
 window.AURORA_STATION_DATA = {
   "schemaVersion": "1.0.0",
-  "contentVersion": "2.1.0-static-ebook",
+  "contentVersion": "2.2.0-result-and-story-export",
   "id": "aurora-station",
   "title": "Aurora Station",
   "subtitle": "The Final Watch",
@@ -10,7 +10,7 @@ window.AURORA_STATION_DATA = {
     "platform": "Static HTML/CSS/JavaScript",
     "dataLoading": "Classic script; works from file:// and GitHub Pages",
     "persistence": "Browser localStorage with in-memory fallback",
-    "export": "Direct story PDF and personal profile PNG downloads"
+    "export": "Direct personalised story PDF and multi-page profile PDF downloads"
   },
   "assessment": {
     "model": "Big Five OCEAN",
@@ -2848,7 +2848,7 @@ window.AURORA_STATION_DATA = {
                 "transition": "You keep a quiet current of practical conversation moving. Alertness is easier to hear, though speaking becomes another small demand."
               }
             },
-            "convergence": "At 04:46, a new voice breaks through the VHF static: 'Aurora, this is Ridge Survey. We are fourteen kilometres south. Confirm your condition.'"
+            "convergence": "At 04:46, a new voice breaks through the VHF static: 'Aurora, this is Ridge Survey. We are fourteen kilometres south. Confirm your condition.' Above the ridge, the last green-violet bands begin to thin as the solar disturbance falls away."
           },
           {
             "id": "q59",
@@ -2890,7 +2890,7 @@ window.AURORA_STATION_DATA = {
                 "transition": "You return quickly to radio, warmth and entry preparation. The routine stays intact, while the emotional release waits."
               }
             },
-            "convergence": "Ridge receives Aurora's condition, the electrical hazard and the safe entry point. The rescue team confirms that it will not energise the damaged common bus."
+            "convergence": "Ridge receives Aurora's condition, the electrical hazard and the safe entry point. The rescue team confirms that it will not energise the damaged common bus. By then, the auroral colour has disappeared, leaving Aurora beneath the ordinary polar dark."
           },
           {
             "id": "q60",
@@ -2986,6 +2986,6 @@ window.AURORA_STATION_DATA = {
   },
   "ending": {
     "rescue": "Ridge technicians isolate the damaged common bus and connect their portable generator only to Aurora's independent service inlet. Medical heat and communications return without re-energising the fault.\n\nAs ordinary electrical noise spreads through the station, the signal beneath the ice disappears.",
-    "shared": "No camera or sensor ever confirms the figure Ilan reported in the whiteout.\n\nIn the tracked vehicle, Mira says that the first Sector C warning should have been escalated earlier. Ilan holds the data drive in both hands and says he will return when Aurora is safe.\n\nThrough the ice-covered window, the outpost becomes a dark shape beneath the aurora. Warmth begins to pull you towards sleep, but the night's evidence refuses to settle into a single explanation.\n\nThe pulse, the drifting instruments and the figure in the storm may have shared a cause—or none at all. Ice movement, damaged machinery, measurement interference and exhaustion remain plausible in different combinations. The record closes before those possibilities do.\n\nWhen the next watch returns to Aurora, what, if anything, will it hear beneath the ordinary noise?"
+    "shared": "No camera or sensor ever confirms the figure Ilan reported in the whiteout.\n\nIn the tracked vehicle, Mira says that the first Sector C warning should have been escalated earlier. Ilan holds the data drive in both hands and says he will return when Aurora is safe.\n\nThrough the ice-covered window, the outpost becomes a dark shape beneath a colourless polar sky. Warmth begins to pull you towards sleep, but the night's evidence refuses to settle into a single explanation.\n\nThe pulse, the drifting instruments and the figure in the storm may have shared a cause—or none at all. Ice movement, damaged machinery, measurement interference and exhaustion remain plausible in different combinations. The record closes before those possibilities do.\n\nWhen the next watch returns to Aurora, what, if anything, will it hear beneath the ordinary noise?"
   }
 };

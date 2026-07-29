@@ -28,9 +28,19 @@
 
   function emptyState() {
     return {
+      playerName: "",
+      onboardingComplete: false,
       answers: [],
       reserveChoice: null,
+      endingAcknowledged: false,
     };
+  }
+
+  function normalisePlayerName(value) {
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 60);
   }
 
   function sanitiseState(data, candidate) {
@@ -62,7 +72,39 @@
       answers.length = 55;
     }
 
-    return { answers, reserveChoice };
+    const playerName = normalisePlayerName(candidate && candidate.playerName);
+    const onboardingComplete = Boolean(
+      candidate && candidate.onboardingComplete && playerName,
+    );
+    const endingAcknowledged = Boolean(
+      candidate &&
+        candidate.endingAcknowledged &&
+        answers.length === itemCount &&
+        reserveChoice,
+    );
+
+    return {
+      playerName,
+      onboardingComplete,
+      answers,
+      reserveChoice,
+      endingAcknowledged,
+    };
+  }
+
+  function setPlayerIdentity(data, state, name) {
+    const safeState = sanitiseState(data, state);
+    const playerName = normalisePlayerName(name);
+
+    if (!playerName) {
+      return safeState;
+    }
+
+    return {
+      ...safeState,
+      playerName,
+      onboardingComplete: true,
+    };
   }
 
   function loadState(data, storage) {
@@ -109,7 +151,9 @@
     const items = flattenItems(data);
 
     if (safeState.answers.length === items.length) {
-      return { type: "complete" };
+      return safeState.endingAcknowledged
+        ? { type: "complete" }
+        : { type: "ending" };
     }
 
     if (safeState.answers.length === 55 && !safeState.reserveChoice) {
@@ -138,8 +182,11 @@
     }
 
     return {
+      playerName: safeState.playerName,
+      onboardingComplete: safeState.onboardingComplete,
       answers: safeState.answers.concat(raw),
       reserveChoice: safeState.reserveChoice,
+      endingAcknowledged: false,
     };
   }
 
@@ -155,28 +202,56 @@
     }
 
     return {
+      playerName: safeState.playerName,
+      onboardingComplete: safeState.onboardingComplete,
       answers: safeState.answers.slice(),
       reserveChoice: optionId,
+      endingAcknowledged: false,
+    };
+  }
+
+  function acknowledgeEnding(data, state) {
+    const safeState = sanitiseState(data, state);
+    const step = currentStep(data, safeState);
+    if (step.type !== "ending") {
+      return safeState;
+    }
+    return {
+      ...safeState,
+      endingAcknowledged: true,
     };
   }
 
   function undoLast(data, state) {
     const safeState = sanitiseState(data, state);
 
+    if (safeState.endingAcknowledged) {
+      return {
+        ...safeState,
+        endingAcknowledged: false,
+      };
+    }
+
     if (
       safeState.answers.length === 55 &&
       safeState.reserveChoice !== null
     ) {
       return {
+        playerName: safeState.playerName,
+        onboardingComplete: safeState.onboardingComplete,
         answers: safeState.answers.slice(),
         reserveChoice: null,
+        endingAcknowledged: false,
       };
     }
 
     if (safeState.answers.length > 0) {
       return {
+        playerName: safeState.playerName,
+        onboardingComplete: safeState.onboardingComplete,
         answers: safeState.answers.slice(0, -1),
         reserveChoice: safeState.reserveChoice,
+        endingAcknowledged: false,
       };
     }
 
@@ -256,42 +331,131 @@
     };
   }
 
-  function describeElement(result, definition) {
+  const PROFILE_STAGES = [
+    { id: "starting", label: "Starting conditions", from: 1, to: 20 },
+    { id: "escalation", label: "Escalation", from: 21, to: 40 },
+    { id: "pressure", label: "Late pressure", from: 41, to: 60 },
+  ];
+
+  const SPECTRUM_LABELS = {
+    WO: { lower: "Focused evidence", higher: "Exploration" },
+    FI: { lower: "Quiet influence", higher: "Visible direction" },
+    EA: { lower: "Firm boundaries", higher: "Human accommodation" },
+    ME: { lower: "Adaptive structure", higher: "Systematic structure" },
+    WA: { lower: "Threat sensitivity", higher: "Emotional steadiness" },
+  };
+
+  const ROLE_DEFINITIONS = {
+    WO: {
+      title: "The Pathfinder",
+      function:
+        "Keep unexplored possibilities visible before the crew closes on one explanation.",
+      bring:
+        "Alternative explanations, pattern recognition and room for a route the crew has not yet considered.",
+      actionTitle: "OPEN ANOTHER ROUTE",
+      action:
+        "Name one plausible option, signal or explanation the crew has not yet considered.",
+    },
+    FI: {
+      title: "The Catalyst",
+      function:
+        "Turn uncertainty into a visible decision and help the crew create forward momentum.",
+      bring:
+        "Visible direction, shared energy and the momentum required to move from discussion into action.",
+      actionTitle: "CALL THE DECISION",
+      action:
+        "State the decision that is being delayed and identify the next concrete move.",
+    },
+    EA: {
+      title: "The Steward",
+      function:
+        "Keep people, trust and coordination visible while the crew makes difficult decisions.",
+      bring:
+        "Awareness of human consequences, unspoken concerns and the conditions needed for workable cooperation.",
+      actionTitle: "CREW IMPACT SCAN",
+      action:
+        "Name one person, stakeholder or human consequence the current plan may have missed.",
+    },
+    ME: {
+      title: "The Architect",
+      function:
+        "Turn intent into clear boundaries, sequence and reliable follow-through.",
+      bring:
+        "Clear criteria, operational sequence and the discipline required to carry a decision through safely.",
+      actionTitle: "SET THE BOUNDARY",
+      action:
+        "Define the condition, standard or limit that must hold before the crew proceeds.",
+    },
+    WA: {
+      title: "The Sentinel",
+      function:
+        "Track unresolved risk, protect stability and clarify what evidence is still needed.",
+      bring:
+        "Calm observation, risk awareness and a clear view of what remains unresolved before the crew commits.",
+      actionTitle: "RISK CHECK",
+      action:
+        "Identify one unresolved risk and the evidence that would show it is sufficiently controlled.",
+    },
+  };
+
+  const MISSION_WEIGHTS = {
+    safety: { WO: 0.25, FI: 0.4, EA: 1, ME: 0.7, WA: 0.9 },
+    discovery: { WO: 1, FI: 0.45, EA: 0.3, ME: 0.55, WA: 0.75 },
+    bounded: { WO: 0.55, FI: 0.45, EA: 0.65, ME: 1, WA: 0.85 },
+  };
+
+  function correctedScore(item, raw) {
+    return item.assessment.key === "R" ? 7 - raw : raw;
+  }
+
+  function scoreBand(score) {
+    if (score === null) {
+      return { id: "unavailable", label: "Not available", side: "balanced" };
+    }
+    if (score <= 2.49) {
+      return { id: "clear-lower", label: "Clear lower-pole lean", side: "lower" };
+    }
+    if (score <= 3.24) {
+      return {
+        id: "moderate-lower",
+        label: "Moderate lower-pole lean",
+        side: "lower",
+      };
+    }
+    if (score <= 3.75) {
+      return {
+        id: "balanced",
+        label: "Balanced or context-sensitive",
+        side: "balanced",
+      };
+    }
+    if (score <= 4.5) {
+      return {
+        id: "moderate-higher",
+        label: "Moderate higher-pole lean",
+        side: "higher",
+      };
+    }
+    return { id: "clear-higher", label: "Clear higher-pole lean", side: "higher" };
+  }
+
+  function describeElement(result, definition, band) {
     const interpretation = definition.interpretation;
     if (!interpretation || result.score === null) {
       return "";
     }
 
-    if (result.score >= 4.5) {
-      return `A strong pull toward a style that ${interpretation.higher}.`;
+    if (band.side === "balanced") {
+      return (
+        `Your responses moved between ${SPECTRUM_LABELS[result.code].lower.toLowerCase()} ` +
+        `and ${SPECTRUM_LABELS[result.code].higher.toLowerCase()}, suggesting that context ` +
+        "influenced which end of this range became more useful."
+      );
     }
 
-    if (result.score >= 3.5) {
-      return `A measured lean toward a style that ${interpretation.higher}, while the counter-style still appears when useful.`;
-    }
-
-    if (result.score >= 2.5) {
-      return `A measured lean toward a style that ${interpretation.lower}, while the opposite style remains available.`;
-    }
-
-    return `A strong pull toward a style that ${interpretation.lower}.`;
-  }
-
-  function expressionBand(score) {
-    if (score >= 4.5) {
-      return "Strongly expressed";
-    }
-    if (score >= 3.5) {
-      return "Readily available";
-    }
-    if (score >= 2.5) {
-      return "Context-dependent";
-    }
-    return "Used selectively";
-  }
-
-  function elementSide(result) {
-    return result.score >= 3.5 ? "higher" : "lower";
+    const direction = band.side === "higher" ? interpretation.higher : interpretation.lower;
+    const strength = band.id.startsWith("clear") ? "a clear" : "a moderate";
+    return `Your responses showed ${strength} lean toward a style that ${direction}.`;
   }
 
   function describeFacetPattern(result, guide) {
@@ -303,114 +467,427 @@
     const [first, second] = available;
     const difference = Math.abs(first.score - second.score);
     const firstFocus = guide.facetFocus[first.name] || first.name.toLowerCase();
-    const secondFocus =
-      guide.facetFocus[second.name] || second.name.toLowerCase();
+    const secondFocus = guide.facetFocus[second.name] || second.name.toLowerCase();
 
-    if (difference < 0.6) {
+    if (difference < 0.4) {
       return (
-        `The two facets moved together: ${firstFocus} and ${secondFocus} ` +
+        `The facets were broadly aligned: ${firstFocus} and ${secondFocus} ` +
         "appeared at a similar level across the station scenarios."
       );
     }
 
     const leading = first.score > second.score ? first : second;
     const quieter = leading === first ? second : first;
-    const leadingFocus =
-      guide.facetFocus[leading.name] || leading.name.toLowerCase();
+    const leadingFocus = guide.facetFocus[leading.name] || leading.name.toLowerCase();
+    const emphasis = difference >= 0.8 ? "a pronounced" : "a noticeable";
 
     return (
-      `${leading.name} came forward more consistently than ${quieter.name}. ` +
-      `In this journey, ${leadingFocus} was more readily available, while ` +
-      `${quieter.name.toLowerCase()} depended more on context.`
+      `There was ${emphasis} difference between the facets. ${leading.name} came ` +
+      `forward more consistently than ${quieter.name}; ${leadingFocus} was more ` +
+      "readily available in this journey."
     );
   }
 
-  function buildProfileNarrative(data, ranked) {
-    const primary = ranked[0];
-    const secondary = ranked[1];
-    const quieter = ranked[ranked.length - 1];
-    if (!primary || !secondary || !quieter) {
-      return null;
-    }
+  function stageForItem(item) {
+    return PROFILE_STAGES.find(
+      (stage) => item.number >= stage.from && item.number <= stage.to,
+    );
+  }
 
-    const primaryDefinition = data.assessment.elements[primary.code];
-    const secondaryDefinition = data.assessment.elements[secondary.code];
-    const quieterDefinition = data.assessment.elements[quieter.code];
-    const primaryGuide = primaryDefinition.interpretation.guide;
-    const secondaryGuide = secondaryDefinition.interpretation.guide;
-    const closePair = Math.abs(primary.score - secondary.score) < 0.35;
-    const titleWords = {
-      WO: "Explorer",
-      FI: "Catalyst",
-      EA: "Connector",
-      ME: "Architect",
-      WA: "Anchor",
-    };
+  function scoreContextMovement(data, state) {
+    const safeState = sanitiseState(data, state);
+    const items = flattenItems(data);
+    const buckets = {};
+
+    PROFILE_STAGES.forEach((stage) => {
+      buckets[stage.id] = {};
+      Object.keys(data.assessment.elements).forEach((code) => {
+        buckets[stage.id][code] = [];
+      });
+    });
+
+    safeState.answers.forEach((raw, index) => {
+      const item = items[index];
+      const stage = item && stageForItem(item);
+      if (!item || !stage) {
+        return;
+      }
+      buckets[stage.id][item.assessment.elementCode].push(
+        correctedScore(item, raw),
+      );
+    });
+
+    const elements = Object.keys(data.assessment.elements).map((code) => {
+      const stages = PROFILE_STAGES.map((stage) => ({
+        id: stage.id,
+        label: stage.label,
+        score: mean(buckets[stage.id][code]),
+      }));
+      const start = stages[0].score;
+      const finish = stages[2].score;
+      const delta = start === null || finish === null ? null : finish - start;
+      let label = "Broadly stable";
+      if (delta !== null && Math.abs(delta) >= 0.75) {
+        label = delta > 0 ? "Pronounced increase" : "Pronounced decrease";
+      } else if (delta !== null && Math.abs(delta) >= 0.35) {
+        label = delta > 0 ? "Noticeable increase" : "Noticeable decrease";
+      }
+      return { code, stages, delta, label };
+    });
+
+    const moved = elements
+      .filter((item) => item.delta !== null && Math.abs(item.delta) >= 0.35)
+      .slice()
+      .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta));
+
+    const highlights = moved.slice(0, 3).map((item) => {
+      const element = data.assessment.elements[item.code].element;
+      const direction = item.delta > 0 ? "became more available" : "became less available";
+      return `${element} ${direction} from the opening conditions to late pressure (${item.delta > 0 ? "+" : ""}${item.delta.toFixed(1)}).`;
+    });
 
     return {
-      title: `The ${titleWords[primary.code]}–${titleWords[secondary.code]}`,
-      strapline: closePair
-        ? `${primary.element} and ${secondary.element} appeared as a closely matched pair across this journey.`
-        : `${primary.element}'s ${primaryDefinition.interpretation.lens.toLowerCase()} appeared most readily, supported by ${secondary.element}.`,
-      summary:
-        `Across Aurora Station, your choices most often combined ${primaryDefinition.interpretation.lens.toLowerCase()} ` +
-        `with ${secondaryDefinition.interpretation.lens.toLowerCase()}. ` +
-        `${quieter.element} is not absent or weak; its ${quieterDefinition.interpretation.lens.toLowerCase()} was simply more dependent on context. ` +
-        "This is a pattern in these scenarios, not a fixed personality type.",
-      rhythm:
-        `Your likely decision rhythm is to ${primaryGuide.action}, then ` +
-        `${secondaryGuide.action}. Under different stakes or with more time, that order may change.`,
-      strengths: [
-        `${primary.element}: ${primaryGuide[`${elementSide(primary)}Use`]}`,
-        `${secondary.element}: ${secondaryGuide[`${elementSide(secondary)}Use`]}`,
-        "Together, these currents give you more than one route into an uncertain decision.",
-      ],
-      pressure:
-        `When time contracts, you may lean harder on ${primary.element.toLowerCase()} and move quickly into ${primaryGuide.action}. ` +
-        `That can be effective, but it can also reduce the chance that ${quieter.element.toLowerCase()}-style ${quieterDefinition.interpretation.lens.toLowerCase()} enters the decision early enough.`,
-      watchOut:
-        `The useful counterbalance is to pause briefly and ask what ${quieterDefinition.interpretation.lens.toLowerCase()} would add before committing. ` +
-        `This is not about suppressing ${primary.element}; it is about choosing when it should lead and when another current should take the first turn.`,
-      collaboration:
-        `Others are likely to experience you most clearly through ${primaryDefinition.interpretation.lens.toLowerCase()} and ${secondaryDefinition.interpretation.lens.toLowerCase()}. ` +
-        `Collaboration improves when someone is explicitly invited to contribute the quieter ${quieterDefinition.interpretation.lens.toLowerCase()} perspective before the group closes.`,
+      stages: PROFILE_STAGES.map((stage) => ({ ...stage })),
+      elements,
+      highlights,
+      summary: highlights.length
+        ? highlights.join(" ")
+        : "Your five currents remained broadly stable across the three stages of the journey.",
+      note:
+        "These stage comparisons are exploratory context signals within Aurora Station, not separate validated personality scales.",
     };
   }
 
-  function analyseProfile(data, state) {
-    const assessment = scoreAssessment(data, state);
-    const ranked = assessment.elements
-      .filter((result) => result.score !== null)
-      .slice()
-      .sort((left, right) => right.score - left.score);
-    const narrative = buildProfileNarrative(data, ranked);
-    const overview = narrative
-      ? narrative.summary
-      : "Complete the journey to reveal your response pattern.";
+  function responseQuality(data, state) {
+    const values = sanitiseState(data, state).answers;
+    if (!values.length) {
+      return {
+        status: "Not available",
+        level: "unavailable",
+        summary: "Complete the journey to review response variation.",
+        metrics: {},
+      };
+    }
+
+    const average = mean(values);
+    const variance = mean(values.map((value) => (value - average) ** 2));
+    const deviation = Math.sqrt(variance || 0);
+    const counts = new Map();
+    let longestRun = 1;
+    let currentRun = 1;
+
+    values.forEach((value, index) => {
+      counts.set(value, (counts.get(value) || 0) + 1);
+      if (index > 0) {
+        if (value === values[index - 1]) {
+          currentRun += 1;
+          longestRun = Math.max(longestRun, currentRun);
+        } else {
+          currentRun = 1;
+        }
+      }
+    });
+
+    const dominantCount = Math.max(...counts.values());
+    const dominantRate = dominantCount / values.length;
+    const flags = [];
+    if (dominantRate >= 0.75) {
+      flags.push("one response level was used for most items");
+    }
+    if (deviation < 0.65) {
+      flags.push("responses showed very little variation");
+    }
+    if (longestRun >= 18) {
+      flags.push("a long sequence used the same response");
+    }
+
+    if (flags.length) {
+      return {
+        status: "Interpret with care",
+        level: "caution",
+        summary:
+          `The response pattern may provide less differentiation because ${flags.join(" and ")}. ` +
+          "Review the profile as a reflection prompt rather than a precise distinction between currents.",
+        metrics: { deviation, dominantRate, longestRun },
+      };
+    }
+
+    return {
+      status: "Suitable for reflection",
+      level: "clear",
+      summary:
+        "Your responses used the six-point range with enough variation to support a differentiated reflective profile. This remains a self-report, not a diagnostic assessment.",
+      metrics: { deviation, dominantRate, longestRun },
+    };
+  }
+
+  function missionWeightsForState(state) {
+    return MISSION_WEIGHTS[state.reserveChoice] || {
+      WO: 0.5,
+      FI: 0.5,
+      EA: 0.5,
+      ME: 0.5,
+      WA: 0.5,
+    };
+  }
+
+  function normaliseRoleInput(value) {
+    if (!Number.isFinite(value)) {
+      return 0.5;
+    }
+    return Math.max(0, Math.min(1, (value - 1) / 5));
+  }
+
+  function roleMetric(result) {
+    const overall = Number(result.score);
+    const latePressure = Number(result.context?.stages?.[2]?.score);
+    const facetScores = result.facets
+      .map((facet) => Number(facet.score))
+      .filter(Number.isFinite);
+    const facetFloor = facetScores.length ? Math.min(...facetScores) : overall;
+    const profileSuitability =
+      normaliseRoleInput(overall) * 0.6 +
+      normaliseRoleInput(latePressure) * 0.25 +
+      normaliseRoleInput(facetFloor) * 0.15;
+
+    return {
+      overall,
+      latePressure,
+      facetFloor,
+      profileSuitability,
+    };
+  }
+
+  function roleTieWeight(state, code) {
+    return Number(missionWeightsForState(state)[code] ?? 0.5);
+  }
+
+  function recommendRole(data, state, elements, options) {
+    const settings = options || {};
+    const teamWeights = settings.teamComposition || null;
+    const missionWeights = settings.missionRequirement || null;
+    const groupMode = Boolean(teamWeights || missionWeights || settings.mode === "group");
+    const allowStretchRoles = Boolean(settings.allowStretchRoles);
+    const availableElements = elements.filter(
+      (result) => Number.isFinite(result.score),
+    );
+
+    const candidates = availableElements.map((result) => {
+      const metric = roleMetric(result);
+      const teamNeed = Number(teamWeights?.[result.code] ?? 0.5);
+      const missionNeed = Number(missionWeights?.[result.code] ?? 0.5);
+      const stretch = metric.overall < 3.25;
+      const finalScore = groupMode
+        ? metric.profileSuitability * 0.45 +
+          teamNeed * 0.3 +
+          missionNeed * 0.25
+        : metric.profileSuitability;
+
+      return {
+        code: result.code,
+        finalScore,
+        profileSuitability: metric.profileSuitability,
+        overall: metric.overall,
+        latePressure: metric.latePressure,
+        facetFloor: metric.facetFloor,
+        teamNeed,
+        missionNeed,
+        stretch,
+      };
+    });
+
+    let selectable = candidates.filter(
+      (candidate) => !candidate.stretch || (groupMode && allowStretchRoles),
+    );
+    if (!selectable.length) {
+      selectable = candidates.slice();
+    }
+
+    selectable.sort((left, right) => {
+      const finalDifference = right.finalScore - left.finalScore;
+      if (Math.abs(finalDifference) > 0.000001) {
+        return finalDifference;
+      }
+
+      if (groupMode) {
+        const teamDifference = right.teamNeed - left.teamNeed;
+        if (Math.abs(teamDifference) > 0.000001) {
+          return teamDifference;
+        }
+        const missionDifference = right.missionNeed - left.missionNeed;
+        if (Math.abs(missionDifference) > 0.000001) {
+          return missionDifference;
+        }
+      }
+
+      const overallDifference = right.overall - left.overall;
+      if (Math.abs(overallDifference) > 0.000001) {
+        return overallDifference;
+      }
+      const pressureDifference = right.latePressure - left.latePressure;
+      if (Math.abs(pressureDifference) > 0.000001) {
+        return pressureDifference;
+      }
+      const facetDifference = right.facetFloor - left.facetFloor;
+      if (Math.abs(facetDifference) > 0.000001) {
+        return facetDifference;
+      }
+
+      // A final narrative decision is used only when all profile metrics tie.
+      return roleTieWeight(state, right.code) - roleTieWeight(state, left.code);
+    });
+
+    const selected = selectable[0];
+    const runnerUp = selectable[1] || null;
+    const scoreGap = runnerUp
+      ? selected.finalScore - runnerUp.finalScore
+      : 1;
+    const result = elements.find((element) => element.code === selected.code);
+    const definition = ROLE_DEFINITIONS[selected.code];
+
+    let fit = "Clear fit";
+    if (scoreGap < 0.04) {
+      fit = groupMode ? "Mission-based fit" : "Balanced fit";
+    } else if (scoreGap < 0.08) {
+      fit = "Close fit";
+    }
+
+    const closeFits = selectable
+      .slice(1)
+      .filter((candidate) => selected.finalScore - candidate.finalScore < 0.08)
+      .map((candidate) => ROLE_DEFINITIONS[candidate.code].title);
+
+    let basis;
+    if (groupMode) {
+      basis =
+        "This recommendation combines profile suitability, the contribution currently needed by the team and the requirements of this mission.";
+    } else if (fit === "Balanced fit") {
+      basis =
+        "This recommendation was selected from closely matched contributions using overall availability, late-pressure availability and facet balance. Your final operational choice was used only as a last tie-break.";
+    } else {
+      basis =
+        "This solo recommendation is led by your profile: overall availability, late-pressure availability and the lower of the two facet scores.";
+    }
+
+    const closeFitText =
+      closeFits.length === 0
+        ? ""
+        : closeFits.length === 1
+          ? closeFits[0]
+          : `${closeFits.slice(0, -1).join(", ")}, and ${closeFits.at(-1)}`;
+    const why =
+      `${result.element} produced the strongest eligible profile suitability ` +
+      `(${selected.profileSuitability.toFixed(2)}) after combining overall availability, ` +
+      "late-pressure availability and facet balance." +
+      (closeFitText ? ` ${closeFitText} remained close alternatives.` : "");
+
+    return {
+      ...definition,
+      code: selected.code,
+      element: result.element,
+      trait: result.trait,
+      colour: result.colour,
+      fit,
+      profilePattern:
+        fit === "Balanced fit" || fit === "Mission-based fit"
+          ? "balanced"
+          : fit === "Close fit"
+            ? "close"
+            : "focused",
+      eligibleRoleCount: selectable.length,
+      closeFits,
+      whatYouBring: definition.bring,
+      watchFor: result.overextension,
+      basis,
+      why,
+      scoreGap,
+      definition:
+        "Your Aurora Role is the contribution your Five-Element profile is best placed to make in this mission. It is not a fixed personality type.",
+      candidates,
+      mode: groupMode ? "group" : "solo",
+    };
+  }
+
+  function finalChoiceSummary(data, state) {
+    const reserve = selectedReserve(data, state);
+    if (!reserve) {
+      return null;
+    }
+    return {
+      id: reserve.id,
+      title: reserve.title,
+      text: reserve.text,
+      note:
+        "This narrative decision is not included in any Five-Element score. In a solo journey, it is used only as a final tie-break when all profile metrics are exactly matched.",
+    };
+  }
+
+  function analyseProfile(data, state, options) {
+    const safeState = sanitiseState(data, state);
+    const assessment = scoreAssessment(data, safeState);
+    const context = scoreContextMovement(data, safeState);
+    const contextByCode = Object.fromEntries(
+      context.elements.map((item) => [item.code, item]),
+    );
+
+    const elements = assessment.elements.map((result) => {
+      const definition = data.assessment.elements[result.code];
+      const guide = definition.interpretation?.guide;
+      const band = scoreBand(result.score);
+      const side = band.side === "balanced" ? (result.score >= 3.5 ? "higher" : "lower") : band.side;
+      const spectrum = SPECTRUM_LABELS[result.code];
+      const potentialAdvantage = band.side === "balanced"
+        ? guide?.adaptiveRange || ""
+        : guide?.[`${side}Use`] || "";
+      const overextension = band.side === "balanced"
+        ? "Access to both ends of the range can become hesitation when the situation needs a clear and explicit choice."
+        : guide?.[`${side}TradeOff`] || "";
+      const reflection = band.side === "balanced"
+        ? `Which end of the ${spectrum.lower.toLowerCase()}–${spectrum.higher.toLowerCase()} range does the current situation require you to make more explicit?`
+        : guide?.[`${side}Balance`] || "";
+
+      return {
+        ...result,
+        lens: definition.interpretation?.lens || result.trait,
+        description: describeElement(result, definition, band),
+        expression: band.label,
+        band,
+        spectrum,
+        position: result.score === null ? 0.5 : Math.max(0, Math.min(1, (result.score - 1) / 5)),
+        facetDefinitions: definition.interpretation?.facets || {},
+        facetPattern: describeFacetPattern(result, guide),
+        potentialAdvantage,
+        overextension,
+        reflection,
+        practicalReading: potentialAdvantage,
+        tradeOff: overextension,
+        balancePrompt: reflection,
+        plainMeaning: guide?.plainMeaning || "",
+        notSameAs: guide?.notSameAs || "",
+        adaptiveRange: guide?.adaptiveRange || "",
+        context: contextByCode[result.code],
+      };
+    });
+
+    const role = recommendRole(data, safeState, elements, options);
+    const quality = responseQuality(data, safeState);
+    const overview =
+      "Like an aurora, this profile is a spectrum of several colours rather than a single type. " +
+      "The five currents below show how you responded across Aurora Station; the recommended role translates that pattern into one practical contribution for this mission.";
 
     return {
       ...assessment,
+      playerName: safeState.playerName,
       overview,
-      elements: assessment.elements.map((result) => {
-        const definition = data.assessment.elements[result.code];
-        const guide = definition.interpretation?.guide;
-        const side = elementSide(result);
-        return {
-          ...result,
-          lens: definition.interpretation?.lens || result.trait,
-          description: describeElement(result, definition),
-          expression: expressionBand(result.score),
-          facetDefinitions: definition.interpretation?.facets || {},
-          facetPattern: describeFacetPattern(result, guide),
-          practicalReading: guide?.[`${side}Use`] || "",
-          tradeOff: guide?.[`${side}TradeOff`] || "",
-          balancePrompt: guide?.[`${side}Balance`] || "",
-          plainMeaning: guide?.plainMeaning || "",
-          notSameAs: guide?.notSameAs || "",
-          adaptiveRange: guide?.adaptiveRange || "",
-        };
-      }),
-      narrative,
+      elements,
+      role,
+      context,
+      quality,
+      finalChoice: finalChoiceSummary(data, safeState),
+      roleModel:
+        role.mode === "group"
+          ? "Recommended Role = 45% profile suitability + 30% team composition need + 25% mission requirement."
+          : "Solo Role = 60% overall availability + 25% late-pressure availability + 15% facet floor.",
     };
   }
 
@@ -473,6 +950,7 @@
 
   const api = {
     STORAGE_KEY,
+    acknowledgeEnding,
     answerCurrent,
     branchForRaw,
     buildPlainStory,
@@ -482,11 +960,14 @@
     emptyState,
     flattenItems,
     loadState,
+    normalisePlayerName,
     analyseProfile,
+    recommendRole,
     sanitiseState,
     saveState,
     scoreAssessment,
     selectedReserve,
+    setPlayerIdentity,
     splitParagraphs,
     undoLast,
   };
