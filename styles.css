@@ -225,7 +225,7 @@ body.aurora-rescue-faint:not(.debrief-mode) .aurora-background {
   display: block;
   width: 100%;
   height: min(62vh, 52rem);
-  opacity: 1;
+  opacity: 0.86;
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,

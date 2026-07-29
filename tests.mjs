@@ -17,6 +17,26 @@ const core = globalThis.AuroraCore;
 const pdf = globalThis.AuroraPdf;
 const audio = globalThis.AuroraAudio;
 
+assert.equal(data.contentVersion, "3.0.0-story-first-narrative");
+assert.match(data.narrativeDelivery.principle, /story on the surface/i);
+
+const visibleItems = data.story.acts.flatMap((act) => act.items);
+assert.equal(visibleItems.length, 60);
+const wordCount = (value) => String(value).trim().split(/\s+/).filter(Boolean).length;
+const heavyNarrativePhrases = /operational boundary|operating envelope|shared ownership|material consequence|cognitive demand|escalation pathway/i;
+visibleItems.forEach((item) => {
+  assert.ok(wordCount(item.context) <= 45, `Q${item.number} context is too long`);
+  assert.ok(wordCount(item.statement) <= 20, `Q${item.number} statement is too long`);
+  assert.ok(wordCount(item.convergence) <= 30, `Q${item.number} convergence is too long`);
+  ["low", "mid", "high"].forEach((band) => {
+    assert.ok(
+      wordCount(item.responseBranches[band].transition) <= 40,
+      `Q${item.number} ${band} transition is too long`,
+    );
+  });
+  assert.doesNotMatch(`${item.context} ${item.statement}`, heavyNarrativePhrases);
+});
+
 function completeUniformJourney(reserveChoice, raw = 4) {
   let journey = core.setPlayerIdentity(data, core.emptyState(), "Test Crew");
   for (let index = 0; index < 55; index += 1) {
@@ -28,6 +48,31 @@ function completeUniformJourney(reserveChoice, raw = 4) {
   }
   return { journey, profile: core.analyseProfile(data, journey) };
 }
+
+const roleTestRecipes = {
+  "The Pathfinder": { six: [4, 20, 21, 31, 38, 41, 53, 60], one: [6, 11, 28, 47] },
+  "The Catalyst": { six: [9, 13, 23, 34, 40, 44, 49, 58], one: [2, 19, 29, 55] },
+  "The Steward": { six: [3, 14, 18, 26, 33, 37, 48, 56], one: [8, 24, 43, 51] },
+  "The Architect": { six: [1, 7, 17, 27, 32, 42, 46, 52], one: [12, 22, 39, 57] },
+  "The Sentinel": { six: [5, 10, 15, 25, 30, 45, 54, 59], one: [16, 35, 36, 50] },
+};
+Object.entries(roleTestRecipes).forEach(([expectedRole, recipe]) => {
+  const answers = Array(60).fill(3);
+  recipe.six.forEach((question) => { answers[question - 1] = 6; });
+  recipe.one.forEach((question) => { answers[question - 1] = 1; });
+  const testProfile = core.analyseProfile(data, {
+    playerName: "Role Test",
+    onboardingComplete: true,
+    answers,
+    reserveChoice: "safety",
+    endingAcknowledged: true,
+  });
+  assert.equal(testProfile.role.title, expectedRole);
+  assert.equal(
+    testProfile.role.candidates.find((candidate) => candidate.code === testProfile.role.code).profileSuitability,
+    1,
+  );
+});
 
 let state = core.emptyState();
 state = core.setPlayerIdentity(data, state, "  Nam   Vu  ");
@@ -294,6 +339,10 @@ assert.match(auroraSource, /uSpeed \* 3\.25/);
 assert.match(auroraSource, /speed: 0\.03/);
 assert.match(auroraSource, /ribbonBand/);
 assert.match(auroraSource, /point\.x \* 0\.055/);
+assert.match(auroraSource, /peak - 0\.62/);
+assert.match(auroraSource, /clamp\(finalColour, 0\.0, 0\.88\)/);
+assert.match(auroraSource, /intensity: 0\.76/);
+assert.match(stylesSource, /#aurora-canvas[\s\S]*?opacity: 0\.86/);
 assert.match(stylesSource, /--movement-name-column/);
 assert.match(stylesSource, /padding-left: calc\(var\(--movement-name-column\)/);
 assert.match(stylesSource, /\.final-record-actions/);
