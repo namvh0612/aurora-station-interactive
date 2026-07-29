@@ -1,4 +1,4 @@
-name: Finalise full Aurora project
+name: Apply story-first narrative rewrite
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  finalise:
+  apply-narrative:
     runs-on: ubuntu-latest
     steps:
       - name: Check out main
@@ -18,16 +18,13 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Restore final project files
+      - name: Restore rewritten narrative and tests
         shell: bash
         run: |
           set -euo pipefail
-          cat .deploy/chunk-* | base64 --decode | gzip --decompress | tar -xf -
-          rm -f .deploy/style-tests.b64 .deploy/chunk-*
-          rmdir .deploy 2>/dev/null || true
-          rm -f .github/workflows/finalise-full-project.yml
+          base64 --decode .narrative-deploy/payload.tar.xz.b64 | tar -xJf -
 
-      - name: Validate final project
+      - name: Validate syntax, scoring and narrative contract
         shell: bash
         run: |
           node --check app.js
@@ -35,13 +32,20 @@ jobs:
           node --check aurora.js
           node --check core.js
           node --check pdf-export.js
+          node --check content/Aurora_Station_Content.js
           node tests.mjs
 
-      - name: Commit complete project
+      - name: Remove temporary deployment files
+        shell: bash
+        run: |
+          rm -rf .narrative-deploy .deploy
+          rm -f .github/workflows/finalise-full-project.yml
+
+      - name: Commit clean story-first project
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'Synchronise complete Aurora Station project'
+          git commit -m 'Rewrite Aurora Station narrative for story-first delivery'
           git push origin main
