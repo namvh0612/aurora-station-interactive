@@ -26,6 +26,7 @@
   let interactionLocked = false;
   let entryDialog = null;
   let restartDialog = null;
+  let restartRequested = false;
   let resultState = loadResultState();
   let state;
 
@@ -613,15 +614,29 @@
     eraseButton.addEventListener("click", () => {
       clearPlayerCache();
       interactionLocked = false;
+      restartRequested = true;
       dialog.close();
-      render();
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      openStationEntry();
-      announce("Journey cleared. Enter a new watchkeeper name to begin again.");
     });
 
     dialog.addEventListener("close", () => {
       document.body.classList.remove("restart-open");
+
+      if (!restartRequested) {
+        return;
+      }
+
+      restartRequested = false;
+      render();
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+      // Open the onboarding dialog in a new task, after the restart dialog
+      // has fully left the browser top layer and released its backdrop.
+      window.setTimeout(() => {
+        openStationEntry();
+        announce(
+          "Journey cleared. Enter a new watchkeeper name to begin again.",
+        );
+      }, 0);
     });
 
     document.body.appendChild(dialog);

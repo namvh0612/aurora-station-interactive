@@ -264,6 +264,23 @@ assert.match(appSource, /Choose 1 when the statement does not resemble you at al
 assert.match(appSource, /PRELUDE 03 \/ 03/);
 assert.match(appSource, /Erase and restart/);
 assert.match(appSource, /core\.clearState/);
+assert.match(appSource, /let restartRequested = false/);
+const restartDialogSource = appSource.slice(
+  appSource.indexOf("function buildRestartDialog"),
+  appSource.indexOf("function openRestartDialog"),
+);
+assert.match(
+  restartDialogSource,
+  /restartRequested = true;[\s\S]*?dialog\.close\(\);/i,
+);
+assert.match(
+  restartDialogSource,
+  /dialog\.addEventListener\("close"[\s\S]*?window\.setTimeout\([\s\S]*?openStationEntry\(\)/i,
+);
+assert.ok(
+  restartDialogSource.indexOf("dialog.close();") <
+    restartDialogSource.indexOf("openStationEntry();"),
+);
 assert.match(appSource, /Continue to dawn debrief/);
 assert.match(appSource, /What the watch leaves behind/);
 assert.match(appSource, /core\.acknowledgeEnding/);
