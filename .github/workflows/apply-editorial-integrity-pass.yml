@@ -1,0 +1,45 @@
+name: Apply editorial integrity pass
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  apply-editorial-pass:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out editorial branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply controlled narrative revisions
+        run: python3 scripts/editorial_integrity_pass.py
+
+      - name: Validate syntax, scoring and editorial contract
+        run: |
+          node --check content/Aurora_Station_Content.js
+          node --check core.js
+          node --check app.js
+          node tests.mjs
+
+      - name: Preserve verified files
+        run: |
+          cp content/Aurora_Station_Content.js /tmp/Aurora_Station_Content.js
+          cp tests.mjs /tmp/tests.mjs
+
+      - name: Commit verified revision to main
+        run: |
+          git fetch origin main
+          git checkout -B main origin/main
+          cp /tmp/Aurora_Station_Content.js content/Aurora_Station_Content.js
+          cp /tmp/tests.mjs tests.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add content/Aurora_Station_Content.js tests.mjs
+          git commit -m 'Refine Aurora narrative assessment integrity'
+          git push origin main
