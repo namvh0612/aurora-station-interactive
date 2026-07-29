@@ -46,3 +46,5 @@ jobs:
           git add -A
           git commit -m 'Synchronise complete Aurora Station project'
           git push origin main
+
+# One-time full-project synchronisation trigger.
