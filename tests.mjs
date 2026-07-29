@@ -264,23 +264,20 @@ assert.match(appSource, /Choose 1 when the statement does not resemble you at al
 assert.match(appSource, /PRELUDE 03 \/ 03/);
 assert.match(appSource, /Erase and restart/);
 assert.match(appSource, /core\.clearState/);
-assert.match(appSource, /let restartRequested = false/);
+assert.doesNotMatch(appSource, /restartRequested/);
 const restartDialogSource = appSource.slice(
   appSource.indexOf("function buildRestartDialog"),
   appSource.indexOf("function openRestartDialog"),
 );
 assert.match(
   restartDialogSource,
-  /restartRequested = true;[\s\S]*?dialog\.close\(\);/i,
+  /clearPlayerCache\(\)[\s\S]*?searchParams\.set\("restart"[\s\S]*?window\.location\.replace/i,
 );
-assert.match(
-  restartDialogSource,
-  /dialog\.addEventListener\("close"[\s\S]*?window\.setTimeout\([\s\S]*?openStationEntry\(\)/i,
-);
-assert.ok(
-  restartDialogSource.indexOf("dialog.close();") <
-    restartDialogSource.indexOf("openStationEntry();"),
-);
+assert.doesNotMatch(restartDialogSource, /openStationEntry\(\)/);
+assert.doesNotMatch(restartDialogSource, /window\.setTimeout/);
+assert.match(appSource, /function clearRestartMarkerFromUrl/);
+assert.match(appSource, /clearRestartMarkerFromUrl\(\)/);
+assert.match(indexSource, /app\.js\?v=4\.1\.1/);
 assert.match(appSource, /Continue to dawn debrief/);
 assert.match(appSource, /What the watch leaves behind/);
 assert.match(appSource, /core\.acknowledgeEnding/);

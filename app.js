@@ -26,7 +26,6 @@
   let interactionLocked = false;
   let entryDialog = null;
   let restartDialog = null;
-  let restartRequested = false;
   let resultState = loadResultState();
   let state;
 
@@ -44,6 +43,21 @@
       return window.sessionStorage;
     } catch {
       return null;
+    }
+  }
+
+  function clearRestartMarkerFromUrl() {
+    try {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has("restart")) {
+        return;
+      }
+
+      url.searchParams.delete("restart");
+      const cleanUrl = `${url.pathname}${url.search}${url.hash}`;
+      window.history.replaceState(null, "", cleanUrl);
+    } catch {
+      // URL cleanup is cosmetic and must never block the experience.
     }
   }
 
@@ -614,29 +628,24 @@
     eraseButton.addEventListener("click", () => {
       clearPlayerCache();
       interactionLocked = false;
-      restartRequested = true;
-      dialog.close();
+      document.body.classList.remove("restart-open", "onboarding-open");
+
+      // Reloading the document is deliberate: it guarantees that every
+      // modal and backdrop leaves the browser top layer before onboarding
+      // starts again. The query marker also bypasses a stale cached page.
+      const restartUrl = new URL(window.location.href);
+      restartUrl.searchParams.set("restart", String(Date.now()));
+      restartUrl.hash = "";
+
+      try {
+        window.location.replace(restartUrl.toString());
+      } catch {
+        window.location.reload();
+      }
     });
 
     dialog.addEventListener("close", () => {
       document.body.classList.remove("restart-open");
-
-      if (!restartRequested) {
-        return;
-      }
-
-      restartRequested = false;
-      render();
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-
-      // Open the onboarding dialog in a new task, after the restart dialog
-      // has fully left the browser top layer and released its backdrop.
-      window.setTimeout(() => {
-        openStationEntry();
-        announce(
-          "Journey cleared. Enter a new watchkeeper name to begin again.",
-        );
-      }, 0);
     });
 
     document.body.appendChild(dialog);
@@ -1805,6 +1814,7 @@
   audioManager?.init({ toggleButton: soundToggle });
   restartButton?.addEventListener("click", openRestartDialog);
   state = core.sanitiseState(data, core.loadState(data, safeStorage()));
+  clearRestartMarkerFromUrl();
   render();
   openStationEntry();
 })();
