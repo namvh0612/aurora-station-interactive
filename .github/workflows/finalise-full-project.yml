@@ -24,6 +24,25 @@ jobs:
           set -euo pipefail
           cat .narrative-deploy/chunk-* | base64 --decode | tar -xJf -
 
+      - name: Complete Aurora brightness alignment
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          path = Path('styles.css')
+          source = path.read_text(encoding='utf-8')
+          updated, count = re.subn(
+              r'(#aurora-canvas\s*\{[\s\S]*?\bopacity:)\s*(?:1(?:\.0+)?|0\.86)\s*;',
+              r'\1 0.86;',
+              source,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit('Could not locate #aurora-canvas opacity declaration.')
+          path.write_text(updated, encoding='utf-8')
+          PY
+
       - name: Validate syntax, scoring and narrative contract
         shell: bash
         run: |
