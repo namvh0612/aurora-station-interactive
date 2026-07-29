@@ -1,7 +1,7 @@
 /* Edit this data file to update the story; no rebuild is required. */
 window.AURORA_STATION_DATA = {
   "schemaVersion": "1.0.0",
-  "contentVersion": "4.0.0-option-b-likert-balanced",
+  "contentVersion": "4.1.0-honest-response-onboarding",
   "id": "aurora-station",
   "title": "Aurora Station",
   "subtitle": "The Final Watch",
@@ -2095,7 +2095,7 @@ window.AURORA_STATION_DATA = {
             "number": 36,
             "title": "Someone Outside",
             "context": "Ilan points into the whiteout. Your first reply comes out sharper than you intended.",
-            "statement": "I would recover an even tone before continuing the verification.",
+            "statement": "I would need time before my voice settled during the verification.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2801,7 +2801,7 @@ window.AURORA_STATION_DATA = {
             "number": 50,
             "title": "Two Urgencies",
             "context": "Mira names the danger of cold. Ilan names the loss of the signal. The pressure rises.",
-            "statement": "I would recover from the emotional pull and return to the decision criteria.",
+            "statement": "I would remain pulled towards whichever loss felt most immediate.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
