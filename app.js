@@ -10,6 +10,7 @@
   const progressBar = document.querySelector(".reader-progress");
   const progressLabel = document.getElementById("progress-label");
   const soundToggle = document.getElementById("sound-toggle");
+  const restartButton = document.getElementById("restart-watch");
   const liveStatus = document.getElementById("screen-reader-status");
   const RESPONSE_LABELS = Object.freeze([
     "Not at all like how I would respond",
@@ -24,6 +25,7 @@
   const RESULT_SESSION_KEY = "aurora-station-result-deck-v1";
   let interactionLocked = false;
   let entryDialog = null;
+  let restartDialog = null;
   let resultState = loadResultState();
   let state;
 
@@ -162,7 +164,7 @@
     header.appendChild(
       element("p", "entry-kicker", "AURORA STATION · PRELUDE"),
     );
-    const stepIndicator = element("p", "entry-step-indicator", "PRELUDE 01 / 02");
+    const stepIndicator = element("p", "entry-step-indicator", "PRELUDE 01 / 03");
     header.appendChild(stepIndicator);
     frame.appendChild(header);
 
@@ -282,7 +284,7 @@
     const confirmButton = element(
       "button",
       "entry-primary",
-      "Begin the final watch",
+      "Continue",
     );
     confirmButton.type = "button";
     confirmButton.disabled = true;
@@ -320,22 +322,108 @@
     calibrationPanel.appendChild(calibrationFooter);
     frame.appendChild(calibrationPanel);
 
+    const orientationPanel = element(
+      "section",
+      "entry-panel orientation-panel",
+    );
+    orientationPanel.dataset.entryStep = "orientation";
+    orientationPanel.hidden = true;
+
+    orientationPanel.appendChild(
+      element(
+        "p",
+        "orientation-lead",
+        "Every response changes the route the story records. Across the watch, your choices shape your profile, and later decisions shape the ending you reach.",
+      ),
+    );
+
+    const orientationGuidance = element("div", "orientation-guidance");
+    [
+      [
+        "No right or wrong",
+        "Higher is not better. Each point only shows how closely the statement fits you.",
+      ],
+      [
+        "Answer as you are",
+        "Choose what you would realistically do—not what sounds ideal, capable or expected of a duty lead.",
+      ],
+      [
+        "Use the full scale",
+        "Choose 1 when the statement does not resemble you at all. Choose 6 only when it matches exactly; use 2–5 for the space between.",
+      ],
+    ].forEach(([label, copy]) => {
+      const guidanceItem = element("section", "orientation-guidance-item");
+      guidanceItem.appendChild(
+        element("p", "orientation-guidance-label", label),
+      );
+      guidanceItem.appendChild(
+        element("p", "orientation-guidance-copy", copy),
+      );
+      orientationGuidance.appendChild(guidanceItem);
+    });
+    orientationPanel.appendChild(orientationGuidance);
+
+    orientationPanel.appendChild(
+      element(
+        "p",
+        "orientation-disclaimer",
+        "This is a subjective self-report, not a diagnosis or an objective measure of ability. Honest answers produce the most recognisable reflection.",
+      ),
+    );
+
+    const orientationFooter = element("footer", "entry-footer");
+    const orientationBackButton = element(
+      "button",
+      "entry-secondary",
+      "← Review the scale",
+    );
+    orientationBackButton.type = "button";
+    const beginButton = element(
+      "button",
+      "entry-primary",
+      "Begin the final watch",
+    );
+    beginButton.type = "button";
+    orientationFooter.append(orientationBackButton, beginButton);
+    orientationPanel.appendChild(orientationFooter);
+    frame.appendChild(orientationPanel);
+
     function showStep(step) {
-      const isIdentity = step === "identity";
-      identityPanel.hidden = !isIdentity;
-      calibrationPanel.hidden = isIdentity;
-      stepIndicator.textContent = isIdentity
-        ? "PRELUDE 01 / 02"
-        : "PRELUDE 02 / 02";
-      title.textContent = isIdentity
-        ? "Before the watch begins"
-        : "How to answer the watch";
-      summary.textContent = isIdentity
-        ? "The station log needs a watchkeeper name. It will appear on the final record and on your reflective profile."
-        : "Each moment asks how closely one response matches what you would actually do. Choose 1 for not like you and 6 for exactly like you.";
-      window.requestAnimationFrame(() => {
-        (isIdentity ? nameInput : signalTrack.querySelector("button"))?.focus();
-      });
+      const stepConfig = {
+        identity: {
+          indicator: "PRELUDE 01 / 03",
+          title: "Before the watch begins",
+          summary:
+            "The station log needs a watchkeeper name. It will appear on the final record and on your reflective profile.",
+          focus: () => nameInput,
+        },
+        calibration: {
+          indicator: "PRELUDE 02 / 03",
+          title: "How to answer the watch",
+          summary:
+            "Each moment asks how closely one response matches what you would actually do. Choose 1 for not like you and 6 for exactly like you.",
+          focus: () => signalTrack.querySelector("button"),
+        },
+        orientation: {
+          indicator: "PRELUDE 03 / 03",
+          title: "The path changes with you",
+          summary:
+            "There is no answer key. This is a subjective reflection of how you see your likely response in each moment.",
+          focus: () => beginButton,
+        },
+      }[step];
+
+      if (!stepConfig) {
+        return;
+      }
+
+      identityPanel.hidden = step !== "identity";
+      calibrationPanel.hidden = step !== "calibration";
+      orientationPanel.hidden = step !== "orientation";
+      stepIndicator.textContent = stepConfig.indicator;
+      title.textContent = stepConfig.title;
+      summary.textContent = stepConfig.summary;
+      window.requestAnimationFrame(() => stepConfig.focus()?.focus());
     }
 
     dialog.prepareEntry = () => {
@@ -380,7 +468,11 @@
     });
 
     backButton.addEventListener("click", () => showStep("identity"));
-    confirmButton.addEventListener("click", () => {
+    confirmButton.addEventListener("click", () => showStep("orientation"));
+    orientationBackButton.addEventListener("click", () =>
+      showStep("calibration"),
+    );
+    beginButton.addEventListener("click", () => {
       const playerName = dialog.dataset.pendingName || nameInput.value;
       state = core.setPlayerIdentity(data, state, playerName);
       persist();
@@ -428,6 +520,132 @@
     window.requestAnimationFrame(() => {
       dialog.querySelector("#player-name")?.focus();
     });
+  }
+
+  function clearPlayerCache() {
+    const localStorage = safeStorage();
+    core.clearState(localStorage);
+
+    if (localStorage) {
+      try {
+        for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+          const key = localStorage.key(index);
+          if (
+            key?.startsWith("aurora-station-") &&
+            key !== "aurora-station-sound-v1"
+          ) {
+            localStorage.removeItem(key);
+          }
+        }
+      } catch {
+        // The current journey key has already been removed by AuroraCore.
+      }
+    }
+
+    const sessionStorage = safeSessionStorage();
+    if (sessionStorage) {
+      try {
+        for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
+          const key = sessionStorage.key(index);
+          if (key?.startsWith("aurora-station-")) {
+            sessionStorage.removeItem(key);
+          }
+        }
+      } catch {
+        sessionStorage.removeItem(RESULT_SESSION_KEY);
+      }
+    }
+
+    resultState = { activePage: 0, activeCurrent: "WO" };
+    state = core.emptyState();
+  }
+
+  function buildRestartDialog() {
+    if (restartDialog) {
+      return restartDialog;
+    }
+
+    const dialog = element("dialog", "restart-dialog");
+    dialog.setAttribute("aria-labelledby", "restart-dialog-title");
+    dialog.setAttribute("aria-describedby", "restart-dialog-summary");
+
+    const frame = element("div", "restart-dialog-frame");
+    frame.appendChild(
+      element("p", "restart-dialog-kicker", "WATCH CONTROL"),
+    );
+
+    const title = element("h2", "restart-dialog-title", "Restart the watch?");
+    title.id = "restart-dialog-title";
+    frame.appendChild(title);
+
+    const summary = element(
+      "p",
+      "restart-dialog-summary",
+      "This removes the watchkeeper name, every response, the reserve decision and the saved debrief from this browser.",
+    );
+    summary.id = "restart-dialog-summary";
+    frame.appendChild(summary);
+    frame.appendChild(
+      element(
+        "p",
+        "restart-dialog-note",
+        "This cannot be undone. Your sound preference will remain unchanged.",
+      ),
+    );
+
+    const actions = element("footer", "restart-dialog-actions");
+    const cancelButton = element(
+      "button",
+      "entry-secondary",
+      "Keep current journey",
+    );
+    cancelButton.type = "button";
+    const eraseButton = element(
+      "button",
+      "entry-danger",
+      "Erase and restart",
+    );
+    eraseButton.type = "button";
+    actions.append(cancelButton, eraseButton);
+    frame.appendChild(actions);
+
+    cancelButton.addEventListener("click", () => dialog.close());
+    eraseButton.addEventListener("click", () => {
+      clearPlayerCache();
+      interactionLocked = false;
+      dialog.close();
+      render();
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      openStationEntry();
+      announce("Journey cleared. Enter a new watchkeeper name to begin again.");
+    });
+
+    dialog.addEventListener("close", () => {
+      document.body.classList.remove("restart-open");
+    });
+
+    document.body.appendChild(dialog);
+    restartDialog = dialog;
+    return dialog;
+  }
+
+  function openRestartDialog() {
+    if (!state.onboardingComplete) {
+      return;
+    }
+
+    const dialog = buildRestartDialog();
+    document.body.classList.add("restart-open");
+    if (typeof dialog.showModal === "function") {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    } else {
+      dialog.setAttribute("open", "");
+    }
+    window.requestAnimationFrame(() =>
+      dialog.querySelector(".entry-secondary")?.focus(),
+    );
   }
 
   function updateProgress() {
@@ -1477,6 +1695,9 @@
 
   function render() {
     storyRoot.replaceChildren();
+    if (restartButton) {
+      restartButton.hidden = !state.onboardingComplete;
+    }
     const currentStep = core.currentStep(data, state);
     const complete = currentStep.type === "complete";
     const answeredCount = state.answers.length;
@@ -1567,6 +1788,7 @@
   }
 
   audioManager?.init({ toggleButton: soundToggle });
+  restartButton?.addEventListener("click", openRestartDialog);
   state = core.sanitiseState(data, core.loadState(data, safeStorage()));
   render();
   openStationEntry();

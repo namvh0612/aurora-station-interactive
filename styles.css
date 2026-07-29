@@ -330,7 +330,8 @@ a:focus-visible {
   z-index: 10;
   top: 0;
   display: grid;
-  grid-template-columns: auto minmax(5rem, 16rem) auto auto;
+  grid-template-columns: auto minmax(5rem, 16rem) auto auto auto;
+  grid-template-areas: "brand progress label sound restart";
   align-items: center;
   gap: 1rem;
   min-height: 3.45rem;
@@ -353,6 +354,7 @@ a:focus-visible {
 }
 
 .reader-brand {
+  grid-area: brand;
   color: inherit;
   font-size: 0.72rem;
   font-weight: 600;
@@ -362,6 +364,7 @@ a:focus-visible {
 }
 
 .reader-progress {
+  grid-area: progress;
   overflow: hidden;
   height: 2px;
   background: rgba(145, 168, 176, 0.18);
@@ -386,6 +389,7 @@ a:focus-visible {
 }
 
 .progress-label {
+  grid-area: label;
   color: var(--story-muted);
   font-size: 0.7rem;
   letter-spacing: 0.05em;
@@ -397,6 +401,7 @@ a:focus-visible {
 }
 
 .sound-toggle {
+  grid-area: sound;
   visibility: hidden;
   display: inline-flex;
   align-items: center;
@@ -479,6 +484,55 @@ a:focus-visible {
 
 .debrief-mode .sound-toggle:hover,
 .debrief-mode .sound-toggle:focus-visible {
+  border-color: rgba(49, 95, 105, 0.35);
+  color: var(--dawn-ink);
+}
+
+.restart-watch {
+  grid-area: restart;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--story-muted);
+  cursor: pointer;
+  font-family: var(--technical);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.restart-watch[hidden] {
+  display: none;
+}
+
+.restart-watch:hover,
+.restart-watch:focus-visible {
+  border-color: rgba(98, 216, 232, 0.38);
+  color: var(--story-ink);
+  outline: none;
+}
+
+.restart-icon {
+  display: inline-grid;
+  width: 1rem;
+  place-items: center;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.debrief-mode .restart-watch {
+  color: var(--dawn-muted);
+}
+
+.debrief-mode .restart-watch:hover,
+.debrief-mode .restart-watch:focus-visible {
   border-color: rgba(49, 95, 105, 0.35);
   color: var(--dawn-ink);
 }
@@ -1345,19 +1399,23 @@ a:focus-visible {
 
 @media (max-width: 42rem) {
   .reader-bar {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    grid-template-areas:
+      "brand label sound restart"
+      "progress progress progress progress";
+    gap: 0.35rem 0.55rem;
   }
 
   .reader-progress {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    grid-area: progress;
   }
 
   .progress-label {
     justify-self: end;
   }
 
-  .sound-label {
+  .sound-label,
+  .restart-label {
     position: absolute;
     overflow: hidden;
     width: 1px;
@@ -1748,6 +1806,57 @@ body.onboarding-open {
   text-transform: none;
 }
 
+.orientation-lead {
+  max-width: 36rem;
+  margin: 0 0 1.35rem;
+  color: var(--story-heading);
+  font-size: clamp(1.08rem, 2vw, 1.28rem);
+  line-height: 1.62;
+}
+
+.orientation-guidance {
+  border-top: 1px solid var(--night-line);
+}
+
+.orientation-guidance-item {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 0.34fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--night-line);
+}
+
+.orientation-guidance-label,
+.orientation-guidance-copy {
+  margin: 0;
+}
+
+.orientation-guidance-label {
+  color: var(--signal-cyan);
+  font-family: var(--technical);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.orientation-guidance-copy {
+  color: #b6c5c9;
+  font-size: 0.94rem;
+  line-height: 1.58;
+}
+
+.orientation-disclaimer {
+  max-width: 38rem;
+  margin: 1.2rem 0 0;
+  padding-left: 0.9rem;
+  border-left: 2px solid rgba(108, 227, 181, 0.48);
+  color: var(--story-muted);
+  font-family: var(--technical);
+  font-size: 0.65rem;
+  line-height: 1.58;
+}
+
 .calibration-anchors {
   display: flex;
   justify-content: space-between;
@@ -1851,8 +1960,133 @@ body.onboarding-open {
   }
 }
 
+body.restart-open {
+  overflow: hidden;
+}
+
+.restart-dialog {
+  z-index: 50;
+  width: min(32rem, calc(100% - 1.25rem));
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--story-ink);
+}
+
+.restart-dialog::backdrop {
+  background: rgba(2, 8, 13, 0.88);
+  backdrop-filter: blur(7px);
+}
+
+.restart-dialog-frame {
+  padding: clamp(1.4rem, 4vw, 2.2rem);
+  border: 1px solid rgba(98, 216, 232, 0.2);
+  border-top-color: rgba(239, 173, 173, 0.72);
+  background: rgba(6, 19, 29, 0.99);
+  box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.56);
+}
+
+.restart-dialog-kicker {
+  margin: 0;
+  color: #efadad;
+  font-family: var(--technical);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.restart-dialog-title {
+  margin: 1rem 0 0.55rem;
+  color: var(--story-heading);
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+}
+
+.restart-dialog-summary {
+  margin: 0;
+  color: #b6c5c9;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.restart-dialog-note {
+  margin: 0.8rem 0 0;
+  color: var(--story-muted);
+  font-family: var(--technical);
+  font-size: 0.64rem;
+  line-height: 1.52;
+}
+
+.restart-dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1.6rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--night-line);
+}
+
+.entry-danger {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid rgba(239, 173, 173, 0.72);
+  border-radius: 2px;
+  background: rgba(233, 140, 140, 0.08);
+  color: #efadad;
+  cursor: pointer;
+  font-family: var(--technical);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.entry-danger:hover,
+.entry-danger:focus-visible {
+  background: #efadad;
+  color: #251012;
+  outline: none;
+}
+
+@media (max-width: 42rem) {
+  .orientation-guidance-item {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .restart-dialog {
+    width: calc(100% - 0.75rem);
+  }
+
+  .restart-dialog-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .restart-dialog-actions .entry-secondary,
+  .restart-dialog-actions .entry-danger {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .restart-watch,
+  .entry-danger {
+    transition: none;
+  }
+}
+
 @media print {
-  .station-entry {
+  .station-entry,
+  .restart-dialog,
+  .restart-watch {
     display: none !important;
   }
 }
