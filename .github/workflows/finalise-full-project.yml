@@ -1,10 +1,9 @@
 name: Finalise full Aurora project
 
 on:
-  push:
+  pull_request:
     branches: [main]
-    paths:
-      - '.github/workflows/finalise-full-project.yml'
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
@@ -46,5 +45,3 @@ jobs:
           git add -A
           git commit -m 'Synchronise complete Aurora Station project'
           git push origin main
-
-# One-time full-project synchronisation trigger.
