@@ -25,12 +25,18 @@ jobs:
           node .option-b/apply-option-b.mjs
           python - <<'PY'
           from pathlib import Path
+          import re
           p = Path('tests.mjs')
           s = p.read_text()
           s = s.replace('3.1.0-editorial-integrity', '4.0.0-option-b-likert-balanced')
-          marker = 'const visibleItems = data.story.acts.flatMap((act) => act.items);'
-          addition = '''const visibleItems = data.story.acts.flatMap((act) => act.items);\nassert.match(data.assessment.methodNote, /requires empirical validation/i);\n'''
-          s = s.replace(marker, addition)
+          pattern = re.compile(
+              r'assert\.match\(data\.narrativeDelivery\.revision,[\s\S]*?assert\.match\(editorialItems\.q56\.context, /All three must remain inside the heated refuge/i\);\n',
+              re.M,
+          )
+          replacement = '''assert.match(data.assessment.methodNote, /requires empirical validation/i);\nconst optionBItems = Object.fromEntries(\n  data.story.acts.flatMap((act) => act.items).map((item) => [item.id, item]),\n);\nassert.match(optionBItems.q01.statement, /organised clearly/i);\nassert.match(optionBItems.q02.statement, /written boundary/i);\nassert.match(optionBItems.q03.statement, /invite him to speak/i);\nassert.match(optionBItems.q14.statement, /uncertainty/i);\nassert.match(optionBItems.q30.statement, /regain focus/i);\nassert.match(optionBItems.q36.statement, /recover an even tone/i);\nassert.match(optionBItems.q53.context, /consequences remain uncertain/i);\nassert.match(optionBItems.q56.statement, /shared refuge plan/i);\n'''
+          s, count = pattern.subn(replacement, s)
+          if count != 1:
+              raise SystemExit(f'Expected one editorial assertion block, replaced {count}')
           p.write_text(s)
           PY
 
