@@ -17,22 +17,20 @@ const core = globalThis.AuroraCore;
 const pdf = globalThis.AuroraPdf;
 const audio = globalThis.AuroraAudio;
 
-assert.equal(data.contentVersion, "3.1.0-editorial-integrity");
+assert.equal(data.contentVersion, "4.0.0-option-b-likert-balanced");
 assert.match(data.narrativeDelivery.principle, /story on the surface/i);
-assert.match(data.narrativeDelivery.revision, /continuity, construct clarity, response neutrality/i);
-
-const editorialItems = Object.fromEntries(
+assert.match(data.assessment.methodNote, /requires empirical validation/i);
+const optionBItems = Object.fromEntries(
   data.story.acts.flatMap((act) => act.items).map((item) => [item.id, item]),
 );
-assert.doesNotMatch(editorialItems.q01.responseBranches.high.transition, /trigger for calling her back/i);
-assert.match(editorialItems.q02.context, /what change should bring Mira back/i);
-assert.match(editorialItems.q14.statement, /what remained uncertain/i);
-assert.match(editorialItems.q30.statement, /return to the routine/i);
-assert.match(editorialItems.q36.statement, /settle back into a factual check/i);
-assert.match(editorialItems.q53.context, /blank rows remain/i);
-assert.match(editorialItems.q54.convergence, /execution has not yet begun/i);
-assert.match(editorialItems.q55.convergence, /switching sequence begins/i);
-assert.match(editorialItems.q56.context, /All three must remain inside the heated refuge/i);
+assert.match(optionBItems.q01.statement, /organised clearly/i);
+assert.match(optionBItems.q02.statement, /written boundary/i);
+assert.match(optionBItems.q03.statement, /invite him to speak/i);
+assert.match(optionBItems.q14.statement, /uncertainty/i);
+assert.match(optionBItems.q30.statement, /regain focus/i);
+assert.match(optionBItems.q36.statement, /recover an even tone/i);
+assert.match(optionBItems.q53.context, /consequences remain uncertain/i);
+assert.match(optionBItems.q56.statement, /shared refuge plan/i);
 
 const visibleItems = data.story.acts.flatMap((act) => act.items);
 assert.equal(visibleItems.length, 60);

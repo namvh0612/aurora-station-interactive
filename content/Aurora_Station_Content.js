@@ -1,7 +1,7 @@
 /* Edit this data file to update the story; no rebuild is required. */
 window.AURORA_STATION_DATA = {
   "schemaVersion": "1.0.0",
-  "contentVersion": "3.1.0-editorial-integrity",
+  "contentVersion": "4.0.0-option-b-likert-balanced",
   "id": "aurora-station",
   "title": "Aurora Station",
   "subtitle": "The Final Watch",
@@ -288,7 +288,8 @@ window.AURORA_STATION_DATA = {
           "reverse": 4
         }
       }
-    }
+    },
+    "methodNote": "Narrative-adapted Big Five OCEAN self-report using one behavioural statement per item and a six-point Likert self-fit scale. This adaptation requires empirical validation before normative or diagnostic claims."
   },
   "story": {
     "prologue": {
@@ -308,15 +309,22 @@ window.AURORA_STATION_DATA = {
             "id": "q01",
             "number": 1,
             "title": "Six Words",
-            "context": "Mira's gloved hand rests on the door. The Sector C entry lists the warning, but not what she checked or ruled out.",
-            "statement": "I would keep Mira there until the handover showed what she had checked and what remained open.",
+            "context": "Mira's note lists three Sector C spikes. Her completed checks sit across the alarm history and a handwritten page.",
+            "statement": "I would want the completed checks and open questions organised clearly before taking over.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Orderliness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Orderliness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -350,15 +358,22 @@ window.AURORA_STATION_DATA = {
             "id": "q02",
             "number": 2,
             "title": "At the Door",
-            "context": "The handover is complete. One boundary remains: what change should bring Mira back—the next heat spike, or heat plus an electrical shift?",
-            "statement": "I would let Mira leave and rely on the written instruction to define that boundary.",
+            "context": "The written procedure gives one safe return trigger. Mira's own threshold is slightly more cautious.",
+            "statement": "I would use the written boundary without asking Mira to restate her judgement.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Assertiveness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Assertiveness",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -392,15 +407,22 @@ window.AURORA_STATION_DATA = {
             "id": "q03",
             "number": 3,
             "title": "The Window",
-            "context": "Ilan keeps watching the storm. He says the shutdown may end his only chance to understand the old Sector C records.",
-            "statement": "I would ask what was troubling Ilan before returning to the displays.",
+            "context": "Ilan watches the storm while the old Sector C records remain open beside him. His recorder check is unfinished.",
+            "statement": "I would notice how the shutdown was affecting Ilan and invite him to speak.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Empathy",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Empathy",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -434,15 +456,22 @@ window.AURORA_STATION_DATA = {
             "id": "q04",
             "number": 4,
             "title": "Two Explanations",
-            "context": "The familiar answer is sensor noise. Ilan's old anomaly fits parts of the trace that noise does not. Both files are open.",
-            "statement": "I would keep a second explanation visible while working from the familiar one.",
+            "context": "Sensor noise explains most of the trace. One feature still matches Ilan's older anomaly.",
+            "statement": "I would keep another plausible explanation in mind while testing the familiar one.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Ideas",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Ideas",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -476,15 +505,22 @@ window.AURORA_STATION_DATA = {
             "id": "q05",
             "number": 5,
             "title": "The Quiet Minute",
-            "context": "The room settles. Sector C is unresolved, but the rest of Aurora still needs its normal watch.",
-            "statement": "I would return to the wider watch without letting Sector C take over my attention.",
+            "context": "Sector C remains unresolved. The rest of Aurora continues through its normal watch cycle.",
+            "statement": "I would return my attention to the wider watch without dwelling on Sector C.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Calmness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Calmness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -528,15 +564,22 @@ window.AURORA_STATION_DATA = {
             "id": "q06",
             "number": 6,
             "title": "The Shape",
-            "context": "All values remain below their limits. On replay, the traces repeat the same spacing: magnetics, current, heat.",
-            "statement": "I would treat the traces as separate readings and ignore their shared rhythm unless a limit was crossed.",
+            "context": "All readings remain below their limits. The traces repeat the same order and spacing.",
+            "statement": "I would focus on the defined limits rather than the pattern formed by the traces.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Aesthetics",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Aesthetics",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -570,15 +613,22 @@ window.AURORA_STATION_DATA = {
             "id": "q07",
             "number": 7,
             "title": "Before It Fades",
-            "context": "The readings have returned to normal. The cleanest event is still fresh in the alarm history.",
-            "statement": "I would begin the cross-check now, even if the shutdown list had to wait.",
+            "context": "The event has cleared. Its cleanest data is still available before the next shutdown task begins.",
+            "statement": "I would begin the cross-check while the evidence was still fresh.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Industriousness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Industriousness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -612,15 +662,22 @@ window.AURORA_STATION_DATA = {
             "id": "q08",
             "number": 8,
             "title": "Three Views",
-            "context": "Mira is back at the console. She knows the hardware; Ilan knows the old pattern; you hold the live picture.",
-            "statement": "I would form my own explanation before bringing their views together.",
+            "context": "Mira knows the hardware, Ilan knows the archive and you hold the live readings.",
+            "statement": "I would form my own view before combining it with theirs.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Cooperation",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Cooperation",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -654,15 +711,22 @@ window.AURORA_STATION_DATA = {
             "id": "q09",
             "number": 9,
             "title": "Move",
-            "context": "The inspection window is closing. Mira has just returned from bed. Ilan stands ready but waits for someone to begin.",
-            "statement": "I would raise the room's energy and pull everyone visibly into action.",
+            "context": "The inspection window is closing. Mira and Ilan are ready, but neither has started moving.",
+            "statement": "I would make my energy and urgency visible enough to start the group moving.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Enthusiasm",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Enthusiasm",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -696,7 +760,7 @@ window.AURORA_STATION_DATA = {
             "id": "q10",
             "number": 10,
             "title": "After the Alarm",
-            "context": "A second spike drives the alarm red for less than a second. The tone stops, but the jolt remains in your body.",
+            "context": "A second spike drives the alarm red for less than a second. The tone stops.",
             "statement": "I would return my attention to the evidence quickly after the alarm.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -704,7 +768,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "WA",
               "facet": "Resilience",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Resilience",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -748,15 +819,22 @@ window.AURORA_STATION_DATA = {
             "id": "q11",
             "number": 11,
             "title": "The Green Light",
-            "context": "The cabinet is hot enough to thaw frost from a nearby pipe. Its local indicator remains green.",
-            "statement": "I would keep sensor failure as the working explanation until a direct measurement challenged it.",
+            "context": "The cabinet is hot while its local indicator remains green. A direct measurement is ready.",
+            "statement": "I would stay with the most familiar explanation until direct evidence challenged it.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Ideas",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Ideas",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -790,15 +868,22 @@ window.AURORA_STATION_DATA = {
             "id": "q12",
             "number": 12,
             "title": "Behind the Cover",
-            "context": "The critical isolation checks are complete. The full checklist adds several lower-risk confirmations before the likely hot point.",
-            "statement": "I would move to the suspected hot point before completing those remaining confirmations.",
+            "context": "The likely hot point is behind the front cover. The checklist begins with several wider checks.",
+            "statement": "I would move towards the suspected point before completing the full sequence.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Orderliness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Orderliness",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -832,15 +917,22 @@ window.AURORA_STATION_DATA = {
             "id": "q13",
             "number": 13,
             "title": "One Authority",
-            "context": "Mira watches the generator. Ilan watches the trace. You are alone at the cabinet with the isolation switch.",
-            "statement": "I would take explicit control of roles and switching authority.",
+            "context": "Mira watches the generator, Ilan watches the trace and you hold the isolation switch.",
+            "statement": "I would state clearly who controlled each role and the final switch.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Assertiveness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Assertiveness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -874,15 +966,22 @@ window.AURORA_STATION_DATA = {
             "id": "q14",
             "number": 14,
             "title": "Radio Picture",
-            "context": "Mira and Ilan cannot see the cabinet or your position. A pause on the radio leaves them with only the burnt smell and alarms.",
-            "statement": "I would describe what I could see and what remained uncertain so they were not left imagining the corridor.",
+            "context": "Mira and Ilan cannot see the corridor. They can only hear your breathing and short radio calls.",
+            "statement": "I would notice when their uncertainty needed a brief reassuring update.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Empathy",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Empathy",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -916,7 +1015,7 @@ window.AURORA_STATION_DATA = {
             "id": "q15",
             "number": 15,
             "title": "The Smell of Fire",
-            "context": "The burnt smell is stronger. No flame is visible. The next isolation step is already prepared.",
+            "context": "The burnt smell grows stronger. The next isolation step is ready and no flame is visible.",
             "statement": "I would keep most of my attention on the next confirmed step.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -924,7 +1023,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "WA",
               "facet": "Calmness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Calmness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -968,15 +1074,22 @@ window.AURORA_STATION_DATA = {
             "id": "q16",
             "number": 16,
             "title": "Ninety Seconds",
-            "context": "The controller counts down from ninety. Mira reads voltage, frequency, load and oil pressure in the same measured voice.",
-            "statement": "I would feel the countdown pushing me to act before the critical readings were complete.",
+            "context": "The backup catches unevenly. Mira is still reading the values that will shape the first cut.",
+            "statement": "I would feel pressure to act before the critical readings were complete.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Calmness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Calmness",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1010,15 +1123,22 @@ window.AURORA_STATION_DATA = {
             "id": "q17",
             "number": 17,
             "title": "Keep Going",
-            "context": "Emergency power is stable. Several checks could still change whether the main generator is attempted again tonight.",
-            "statement": "I would keep the team moving through the checks that could still change the recovery plan before calling a pause.",
+            "context": "Emergency power is stable. Several useful diagnostic checks remain, and the team has not rested.",
+            "statement": "I would continue purposeful checks before taking a break.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Industriousness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Industriousness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1052,7 +1172,7 @@ window.AURORA_STATION_DATA = {
             "id": "q18",
             "number": 18,
             "title": "One Plan",
-            "context": "Mira tests the generator, Ilan follows the traces and you choose the live loads. Their work keeps crossing.",
+            "context": "Mira tests the generator, Ilan follows the traces and you manage the live loads.",
             "statement": "I would coordinate the three workstreams through one shared plan.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -1060,7 +1180,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "EA",
               "facet": "Cooperation",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Cooperation",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1094,15 +1221,22 @@ window.AURORA_STATION_DATA = {
             "id": "q19",
             "number": 19,
             "title": "The Red Room",
-            "context": "The restart attempt ends. Mira stops speaking. Ilan stops asking questions. The room has lost any visible sense of progress.",
-            "statement": "I would keep my response contained rather than mark the progress we had made.",
+            "context": "The restart attempt ends. Mira and Ilan become quiet while the generator note fills the room.",
+            "statement": "I would let the room recover without trying to lift its mood.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Enthusiasm",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Enthusiasm",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1136,7 +1270,7 @@ window.AURORA_STATION_DATA = {
             "id": "q20",
             "number": 20,
             "title": "The Generator's Note",
-            "context": "Before each correction, the backup generator changes pitch and a vibration reaches the console.",
+            "context": "Before each correction, the generator changes pitch and a vibration reaches the console.",
             "statement": "I would include the changing sound and vibration in the diagnosis.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -1144,7 +1278,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "WO",
               "facet": "Aesthetics",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Aesthetics",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1188,15 +1329,22 @@ window.AURORA_STATION_DATA = {
             "id": "q21",
             "number": 21,
             "title": "Other Routes",
-            "context": "Mira sets a small test budget for radio power and time. A low-power call, another antenna path or a field relay might still work.",
-            "statement": "Within that fixed budget, I would try more than one plausible route to make contact.",
+            "context": "The long-range route is dead. Several low-power communication paths remain technically possible.",
+            "statement": "I would explore less conventional ways to make contact before accepting the isolation.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Ideas",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Ideas",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1230,15 +1378,22 @@ window.AURORA_STATION_DATA = {
             "id": "q22",
             "number": 22,
             "title": "Calls in the Static",
-            "context": "The static changes from minute to minute. A fixed schedule is written beside the radio.",
-            "statement": "I would retry when conditions seemed favourable rather than follow a fixed call schedule.",
+            "context": "The static changes from minute to minute. A fixed call schedule sits beside the radio.",
+            "statement": "I would retry when conditions seemed favourable rather than follow the fixed schedule.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Orderliness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Orderliness",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1272,15 +1427,22 @@ window.AURORA_STATION_DATA = {
             "id": "q23",
             "number": 23,
             "title": "Say It Plainly",
-            "context": "Mira speaks as if contact may return in minutes. Ilan speaks as if a rescue is already coming.",
-            "statement": "I would tell them plainly that Aurora cannot reach Base and name the next priority.",
+            "context": "Mira expects contact to return soon. Ilan speaks as though rescue is already moving.",
+            "statement": "I would state the present situation and the next priority plainly.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Assertiveness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Assertiveness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1314,7 +1476,7 @@ window.AURORA_STATION_DATA = {
             "id": "q24",
             "number": 24,
             "title": "After the News",
-            "context": "Mira becomes still. Ilan turns back to the window. The heating alarm is already waiting on the next screen.",
+            "context": "Mira becomes still. Ilan turns to the window. The heating screen is waiting.",
             "statement": "I would keep the update task-focused and check on them at the next pause.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -1322,7 +1484,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "EA",
               "facet": "Empathy",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Empathy",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1356,7 +1525,7 @@ window.AURORA_STATION_DATA = {
             "id": "q25",
             "number": 25,
             "title": "What Is Left",
-            "context": "The radio cannot be repaired from this room. Heat, shelter and local monitoring still can.",
+            "context": "The radio cannot be repaired here. Heat, shelter and local monitoring can still be managed.",
             "statement": "I would return most of my attention to what remained under local control.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -1364,7 +1533,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "WA",
               "facet": "Resilience",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Resilience",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1408,15 +1584,22 @@ window.AURORA_STATION_DATA = {
             "id": "q26",
             "number": 26,
             "title": "One Warm Room",
-            "context": "Mira marks the control-room loop. Ilan marks the shared refuge. You have a third plan open between them.",
-            "statement": "I would bring all three views into the same conversation before fixing the heat allocation.",
+            "context": "Mira marks the control room, Ilan marks the refuge and you hold a third workable plan.",
+            "statement": "I would bring the different views into one discussion before fixing the heat allocation.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Cooperation",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Cooperation",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1450,15 +1633,22 @@ window.AURORA_STATION_DATA = {
             "id": "q27",
             "number": 27,
             "title": "Small Loads",
-            "context": "The major loads are off. A few small lights, chargers and heat leaks remain, each with an uncertain return.",
-            "statement": "I would continue through the remaining small loads while each check still offered a plausible saving.",
+            "context": "The major loads are off. Several small lights, chargers and heat leaks remain.",
+            "statement": "I would keep looking for useful small savings after the main work was complete.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Industriousness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Industriousness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1492,7 +1682,7 @@ window.AURORA_STATION_DATA = {
             "id": "q28",
             "number": 28,
             "title": "When the Fans Stop",
-            "context": "The last fan winds down. Through the quiet, a faint grouped sound enters the floor.",
+            "context": "The final fan stops. In the quiet, a faint grouped sound enters through the floor.",
             "statement": "I would stay with the instruments rather than turn towards the unfamiliar sound.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -1500,7 +1690,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "WO",
               "facet": "Aesthetics",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Aesthetics",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1534,15 +1731,22 @@ window.AURORA_STATION_DATA = {
             "id": "q29",
             "number": 29,
             "title": "The Cold Routine",
-            "context": "Checks, radio calls and small adjustments repeat. Between them, the room settles into long stretches of silence.",
-            "statement": "I would let the quiet remain unbroken unless the work required speech.",
+            "context": "Checks and radio calls repeat. Between them, the room becomes quiet and inward.",
+            "statement": "I would let each person manage their own social energy during the routine.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Enthusiasm",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Enthusiasm",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1576,15 +1780,22 @@ window.AURORA_STATION_DATA = {
             "id": "q30",
             "number": 30,
             "title": "Frost at the Door",
-            "context": "Frost creeps along the corridor seal. A check against the model shows refuge temperature and fuel still inside their trigger lines.",
-            "statement": "After checking the frost, I would return to the routine without carrying the concern into every task.",
+            "context": "Frost reaches the door seal. The refuge remains within its limits, but the sight unsettles the room.",
+            "statement": "I would regain focus after noticing the frost and continue with the agreed checks.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Resilience",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Resilience",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1628,15 +1839,22 @@ window.AURORA_STATION_DATA = {
             "id": "q31",
             "number": 31,
             "title": "The Whole Pulse",
-            "context": "The recorder can hold a compact safety record or fewer events in full detail. Mira wants the values; Ilan wants the complete pulse.",
-            "statement": "I would give up some recording capacity to preserve the pulse's full rhythm and texture.",
+            "context": "Mira wants the safety values. Ilan wants the full shape, spacing and sound of the pulse.",
+            "statement": "I would preserve the signal's rhythm and sensory detail in the record.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Aesthetics",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Aesthetics",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1670,15 +1888,22 @@ window.AURORA_STATION_DATA = {
             "id": "q32",
             "number": 32,
             "title": "Before Record",
-            "context": "The pulse does not arrive on command. Mira holds the recorder switch and asks for a time limit and stop conditions.",
-            "statement": "I would agree the limits before switching the recorder on, even if the next pulse passed.",
+            "context": "The pulse may return at any time. Mira asks for a duration, power limit and stop conditions.",
+            "statement": "I would agree the limits before switching the recorder on.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Orderliness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Orderliness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1712,15 +1937,22 @@ window.AURORA_STATION_DATA = {
             "id": "q33",
             "number": 33,
             "title": "Two Years",
-            "context": "Ilan keeps both hands on the recorder case. He says he has spent two years trying to bring someone back to these traces.",
-            "statement": "I would acknowledge what this chance meant to Ilan before setting the limit.",
+            "context": "Ilan keeps both hands on the recorder case. He has spent two years returning to these traces.",
+            "statement": "I would acknowledge what the opportunity meant to Ilan before setting the limit.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Empathy",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Empathy",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1754,15 +1986,22 @@ window.AURORA_STATION_DATA = {
             "id": "q34",
             "number": 34,
             "title": "Twenty or Forty",
-            "context": "“Twenty minutes,” Mira says. “Forty,” Ilan answers. The fuel estimate drops before either looks at you.",
-            "statement": "When neither had new information, I would set the operating limit myself.",
+            "context": "Mira asks for twenty minutes. Ilan asks for forty. Neither adds new information.",
+            "statement": "I would set the operating limit myself when the discussion stopped moving.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Assertiveness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Assertiveness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1796,15 +2035,22 @@ window.AURORA_STATION_DATA = {
             "id": "q35",
             "number": 35,
             "title": "Under the Floor",
-            "context": "With the fans silent, the pulse seems to rise through your boots instead of the speakers.",
-            "statement": "I would feel the unknown source becoming personally threatening.",
+            "context": "With the fans silent, the pulse seems to rise through your boots rather than the speakers.",
+            "statement": "I would experience the unknown source as personally threatening.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Calmness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Calmness",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1848,15 +2094,22 @@ window.AURORA_STATION_DATA = {
             "id": "q36",
             "number": 36,
             "title": "Someone Outside",
-            "context": "Ilan's chair hits the wall. He points through the whiteout and says the same words again: someone is outside.",
-            "statement": "If tension entered my voice, I would find it difficult to settle back into a factual check.",
+            "context": "Ilan points into the whiteout. Your first reply comes out sharper than you intended.",
+            "statement": "I would recover an even tone before continuing the verification.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Resilience",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Resilience",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1890,15 +2143,22 @@ window.AURORA_STATION_DATA = {
             "id": "q37",
             "number": 37,
             "title": "Fear First",
-            "context": "Ilan is cold, exhausted and frightened. He keeps looking at the same point in the glass.",
-            "statement": "I would acknowledge his fear before deciding whether the figure was real.",
+            "context": "Ilan is cold and frightened. He keeps looking at the same point in the glass.",
+            "statement": "I would acknowledge his fear before deciding what he had seen.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Empathy",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Empathy",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1932,7 +2192,7 @@ window.AURORA_STATION_DATA = {
             "id": "q38",
             "number": 38,
             "title": "What It Could Be",
-            "context": "Reflection, ice, camera error, exhaustion—or a real figure. Changing the room light will test several at once.",
+            "context": "Reflection, ice, camera error, exhaustion and a real figure remain possible.",
             "statement": "I would keep more than one explanation in mind while the checks ran.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -1940,7 +2200,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "WO",
               "facet": "Ideas",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Ideas",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -1974,7 +2241,7 @@ window.AURORA_STATION_DATA = {
             "id": "q39",
             "number": 39,
             "title": "Nine More Checks",
-            "context": "The first camera and door checks show no entry. Mira opens the next feed. There are nine more.",
+            "context": "The first camera and door checks show no entry. Nine additional checks remain.",
             "statement": "I would be ready to stop after the first checks showed nothing.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -1982,7 +2249,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "ME",
               "facet": "Industriousness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Industriousness",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2016,15 +2290,22 @@ window.AURORA_STATION_DATA = {
             "id": "q40",
             "number": 40,
             "title": "Back Together",
-            "context": "Mira returns to the fuel trend. Ilan folds around the recorder. After the sighting, no one has acknowledged what just happened.",
-            "statement": "I would call a brief human reset before asking the room to work together again.",
+            "context": "Mira returns to fuel. Ilan folds around the recorder. The room separates into three silences.",
+            "statement": "I would create a shared rhythm that brought the group back into contact.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Enthusiasm",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Enthusiasm",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2068,7 +2349,7 @@ window.AURORA_STATION_DATA = {
             "id": "q41",
             "number": 41,
             "title": "The Sky Enters",
-            "context": "The alarms hold steady for a few seconds. Green and violet light moves across the ceiling, with a pale band none of you can name.",
+            "context": "Green and violet light moves across the ceiling while the alarm band stays red.",
             "statement": "I would take a few seconds to absorb the aurora's colour and scale.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -2076,7 +2357,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "WO",
               "facet": "Aesthetics",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Aesthetics",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2110,7 +2398,7 @@ window.AURORA_STATION_DATA = {
             "id": "q42",
             "number": 42,
             "title": "Drifting Baselines",
-            "context": "Several instrument baselines slide at once. Your fixed observation list is still clipped beside the screen.",
+            "context": "Several instrument baselines begin to drift. The fixed observation list remains beside the screen.",
             "statement": "I would keep the same observation order while the instruments drifted.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -2118,7 +2406,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "ME",
               "facet": "Orderliness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Orderliness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2152,15 +2447,22 @@ window.AURORA_STATION_DATA = {
             "id": "q43",
             "number": 43,
             "title": "Two Emergencies",
-            "context": "Mira watches survival systems. Ilan watches the signal. They stop speaking to each other.",
-            "statement": "I would let them stay on separate tasks and coordinate only at planned handovers.",
+            "context": "Mira watches survival systems. Ilan watches the signal. Their tasks no longer overlap naturally.",
+            "statement": "I would let them remain separate and coordinate mainly at planned handovers.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Cooperation",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Cooperation",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2194,15 +2496,22 @@ window.AURORA_STATION_DATA = {
             "id": "q44",
             "number": 44,
             "title": "Reconnect the Room",
-            "context": "Ilan speaks only to the recorder. Mira speaks only to the panel. The two workstreams are drifting apart in the same room.",
-            "statement": "I would use a clear, energetic summary to make the common task feel shared again.",
+            "context": "Mira and Ilan speak only to their own instruments. Neither hears the other's latest number.",
+            "statement": "I would make my engagement visible enough to reconnect the room.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Enthusiasm",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Enthusiasm",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2236,15 +2545,22 @@ window.AURORA_STATION_DATA = {
             "id": "q45",
             "number": 45,
             "title": "A Deliberate Sound",
-            "context": "The pulse resembles a call: three groups, the same pause, then three again. The resemblance is immediate; intention is not measurable.",
-            "statement": "I would notice the sense of presence without letting it displace the measured task.",
+            "context": "The pulse repeats like a call. The resemblance raises unease, though the measurements remain stable.",
+            "statement": "I would steady my attention and continue treating the pulse as measured data.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Calmness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Calmness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2288,15 +2604,22 @@ window.AURORA_STATION_DATA = {
             "id": "q46",
             "number": 46,
             "title": "One More Calculation",
-            "context": "The estimate is falling faster than before. Several assumptions are old, but only a few could still change the choice.",
-            "statement": "I would keep working through the calculation until the decision-changing values were checked.",
+            "context": "The fuel estimate is falling faster than before. Some assumptions may still be wrong.",
+            "statement": "I would recheck the parts of the calculation most likely to change the decision.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Industriousness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Industriousness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2330,15 +2653,22 @@ window.AURORA_STATION_DATA = {
             "id": "q47",
             "number": 47,
             "title": "A Third Plan",
-            "context": "Mira's heat plan and Ilan's recording plan are ready. A blank line remains between them on the board.",
-            "statement": "I would compare the two complete plans before spending time building a third.",
+            "context": "Mira's heat plan and Ilan's recording plan are complete. A third approach remains possible.",
+            "statement": "I would compare the two complete plans before developing another option.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Ideas",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Ideas",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2372,15 +2702,22 @@ window.AURORA_STATION_DATA = {
             "id": "q48",
             "number": 48,
             "title": "Cross-Examination",
-            "context": "Mira and Ilan hold accurate numbers and different blind spots. They keep directing their objections through you.",
-            "statement": "I would bring them into a direct exchange so each could test the other's assumptions.",
+            "context": "Mira and Ilan hold different assumptions. Both are ready to answer one direct question from the other.",
+            "statement": "I would invite them to test each other's assumptions openly.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Cooperation",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Cooperation",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2414,15 +2751,22 @@ window.AURORA_STATION_DATA = {
             "id": "q49",
             "number": 49,
             "title": "The Circle",
-            "context": "The same figures return, louder each time. The switch sequence needs several minutes that the argument is consuming.",
-            "statement": "I would interrupt and take control of the final exchange.",
+            "context": "The same figures return louder each time. The switch sequence is waiting.",
+            "statement": "I would interrupt the repetition and take control of the final exchange.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Assertiveness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Assertiveness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2456,15 +2800,22 @@ window.AURORA_STATION_DATA = {
             "id": "q50",
             "number": 50,
             "title": "Two Urgencies",
-            "context": "Mira says people may stop responding in the cold. Ilan says the signal may never return. The pressure in both voices is rising.",
-            "statement": "Under that pressure, I would struggle to return to the written criteria.",
+            "context": "Mira names the danger of cold. Ilan names the loss of the signal. The pressure rises.",
+            "statement": "I would recover from the emotional pull and return to the decision criteria.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Resilience",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Resilience",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2508,15 +2859,22 @@ window.AURORA_STATION_DATA = {
             "id": "q51",
             "number": 51,
             "title": "Behind the Numbers",
-            "context": "Mira's page carries three names under HEAT. Ilan's carries two years of dates under RECORD. Both still have to live with the outcome.",
-            "statement": "I would keep the personal stakes outside the decision, even when they changed how each person could carry the outcome.",
+            "context": "Mira's page carries three names under HEAT. Ilan's carries two years of dates under RECORD.",
+            "statement": "I would keep the personal meaning separate from the measurable comparison.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Empathy",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Empathy",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2550,15 +2908,22 @@ window.AURORA_STATION_DATA = {
             "id": "q52",
             "number": 52,
             "title": "One Grid",
-            "context": "The three plans use different notes, units and assumptions. A blank comparison grid waits on the console.",
-            "statement": "I would place all three plans into the same grid before choosing.",
+            "context": "The three plans use different units and assumptions. A blank grid waits on the console.",
+            "statement": "I would place all three plans into the same structure before choosing.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Orderliness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Orderliness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2592,15 +2957,22 @@ window.AURORA_STATION_DATA = {
             "id": "q53",
             "number": 53,
             "title": "The Unmeasured Cost",
-            "context": "The comparison grid shows a near tie. Two blank rows remain for consequences the current numbers do not capture.",
-            "statement": "I would explore whether an unmeasured consequence could reverse the apparent advantage.",
+            "context": "The immediate figures are close. Several consequences remain uncertain and may appear only later.",
+            "statement": "I would consider less-visible consequences before closing the decision.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Ideas",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Ideas",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2634,15 +3006,22 @@ window.AURORA_STATION_DATA = {
             "id": "q54",
             "number": 54,
             "title": "Without Certainty",
-            "context": "The final check is complete. No plan removes uncertainty, and the switch window is closing.",
-            "statement": "I would keep my attention usable long enough to choose, even with uncertainty still present.",
+            "context": "No plan removes every risk. The final comparison is complete and the switch window is closing.",
+            "statement": "I would steady myself enough to commit while uncertainty remained.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Calmness",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Calmness",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2676,15 +3055,22 @@ window.AURORA_STATION_DATA = {
             "id": "q55",
             "number": 55,
             "title": "The Duty Lead",
-            "context": "The plan has been chosen but not started. Mira's hand is on the switch; Ilan waits for the final instruction.",
-            "statement": "I would keep the direction provisional until they had one last chance to challenge it.",
+            "context": "The choice is made. Mira and Ilan understand it, but one final challenge is still possible.",
+            "statement": "I would present the direction as provisional until they had one last chance to challenge it.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Assertiveness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Assertiveness",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2728,15 +3114,22 @@ window.AURORA_STATION_DATA = {
             "id": "q56",
             "number": 56,
             "title": "Three Sleeping Bags",
-            "context": "All three must remain inside the heated refuge. The open question is how to arrange rest, watch and the cramped shared space.",
-            "statement": "I would organise the refuge through one shared plan for rest, watch and warmth.",
+            "context": "The smallest warm room can hold all three. The sleeping positions and watch roles still need agreement.",
+            "statement": "I would work with the others to arrange one shared refuge plan.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Cooperation",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Cooperation",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2770,7 +3163,7 @@ window.AURORA_STATION_DATA = {
             "id": "q57",
             "number": 57,
             "title": "What Still Works",
-            "context": "There is no powered system left to change. Radio listening, symptom checks and entry preparation still remain.",
+            "context": "No powered system can be changed. Radio listening and survival checks still remain.",
             "statement": "I would stop the regular routine and conserve energy until conditions changed.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -2778,7 +3171,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "ME",
               "facet": "Industriousness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw"
+              "correctedScoreFormula": "7 - raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Industriousness",
+                "keyDirection": "R",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2812,7 +3212,7 @@ window.AURORA_STATION_DATA = {
             "id": "q58",
             "number": 58,
             "title": "Keep Time Moving",
-            "context": "Between radio checks, the chemical light barely moves. Silence saves energy but hides how alert each person remains.",
+            "context": "Between radio checks, the chemical light barely moves. Silence hides how alert each person remains.",
             "statement": "I would keep a quiet conversation moving through the wait.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -2820,7 +3220,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "FI",
               "facet": "Enthusiasm",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Enthusiasm",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2862,7 +3269,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "WA",
               "facet": "Resilience",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Resilience",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2896,7 +3310,7 @@ window.AURORA_STATION_DATA = {
             "id": "q60",
             "number": 60,
             "title": "What the Log Misses",
-            "context": "The fault log holds times, loads and alarms. It has no field for the light at the window or the knocks beneath your feet.",
+            "context": "The fault log holds times, loads and alarms, but not the light or the knocks.",
             "statement": "I would record the night's colours, sounds and unanswered details beside the technical report.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -2904,7 +3318,14 @@ window.AURORA_STATION_DATA = {
               "elementCode": "WO",
               "facet": "Aesthetics",
               "key": "+",
-              "correctedScoreFormula": "raw"
+              "correctedScoreFormula": "raw",
+              "constructContract": {
+                "format": "single-statement Likert 1-6",
+                "targetFacet": "Aesthetics",
+                "keyDirection": "+",
+                "contextRule": "Neutral narrative context; no preferred response stated",
+                "responseRule": "Rate how closely the statement matches the player’s likely response"
+              }
             },
             "responseBranches": {
               "low": {
@@ -2989,7 +3410,7 @@ window.AURORA_STATION_DATA = {
     "shared": "No camera or sensor ever confirms the figure Ilan saw in the whiteout.\n\nIn the tracked vehicle, Mira says the first Sector C warning should have been escalated. Ilan holds the data drive in both hands and says he will return when Aurora is safe.\n\nThrough the ice-covered window, the station becomes a black shape beneath a colourless sky. Warm air pulls you towards sleep, but the night's evidence refuses to settle.\n\nThe pulse, the drifting instruments and the figure may share one cause—or none. Ice movement, damaged machinery, interference and exhaustion remain possible in different combinations. The record ends before those possibilities do.\n\nWhen the next watch returns to Aurora, what will it hear beneath the ordinary noise?"
   },
   "narrativeDelivery": {
-    "principle": "The system remains analytical underneath; the reader experiences a story on the surface.",
+    "principle": "The system remains analytical underneath; the reader experiences a story on the surface, while each statement remains a neutral single-construct Likert item.",
     "voice": "Second person, present tense, restrained psychological hard science fiction.",
     "visibleLayer": [
       "scene",
