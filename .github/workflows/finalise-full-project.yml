@@ -22,7 +22,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base64 --decode .narrative-deploy/payload.tar.xz.b64 | tar -xJf -
+          cat .narrative-deploy/chunk-* | base64 --decode | tar -xJf -
 
       - name: Validate syntax, scoring and narrative contract
         shell: bash
@@ -40,6 +40,7 @@ jobs:
         run: |
           rm -rf .narrative-deploy .deploy
           rm -f .github/workflows/finalise-full-project.yml
+          rm -f .story-first-trigger
 
       - name: Commit clean story-first project
         shell: bash
