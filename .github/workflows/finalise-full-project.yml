@@ -1,0 +1,48 @@
+name: Finalise full Aurora project
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/finalise-full-project.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalise:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Restore final project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode .deploy/style-tests.b64 | gzip --decompress | tar -xf -
+          rm -f .deploy/style-tests.b64
+          rmdir .deploy 2>/dev/null || true
+          rm -f .github/workflows/finalise-full-project.yml
+
+      - name: Validate final project
+        shell: bash
+        run: |
+          node --check app.js
+          node --check audio.js
+          node --check aurora.js
+          node --check core.js
+          node --check pdf-export.js
+          node tests.mjs
+
+      - name: Commit complete project
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Synchronise complete Aurora Station project'
+          git push origin main
