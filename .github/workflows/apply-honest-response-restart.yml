@@ -18,6 +18,28 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
+      - name: Normalise temporary test patch literals
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.ux-pass/apply-honest-response-restart.mjs')
+          s = p.read_text()
+          s = s.replace(
+              r'assert.match(appSource, /PRELUDE 03 \/ 03/);',
+              'assert.ok(appSource.includes("PRELUDE 03 / 03"));',
+          )
+          s = s.replace(
+              r'assert.match(appSource, /core\.clearState/);',
+              'assert.ok(appSource.includes("core.clearState"));',
+          )
+          marker = "replaceOnce(\n  testsPath,\n  `assert.match(stylesSource, /\\.movement-graphic/);`"
+          start = s.index(marker)
+          end = s.index("\n);\n\nconsole.log", start) + len("\n);")
+          s = s[:start] + s[end:]
+          p.write_text(s)
+          PY
+
       - name: Apply content and interface pass
         run: node .ux-pass/apply-honest-response-restart.mjs
 
@@ -27,6 +49,10 @@ jobs:
           node --check core.js
           node --check app.js
           node tests.mjs
+          grep -q 'orientation-guidance' styles.css
+          grep -q 'restart-watch' styles.css
+          grep -q 'restart-dialog' styles.css
+          grep -q 'id="restart-watch"' index.html
 
       - name: Run Impeccable detector
         id: impeccable
