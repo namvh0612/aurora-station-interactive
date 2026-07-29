@@ -22,8 +22,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base64 --decode .deploy/style-tests.b64 | gzip --decompress | tar -xf -
-          rm -f .deploy/style-tests.b64
+          cat .deploy/chunk-* | base64 --decode | gzip --decompress | tar -xf -
+          rm -f .deploy/style-tests.b64 .deploy/chunk-*
           rmdir .deploy 2>/dev/null || true
           rm -f .github/workflows/finalise-full-project.yml
 
