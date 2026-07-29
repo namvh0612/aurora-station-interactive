@@ -25,7 +25,6 @@
   const RESULT_SESSION_KEY = "aurora-station-result-deck-v1";
   let interactionLocked = false;
   let entryDialog = null;
-  let restartDialog = null;
   let resultState = loadResultState();
   let state;
 
@@ -43,21 +42,6 @@
       return window.sessionStorage;
     } catch {
       return null;
-    }
-  }
-
-  function clearRestartMarkerFromUrl() {
-    try {
-      const url = new URL(window.location.href);
-      if (!url.searchParams.has("restart")) {
-        return;
-      }
-
-      url.searchParams.delete("restart");
-      const cleanUrl = `${url.pathname}${url.search}${url.hash}`;
-      window.history.replaceState(null, "", cleanUrl);
-    } catch {
-      // URL cleanup is cosmetic and must never block the experience.
     }
   }
 
@@ -575,101 +559,24 @@
     state = core.emptyState();
   }
 
-  function buildRestartDialog() {
-    if (restartDialog) {
-      return restartDialog;
-    }
-
-    const dialog = element("dialog", "restart-dialog");
-    dialog.setAttribute("aria-labelledby", "restart-dialog-title");
-    dialog.setAttribute("aria-describedby", "restart-dialog-summary");
-
-    const frame = element("div", "restart-dialog-frame");
-    frame.appendChild(
-      element("p", "restart-dialog-kicker", "WATCH CONTROL"),
-    );
-
-    const title = element("h2", "restart-dialog-title", "Restart the watch?");
-    title.id = "restart-dialog-title";
-    frame.appendChild(title);
-
-    const summary = element(
-      "p",
-      "restart-dialog-summary",
-      "This removes the watchkeeper name, every response, the reserve decision and the saved debrief from this browser.",
-    );
-    summary.id = "restart-dialog-summary";
-    frame.appendChild(summary);
-    frame.appendChild(
-      element(
-        "p",
-        "restart-dialog-note",
-        "This cannot be undone. Your sound preference will remain unchanged.",
-      ),
-    );
-
-    const actions = element("footer", "restart-dialog-actions");
-    const cancelButton = element(
-      "button",
-      "entry-secondary",
-      "Keep current journey",
-    );
-    cancelButton.type = "button";
-    const eraseButton = element(
-      "button",
-      "entry-danger",
-      "Erase and restart",
-    );
-    eraseButton.type = "button";
-    actions.append(cancelButton, eraseButton);
-    frame.appendChild(actions);
-
-    cancelButton.addEventListener("click", () => dialog.close());
-    eraseButton.addEventListener("click", () => {
-      clearPlayerCache();
-      interactionLocked = false;
-      document.body.classList.remove("restart-open", "onboarding-open");
-
-      // Reloading the document is deliberate: it guarantees that every
-      // modal and backdrop leaves the browser top layer before onboarding
-      // starts again. The query marker also bypasses a stale cached page.
-      const restartUrl = new URL(window.location.href);
-      restartUrl.searchParams.set("restart", String(Date.now()));
-      restartUrl.hash = "";
-
-      try {
-        window.location.replace(restartUrl.toString());
-      } catch {
-        window.location.reload();
-      }
-    });
-
-    dialog.addEventListener("close", () => {
-      document.body.classList.remove("restart-open");
-    });
-
-    document.body.appendChild(dialog);
-    restartDialog = dialog;
-    return dialog;
+  function restartJourney() {
+    clearPlayerCache();
+    interactionLocked = false;
+    document.body.classList.remove("restart-open", "onboarding-open");
+    render();
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    openStationEntry();
+    announce("Journey cleared. Enter a new watchkeeper name to begin again.");
   }
 
-  function openRestartDialog() {
-    if (!state.onboardingComplete) {
+  function confirmRestartJourney() {
+    const confirmed = window.confirm(
+      "Start Aurora Station again? Your watchkeeper name, responses, reserve decision and saved debrief will be cleared.",
+    );
+    if (!confirmed) {
       return;
     }
-
-    const dialog = buildRestartDialog();
-    document.body.classList.add("restart-open");
-    if (typeof dialog.showModal === "function") {
-      if (!dialog.open) {
-        dialog.showModal();
-      }
-    } else {
-      dialog.setAttribute("open", "");
-    }
-    window.requestAnimationFrame(() =>
-      dialog.querySelector(".entry-secondary")?.focus(),
-    );
+    restartJourney();
   }
 
   function updateProgress() {
@@ -1254,20 +1161,7 @@
 
     const restartButton = element("button", "restart-button", "Start again");
     restartButton.type = "button";
-    restartButton.addEventListener("click", () => {
-      const confirmed = window.confirm(
-        "Start Aurora Station again? Your current journey will be cleared.",
-      );
-      if (!confirmed) {
-        return;
-      }
-      core.clearState(safeStorage());
-      safeSessionStorage()?.removeItem(RESULT_SESSION_KEY);
-      resultState = { activePage: 0, activeCurrent: "WO" };
-      state = core.emptyState();
-      render();
-      openStationEntry();
-    });
+    restartButton.addEventListener("click", confirmRestartJourney);
     utilities.appendChild(restartButton);
     masthead.appendChild(utilities);
     section.appendChild(masthead);
@@ -1812,9 +1706,8 @@
   }
 
   audioManager?.init({ toggleButton: soundToggle });
-  restartButton?.addEventListener("click", openRestartDialog);
+  restartButton?.addEventListener("click", confirmRestartJourney);
   state = core.sanitiseState(data, core.loadState(data, safeStorage()));
-  clearRestartMarkerFromUrl();
   render();
   openStationEntry();
 })();

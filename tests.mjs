@@ -262,22 +262,28 @@ assert.match(appSource, /There is no answer key/);
 assert.match(appSource, /subjective self-report/);
 assert.match(appSource, /Choose 1 when the statement does not resemble you at all/);
 assert.match(appSource, /PRELUDE 03 \/ 03/);
-assert.match(appSource, /Erase and restart/);
+assert.match(appSource, /Start Aurora Station again\?/);
 assert.match(appSource, /core\.clearState/);
-assert.doesNotMatch(appSource, /restartRequested/);
-const restartDialogSource = appSource.slice(
-  appSource.indexOf("function buildRestartDialog"),
-  appSource.indexOf("function openRestartDialog"),
+assert.match(appSource, /function restartJourney/);
+assert.match(appSource, /function confirmRestartJourney/);
+assert.doesNotMatch(appSource, /function buildRestartDialog/);
+assert.doesNotMatch(appSource, /function openRestartDialog/);
+assert.doesNotMatch(appSource, /restartDialog/);
+assert.doesNotMatch(appSource, /clearRestartMarkerFromUrl/);
+assert.doesNotMatch(appSource, /window\.location\.replace\(restartUrl/);
+assert.equal(
+  (appSource.match(/addEventListener\("click", confirmRestartJourney\)/g) || []).length,
+  2,
+);
+const sharedRestartSource = appSource.slice(
+  appSource.indexOf("function restartJourney"),
+  appSource.indexOf("function updateProgress"),
 );
 assert.match(
-  restartDialogSource,
-  /clearPlayerCache\(\)[\s\S]*?searchParams\.set\("restart"[\s\S]*?window\.location\.replace/i,
+  sharedRestartSource,
+  /clearPlayerCache\(\)[\s\S]*?render\(\)[\s\S]*?openStationEntry\(\)/,
 );
-assert.doesNotMatch(restartDialogSource, /openStationEntry\(\)/);
-assert.doesNotMatch(restartDialogSource, /window\.setTimeout/);
-assert.match(appSource, /function clearRestartMarkerFromUrl/);
-assert.match(appSource, /clearRestartMarkerFromUrl\(\)/);
-assert.match(indexSource, /app\.js\?v=4\.1\.1/);
+assert.match(indexSource, /app\.js\?v=4\.1\.2/);
 assert.match(appSource, /Continue to dawn debrief/);
 assert.match(appSource, /What the watch leaves behind/);
 assert.match(appSource, /core\.acknowledgeEnding/);
