@@ -1,0 +1,49 @@
+name: Delete all non-main branches
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  delete-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Delete every remote branch except main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          remote_url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          branches=$(git ls-remote --heads "$remote_url" \
+            | awk -F'refs/heads/' '{print $2}' \
+            | grep -v '^main$' || true)
+
+          echo "Branches scheduled for deletion:"
+          printf '%s\n' "$branches"
+
+          for branch in $branches; do
+            git push "$remote_url" --delete "$branch" || true
+          done
+
+          remaining=$(git ls-remote --heads "$remote_url" \
+            | awk -F'refs/heads/' '{print $2}')
+          test "$remaining" = "main"
+          echo "Only main remains."
+
+      - name: Remove this one-time workflow
+        run: |
+          rm -f .github/workflows/delete-all-non-main-branches.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Remove one-time branch cleanup workflow'
+          git push origin HEAD:main
