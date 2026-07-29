@@ -1,7 +1,7 @@
 /* Edit this data file to update the story; no rebuild is required. */
 window.AURORA_STATION_DATA = {
   "schemaVersion": "1.0.0",
-  "contentVersion": "3.0.0-story-first-narrative",
+  "contentVersion": "3.1.0-editorial-integrity",
   "id": "aurora-station",
   "title": "Aurora Station",
   "subtitle": "The Final Watch",
@@ -308,8 +308,8 @@ window.AURORA_STATION_DATA = {
             "id": "q01",
             "number": 1,
             "title": "Six Words",
-            "context": "Mira's gloved hand rests on the door. The Sector C entry has six words and no instruction for what happens next.",
-            "statement": "I would keep Mira there until the warning included a clear next step.",
+            "context": "Mira's gloved hand rests on the door. The Sector C entry lists the warning, but not what she checked or ruled out.",
+            "statement": "I would keep Mira there until the handover showed what she had checked and what remained open.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -333,7 +333,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You add the last timestamps and one recall point. Mira answers, then leaves."
+                "transition": "You add the last timestamps and one unresolved check. Mira answers, then leaves."
               },
               "high": {
                 "responses": [
@@ -341,7 +341,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You ask Mira to list the checks, the open questions and the trigger for calling her back. Her rest begins a few minutes later."
+                "transition": "You ask Mira to list the checks, the causes she ruled out and the questions still open. Her rest begins a few minutes later."
               }
             },
             "convergence": "The record now shows three brief spikes. Each cleared by itself, and none reached the trip limit."
@@ -350,8 +350,8 @@ window.AURORA_STATION_DATA = {
             "id": "q02",
             "number": 2,
             "title": "At the Door",
-            "context": "One question remains: does Mira return for another heat spike, or only when an electrical reading moves too? The manual is open on the desk.",
-            "statement": "I would let Mira go and look for the answer in the standing instructions.",
+            "context": "The handover is complete. One boundary remains: what change should bring Mira back—the next heat spike, or heat plus an electrical shift?",
+            "statement": "I would let Mira leave and rely on the written instruction to define that boundary.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -528,8 +528,8 @@ window.AURORA_STATION_DATA = {
             "id": "q06",
             "number": 6,
             "title": "The Shape",
-            "context": "All values remain below their limits. On replay, the traces form the same order: magnetics, current, heat.",
-            "statement": "I would stay with the defined limits rather than the shape and rhythm of the traces.",
+            "context": "All values remain below their limits. On replay, the traces repeat the same spacing: magnetics, current, heat.",
+            "statement": "I would treat the traces as separate readings and ignore their shared rhythm unless a limit was crossed.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -553,7 +553,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You check the limits, then save a short high-resolution replay."
+                "transition": "You check the limits, then save a short replay that preserves the sequence."
               },
               "high": {
                 "responses": [
@@ -561,7 +561,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You keep the response tied to the documented limits. Ilan later enlarges the same trace."
+                "transition": "You keep the response tied to individual readings. Ilan later notices the repeated rhythm."
               }
             },
             "convergence": "The order is repeatable. It does not explain the fault, but it is not random noise."
@@ -612,7 +612,7 @@ window.AURORA_STATION_DATA = {
             "id": "q08",
             "number": 8,
             "title": "Three Views",
-            "context": "Mira knows the hardware. Ilan knows the old pattern. You have the live picture. All three are now at the same screen.",
+            "context": "Mira is back at the console. She knows the hardware; Ilan knows the old pattern; you hold the live picture.",
             "statement": "I would form my own explanation before bringing their views together.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -790,8 +790,8 @@ window.AURORA_STATION_DATA = {
             "id": "q12",
             "number": 12,
             "title": "Behind the Cover",
-            "context": "The likely hot point sits behind the front cover. The inspection checklist begins several steps earlier.",
-            "statement": "I would go to the suspected hot point before completing the full inspection sequence.",
+            "context": "The critical isolation checks are complete. The full checklist adds several lower-risk confirmations before the likely hot point.",
+            "statement": "I would move to the suspected hot point before completing those remaining confirmations.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -807,7 +807,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You begin outside the cabinet and work inward through every isolation check."
+                "transition": "You finish the remaining confirmations, then open the cover with the full sequence complete."
               },
               "mid": {
                 "responses": [
@@ -815,7 +815,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You complete the critical safeguards, then move to the suspected point."
+                "transition": "You complete only the checks that could still change the safety boundary, then move inward."
               },
               "high": {
                 "responses": [
@@ -823,7 +823,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You go straight to the hot section while Mira reads the missed safeguards over the radio."
+                "transition": "You move to the hot section while Mira tracks the deferred confirmations over the radio."
               }
             },
             "convergence": "A portable meter shows leakage on the Sector C branch and a smaller pulse upstream."
@@ -874,8 +874,8 @@ window.AURORA_STATION_DATA = {
             "id": "q14",
             "number": 14,
             "title": "Radio Picture",
-            "context": "Mira and Ilan cannot see the cabinet or your position. The radio is their only view into the corridor.",
-            "statement": "I would give short radio updates while working, not only at decision points.",
+            "context": "Mira and Ilan cannot see the cabinet or your position. A pause on the radio leaves them with only the burnt smell and alarms.",
+            "statement": "I would describe what I could see and what remained uncertain so they were not left imagining the corridor.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -899,7 +899,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You report at each decision point."
+                "transition": "You report what is visible at each decision point and leave the smaller uncertainties unspoken."
               },
               "high": {
                 "responses": [
@@ -907,7 +907,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You give position, risk and next action before every change."
+                "transition": "You give position, visible risk, uncertainty and next action before every change."
               }
             },
             "convergence": "The branch can be isolated, but the upstream pulse keeps the main supply suspect."
@@ -968,8 +968,8 @@ window.AURORA_STATION_DATA = {
             "id": "q16",
             "number": 16,
             "title": "Ninety Seconds",
-            "context": "The controller counts down. Mira reads voltage, frequency, load and oil pressure in the same measured voice.",
-            "statement": "I would issue the first recovery order before Mira finished the critical readings.",
+            "context": "The controller counts down from ninety. Mira reads voltage, frequency, load and oil pressure in the same measured voice.",
+            "statement": "I would feel the countdown pushing me to act before the critical readings were complete.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -985,7 +985,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You wait for the essential values. Mira calls for a precise forty-percent cut."
+                "transition": "You let the pressure pass through the room without becoming the order. Mira calls for a precise forty-percent cut."
               },
               "mid": {
                 "responses": [
@@ -993,7 +993,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You ask only for the values that change the decision."
+                "transition": "You ask only for the values that can still change the first action."
               },
               "high": {
                 "responses": [
@@ -1001,7 +1001,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You order an immediate cut, then narrow it as Mira's readings arrive."
+                "transition": "The falling number drives an immediate cut; you narrow it as Mira's readings arrive."
               }
             },
             "convergence": "The same critical loads survive. The bus settles before the countdown reaches zero."
@@ -1010,8 +1010,8 @@ window.AURORA_STATION_DATA = {
             "id": "q17",
             "number": 17,
             "title": "Keep Going",
-            "context": "Emergency power is stable. The main generator is still unavailable, and the upstream leakage has no cause.",
-            "statement": "I would continue into deeper diagnostics before letting the team pause.",
+            "context": "Emergency power is stable. Several checks could still change whether the main generator is attempted again tonight.",
+            "statement": "I would keep the team moving through the checks that could still change the recovery plan before calling a pause.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -1027,7 +1027,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You protect the stable state and call a short recovery break."
+                "transition": "You protect the stable state and call a short recovery break before deeper work."
               },
               "mid": {
                 "responses": [
@@ -1035,7 +1035,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You complete only the checks that decide whether restart is possible."
+                "transition": "You complete the single check most likely to change the plan, then pause."
               },
               "high": {
                 "responses": [
@@ -1043,7 +1043,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You continue while the evidence is fresh and postpone the first rest."
+                "transition": "You finish the decision-relevant checks while the evidence is fresh, then release the team to rest."
               }
             },
             "convergence": "The main generator cannot be restarted safely while the station is occupied."
@@ -1094,8 +1094,8 @@ window.AURORA_STATION_DATA = {
             "id": "q19",
             "number": 19,
             "title": "The Red Room",
-            "context": "The restart attempt ends. Mira stops speaking. Ilan stops asking questions. Only the generator note fills the room.",
-            "statement": "I would work quietly and let them recover their own momentum.",
+            "context": "The restart attempt ends. Mira stops speaking. Ilan stops asking questions. The room has lost any visible sense of progress.",
+            "statement": "I would keep my response contained rather than mark the progress we had made.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -1111,7 +1111,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You name what has already been achieved and give the next task a clear beginning."
+                "transition": "You name what the team has already secured and give the next task a clear beginning."
               },
               "mid": {
                 "responses": [
@@ -1127,7 +1127,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You return to your work without asking either person to answer your energy."
+                "transition": "You return to your own work without making the room's progress visible."
               }
             },
             "convergence": "The room finds a working pace again, without any promise that the main generator will return."
@@ -1188,8 +1188,8 @@ window.AURORA_STATION_DATA = {
             "id": "q21",
             "number": 21,
             "title": "Other Routes",
-            "context": "The long-range route is dead. A low-power call, another antenna path or a field relay might still work.",
-            "statement": "I would spend some remaining power testing less conventional ways to make contact.",
+            "context": "Mira sets a small test budget for radio power and time. A low-power call, another antenna path or a field relay might still work.",
+            "statement": "Within that fixed budget, I would try more than one plausible route to make contact.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -1205,7 +1205,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You accept the isolation and protect power for heat and monitoring."
+                "transition": "You protect the budget for one conventional call path and stop when it fails."
               },
               "mid": {
                 "responses": [
@@ -1213,7 +1213,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You test the two routes with the best chance, then stop."
+                "transition": "You test the two routes with the strongest evidence, then stop."
               },
               "high": {
                 "responses": [
@@ -1221,7 +1221,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You work through every plausible route and rule several of them out."
+                "transition": "You use the fixed budget across several distinct, plausible routes and rule each one in or out."
               }
             },
             "convergence": "No route reaches outside. Aurora must plan as if no answer is coming."
@@ -1450,8 +1450,8 @@ window.AURORA_STATION_DATA = {
             "id": "q27",
             "number": 27,
             "title": "Small Loads",
-            "context": "The major loads are already off. A few small lights, chargers and heat leaks remain.",
-            "statement": "I would keep searching for smaller savings even if the next rest cycle had to wait.",
+            "context": "The major loads are off. A few small lights, chargers and heat leaks remain, each with an uncertain return.",
+            "statement": "I would continue through the remaining small loads while each check still offered a plausible saving.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -1475,7 +1475,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You test only the small changes with a plausible return."
+                "transition": "You test only the small changes with the clearest return."
               },
               "high": {
                 "responses": [
@@ -1483,7 +1483,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You continue through every small load and seal. Several extra minutes appear in the estimate."
+                "transition": "You continue until the remaining checks no longer offer a credible saving. Several extra minutes appear in the estimate."
               }
             },
             "convergence": "The survival setup may last until 04:10, if no new fault appears."
@@ -1534,8 +1534,8 @@ window.AURORA_STATION_DATA = {
             "id": "q29",
             "number": 29,
             "title": "The Cold Routine",
-            "context": "Checks, radio calls and small adjustments repeat. Between them, the room becomes very quiet.",
-            "statement": "I would work quietly and let each person manage their own energy.",
+            "context": "Checks, radio calls and small adjustments repeat. Between them, the room settles into long stretches of silence.",
+            "statement": "I would let the quiet remain unbroken unless the work required speech.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -1551,7 +1551,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You keep light conversation moving between checks."
+                "transition": "You keep a low current of conversation moving between checks."
               },
               "mid": {
                 "responses": [
@@ -1559,7 +1559,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You use few words but make contact at every handover."
+                "transition": "You make brief contact at each handover and allow silence between them."
               },
               "high": {
                 "responses": [
@@ -1567,7 +1567,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You allow long stretches of independent work."
+                "transition": "You leave the quiet intact and speak only when the task requires it."
               }
             },
             "convergence": "The group stays functional. Ilan finds the same interval in the old anomaly file."
@@ -1576,8 +1576,8 @@ window.AURORA_STATION_DATA = {
             "id": "q30",
             "number": 30,
             "title": "Frost at the Door",
-            "context": "Frost creeps along the corridor seal. Refuge temperature and fuel remain inside their trigger lines.",
-            "statement": "The frost alone would not make me reopen the heat plan.",
+            "context": "Frost creeps along the corridor seal. A check against the model shows refuge temperature and fuel still inside their trigger lines.",
+            "statement": "After checking the frost, I would return to the routine without carrying the concern into every task.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -1593,7 +1593,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You reopen the calculation and check every assumption again."
+                "transition": "The image of the frost stays with you. You reopen the calculation and begin checking assumptions again."
               },
               "mid": {
                 "responses": [
@@ -1601,7 +1601,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You compare the trend with the trigger points before deciding."
+                "transition": "You compare the trend with the trigger points, then take another check to settle your attention."
               },
               "high": {
                 "responses": [
@@ -1609,7 +1609,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You keep the allocation and continue monitoring."
+                "transition": "You register the concern, confirm the limits and return fully to the working rhythm."
               }
             },
             "convergence": "The refuge remains in range. Beneath the floor, the pulse repeats clearly enough for the recorder."
@@ -1628,8 +1628,8 @@ window.AURORA_STATION_DATA = {
             "id": "q31",
             "number": 31,
             "title": "The Whole Pulse",
-            "context": "Mira wants the safety values. Ilan wants the shape, spacing and sound of the complete pulse.",
-            "statement": "I would preserve the signal's rhythm and texture, even if the record became less compact.",
+            "context": "The recorder can hold a compact safety record or fewer events in full detail. Mira wants the values; Ilan wants the complete pulse.",
+            "statement": "I would give up some recording capacity to preserve the pulse's full rhythm and texture.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -1645,7 +1645,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You save the safety values first and allow one short waveform."
+                "transition": "You keep the compact safety record and allow one short waveform."
               },
               "mid": {
                 "responses": [
@@ -1661,7 +1661,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You retain the full shape, spacing and room conditions around it."
+                "transition": "You reserve enough capacity for the full shape, spacing, sound and room conditions around several groups."
               }
             },
             "convergence": "The record confirms a repeatable delay from magnetic movement to sound."
@@ -1849,7 +1849,7 @@ window.AURORA_STATION_DATA = {
             "number": 36,
             "title": "Someone Outside",
             "context": "Ilan's chair hits the wall. He points through the whiteout and says the same words again: someone is outside.",
-            "statement": "I would hear tension enter my voice before I verified what he saw.",
+            "statement": "If tension entered my voice, I would find it difficult to settle back into a factual check.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -1865,7 +1865,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You keep your voice even and ask for place, movement and duration."
+                "transition": "Your first reply sharpens, then settles. You ask for place, movement and duration."
               },
               "mid": {
                 "responses": [
@@ -1873,7 +1873,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "A sharp reply rises; you pause and turn it into a factual question."
+                "transition": "You pause long enough to turn the tension into a factual question."
               },
               "high": {
                 "responses": [
@@ -1881,7 +1881,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "Your voice tightens before the check begins. Ilan answers with equal force."
+                "transition": "The tension remains in your voice and keeps pulling the check back towards the fear in the room."
               }
             },
             "convergence": "He identifies one point beyond the left window frame, but cannot separate movement from reflection."
@@ -2016,8 +2016,8 @@ window.AURORA_STATION_DATA = {
             "id": "q40",
             "number": 40,
             "title": "Back Together",
-            "context": "Mira returns to the fuel trend. Ilan folds around the recorder. The room has split into three silences.",
-            "statement": "I would try to bring everyone back into a shared rhythm.",
+            "context": "Mira returns to the fuel trend. Ilan folds around the recorder. After the sighting, no one has acknowledged what just happened.",
+            "statement": "I would call a brief human reset before asking the room to work together again.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2049,7 +2049,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You begin a speak-check-work rotation and draw everyone into it."
+                "transition": "You bring everyone into a brief shared check-in, then restart the watch as one group."
               }
             },
             "convergence": "A twenty-minute rotation begins. No second figure appears."
@@ -2068,7 +2068,7 @@ window.AURORA_STATION_DATA = {
             "id": "q41",
             "number": 41,
             "title": "The Sky Enters",
-            "context": "Green and violet light moves across the ceiling while the alarm band stays red.",
+            "context": "The alarms hold steady for a few seconds. Green and violet light moves across the ceiling, with a pale band none of you can name.",
             "statement": "I would take a few seconds to absorb the aurora's colour and scale.",
             "spectrumId": "self-fit-6",
             "assessment": {
@@ -2194,8 +2194,8 @@ window.AURORA_STATION_DATA = {
             "id": "q44",
             "number": 44,
             "title": "Reconnect the Room",
-            "context": "Ilan speaks only to the recorder. Mira speaks only to the panel. Neither hears the other's latest number.",
-            "statement": "I would use my own energy to reconnect the group.",
+            "context": "Ilan speaks only to the recorder. Mira speaks only to the panel. The two workstreams are drifting apart in the same room.",
+            "statement": "I would use a clear, energetic summary to make the common task feel shared again.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2219,7 +2219,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You call one shared update and return both people to their work."
+                "transition": "You call one shared update, then return both people to their work."
               },
               "high": {
                 "responses": [
@@ -2227,7 +2227,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You step between the stations, restate the common problem and make each person answer the other."
+                "transition": "You step between the stations, restate the common problem with visible energy and make each person answer the other."
               }
             },
             "convergence": "The room returns to one operating picture as the fuel estimate drops again."
@@ -2236,8 +2236,8 @@ window.AURORA_STATION_DATA = {
             "id": "q45",
             "number": 45,
             "title": "A Deliberate Sound",
-            "context": "The pulse now resembles a call: three groups, the same pause, then three again. No instrument can measure intention.",
-            "statement": "I would still experience the pulse mainly as data, not as a presence.",
+            "context": "The pulse resembles a call: three groups, the same pause, then three again. The resemblance is immediate; intention is not measurable.",
+            "statement": "I would notice the sense of presence without letting it displace the measured task.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2253,7 +2253,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "The resemblance becomes hard to separate from the source. You check the room as well as the trace."
+                "transition": "The resemblance takes over the room. You check the walls and window before returning to the trace."
               },
               "mid": {
                 "responses": [
@@ -2261,7 +2261,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You notice the likeness, name it, then return to timing and amplitude."
+                "transition": "You name the feeling, then bring your attention back to timing and amplitude."
               },
               "high": {
                 "responses": [
@@ -2269,7 +2269,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You keep the signal at the distance of a measured pattern."
+                "transition": "You hold the unease beside the data and continue the measured check without narrowing your attention."
               }
             },
             "convergence": "The pattern remains repeatable. Its source and meaning remain unknown."
@@ -2288,8 +2288,8 @@ window.AURORA_STATION_DATA = {
             "id": "q46",
             "number": 46,
             "title": "One More Calculation",
-            "context": "The fuel estimate drops faster than before. The old calculation is still open beside the falling number.",
-            "statement": "I would spend part of the remaining time rebuilding the calculation before committing.",
+            "context": "The estimate is falling faster than before. Several assumptions are old, but only a few could still change the choice.",
+            "statement": "I would keep working through the calculation until the decision-changing values were checked.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2313,7 +2313,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You recalculate only the values most likely to change the decision."
+                "transition": "You verify the single assumption most likely to move the result."
               },
               "high": {
                 "responses": [
@@ -2321,10 +2321,10 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You rebuild the full estimate while Mira reads the remaining seconds aloud."
+                "transition": "You check every assumption that could still change the choice and leave the rest untouched."
               }
             },
-            "convergence": "The new result changes little: one major load, about fifteen minutes."
+            "convergence": "The revised result changes little: one major load, about fifteen minutes."
           },
           {
             "id": "q47",
@@ -2372,8 +2372,8 @@ window.AURORA_STATION_DATA = {
             "id": "q48",
             "number": 48,
             "title": "Cross-Examination",
-            "context": "Mira and Ilan hold accurate numbers and different blind spots. Both are looking at you instead of each other.",
-            "statement": "I would ask them to challenge each other's assumptions directly.",
+            "context": "Mira and Ilan hold accurate numbers and different blind spots. They keep directing their objections through you.",
+            "statement": "I would bring them into a direct exchange so each could test the other's assumptions.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2456,8 +2456,8 @@ window.AURORA_STATION_DATA = {
             "id": "q50",
             "number": 50,
             "title": "Two Urgencies",
-            "context": "Mira says people may stop responding in the cold. Ilan says the signal may never return. Both wait for your answer.",
-            "statement": "I would feel my view shift towards whichever loss felt most immediate.",
+            "context": "Mira says people may stop responding in the cold. Ilan says the signal may never return. The pressure in both voices is rising.",
+            "statement": "Under that pressure, I would struggle to return to the written criteria.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2473,7 +2473,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You keep the two losses separate from the pressure in their voices."
+                "transition": "You let the urgency register, then return to the criteria without carrying either voice into the comparison."
               },
               "mid": {
                 "responses": [
@@ -2481,7 +2481,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "The urgency pulls at you, but you return to the written criteria."
+                "transition": "The urgency pulls at you, but a deliberate pause returns your attention to the written limits."
               },
               "high": {
                 "responses": [
@@ -2489,7 +2489,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "The nearer loss begins to dominate how you see the choice."
+                "transition": "The pressure keeps displacing the criteria, and the nearer loss begins to dominate the choice."
               }
             },
             "convergence": "The plans remain unchanged. Only the emotional weight in the room has moved."
@@ -2508,8 +2508,8 @@ window.AURORA_STATION_DATA = {
             "id": "q51",
             "number": 51,
             "title": "Behind the Numbers",
-            "context": "Mira's page carries three names under HEAT. Ilan's carries two years of dates under RECORD.",
-            "statement": "I would base the choice only on measurable outcomes and keep personal stakes separate.",
+            "context": "Mira's page carries three names under HEAT. Ilan's carries two years of dates under RECORD. Both still have to live with the outcome.",
+            "statement": "I would keep the personal stakes outside the decision, even when they changed how each person could carry the outcome.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2592,8 +2592,8 @@ window.AURORA_STATION_DATA = {
             "id": "q53",
             "number": 53,
             "title": "The Unmeasured Cost",
-            "context": "The immediate numbers are close. A short record may prove nothing. A colder crew may answer rescue more slowly.",
-            "statement": "I would consider how those less-visible consequences might change the choice.",
+            "context": "The comparison grid shows a near tie. Two blank rows remain for consequences the current numbers do not capture.",
+            "statement": "I would explore whether an unmeasured consequence could reverse the apparent advantage.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2617,7 +2617,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You note the uncertain effects but give them less weight than current figures."
+                "transition": "You name one uncertain consequence but give it less weight than the current figures."
               },
               "high": {
                 "responses": [
@@ -2625,7 +2625,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You explore how each unmeasured consequence could reverse the apparent advantage."
+                "transition": "You test several plausible hidden consequences and ask whether any could reverse the ranking."
               }
             },
             "convergence": "No hidden consequence can be quantified, but none can be dismissed."
@@ -2634,8 +2634,8 @@ window.AURORA_STATION_DATA = {
             "id": "q54",
             "number": 54,
             "title": "Without Certainty",
-            "context": "The final check is complete. No plan guarantees safety, rescue or discovery. The switch window is closing.",
-            "statement": "I would commit even though uncertainty remained.",
+            "context": "The final check is complete. No plan removes uncertainty, and the switch window is closing.",
+            "statement": "I would keep my attention usable long enough to choose, even with uncertainty still present.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2651,7 +2651,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You hold the decision open and look for one more disqualifying fact."
+                "transition": "The remaining uncertainty keeps the choice open while you look for one more disqualifying fact."
               },
               "mid": {
                 "responses": [
@@ -2659,7 +2659,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You state the remaining uncertainty, then begin the switch sequence."
+                "transition": "You state what remains unknown, steady the room and choose."
               },
               "high": {
                 "responses": [
@@ -2667,17 +2667,17 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You commit and move the room from comparison into action."
+                "transition": "You hold the uncertainty without letting it become the decision, then call the plan."
               }
             },
-            "convergence": "The selected plan begins while the unanswered risks remain visible."
+            "convergence": "A decision is reached. Mira confirms the switch sequence, but execution has not yet begun."
           },
           {
             "id": "q55",
             "number": 55,
             "title": "The Duty Lead",
-            "context": "The plan is understood. Mira's hand is on the switch. Ilan is waiting for the final instruction.",
-            "statement": "I would present the direction as provisional until they had one last chance to challenge it.",
+            "context": "The plan has been chosen but not started. Mira's hand is on the switch; Ilan waits for the final instruction.",
+            "statement": "I would keep the direction provisional until they had one last chance to challenge it.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2709,7 +2709,7 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You present the direction as provisional and invite one final challenge."
+                "transition": "You present the direction as provisional and invite one final challenge before the switch moves."
               }
             },
             "convergence": "The switching sequence begins under the chosen allocation."
@@ -2728,8 +2728,8 @@ window.AURORA_STATION_DATA = {
             "id": "q56",
             "number": 56,
             "title": "Three Sleeping Bags",
-            "context": "The smallest insulated room can hold all three sleeping bags, but only if they touch.",
-            "statement": "I would keep all three of us together in the smallest warm space.",
+            "context": "All three must remain inside the heated refuge. The open question is how to arrange rest, watch and the cramped shared space.",
+            "statement": "I would organise the refuge through one shared plan for rest, watch and warmth.",
             "spectrumId": "self-fit-6",
             "assessment": {
               "visibility": "internal",
@@ -2745,7 +2745,7 @@ window.AURORA_STATION_DATA = {
                   2
                 ],
                 "narrativeMeaning": "Low fit with the stated reaction",
-                "transition": "You set separate resting positions and schedule checks between them."
+                "transition": "You keep everyone warm but let each person manage a separate routine and resting position."
               },
               "mid": {
                 "responses": [
@@ -2753,7 +2753,7 @@ window.AURORA_STATION_DATA = {
                   4
                 ],
                 "narrativeMeaning": "Partial or conditional fit with the stated reaction",
-                "transition": "You share one zone but preserve separate roles and resting spaces."
+                "transition": "You share one warm zone and coordinate only at fixed checks."
               },
               "high": {
                 "responses": [
@@ -2761,10 +2761,10 @@ window.AURORA_STATION_DATA = {
                   6
                 ],
                 "narrativeMeaning": "High fit with the stated reaction",
-                "transition": "You pull all three bags into one compact refuge."
+                "transition": "You build one rotation that coordinates rest, radio watch, symptom checks and the limited space."
               }
             },
-            "convergence": "No one remains in an unheated part of the station."
+            "convergence": "No one remains in an unheated part of the station, and every watch interval has an owner."
           },
           {
             "id": "q57",
@@ -3004,6 +3004,7 @@ window.AURORA_STATION_DATA = {
       "key direction",
       "scoring",
       "branch balance"
-    ]
+    ],
+    "revision": "Senior editorial integrity pass: continuity, construct clarity, response neutrality and restrained hard-SF delivery."
   }
 };
