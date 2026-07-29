@@ -87,7 +87,7 @@ for (const item of items) {
 
 data.contentVersion = '4.0.0-option-b-likert-balanced';
 data.assessment.methodNote = 'Narrative-adapted Big Five OCEAN self-report using one behavioural statement per item and a six-point Likert self-fit scale. This adaptation requires empirical validation before normative or diagnostic claims.';
-data.narrativeDelivery.principle = 'The context creates a readable story moment; the statement remains a neutral single-construct Likert item underneath.';
+data.narrativeDelivery.principle = 'The system remains analytical underneath; the reader experiences a story on the surface, while each statement remains a neutral single-construct Likert item.';
 
 const output = `/* Edit this data file to update the story; no rebuild is required. */\nwindow.AURORA_STATION_DATA = ${JSON.stringify(data, null, 2)};\n`;
 fs.writeFileSync(path, output);
