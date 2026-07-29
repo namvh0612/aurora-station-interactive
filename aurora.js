@@ -25,8 +25,8 @@ function loadOgl() {
 
 const auroraConfig = {
   speed: 0.036,
-  intensity: 0.92,
-  brightness: 1.02,
+  intensity: 0.72,
+  brightness: 0.82,
   distortion: 0.24,
   maxPixelRatio: 1.75,
 };
@@ -34,8 +34,8 @@ const auroraConfig = {
 const phasePresets = {
   "station-drift": {
     speed: 0.03,
-    intensity: 0.78,
-    brightness: 0.9,
+    intensity: 0.66,
+    brightness: 0.8,
     distortion: 0.18,
     palette: [
       "#58e5ef",
@@ -48,8 +48,8 @@ const phasePresets = {
   },
   "system-pressure": {
     speed: 0.036,
-    intensity: 0.86,
-    brightness: 0.96,
+    intensity: 0.7,
+    brightness: 0.82,
     distortion: 0.22,
     palette: [
       "#5be9ef",
@@ -62,8 +62,8 @@ const phasePresets = {
   },
   "the-silence-between": {
     speed: 0.028,
-    intensity: 0.74,
-    brightness: 0.88,
+    intensity: 0.62,
+    brightness: 0.78,
     distortion: 0.17,
     palette: [
       "#65ddea",
@@ -76,8 +76,8 @@ const phasePresets = {
   },
   "under-ice-pulse": {
     speed: 0.044,
-    intensity: 1.04,
-    brightness: 1.12,
+    intensity: 0.76,
+    brightness: 0.84,
     distortion: 0.3,
     palette: [
       "#61f0f2",
@@ -90,8 +90,8 @@ const phasePresets = {
   },
   "under-the-ice": {
     speed: 0.036,
-    intensity: 0.96,
-    brightness: 1.04,
+    intensity: 0.7,
+    brightness: 0.8,
     distortion: 0.26,
     palette: [
       "#5ae9f0",
@@ -248,9 +248,9 @@ const fragmentShader = `
 
     float centreDistance = length(point * vec2(0.62, 0.95));
     float readingMask = mix(
-      0.76,
+      0.48,
       1.0,
-      smoothstep(0.22, 1.16, centreDistance)
+      smoothstep(0.18, 1.08, centreDistance)
     );
     aurora *= skyMask * sideMask * readingMask * pulse * uIntensity;
 
@@ -258,9 +258,15 @@ const fragmentShader = `
     vec3 atmosphericBlue = vec3(0.014, 0.054, 0.082) *
       smoothstep(-1.0, 0.78, point.y) * 0.28;
     vec3 finalColour = night + atmosphericBlue + aurora * uBrightness;
-    finalColour += colourC * pow(max(energy * skyMask, 0.0), 2.35) * 0.11;
+    finalColour += colourC * pow(max(energy * skyMask, 0.0), 2.35) * 0.045;
 
-    gl_FragColor = vec4(finalColour, 1.0);
+    // Compress overlapping ribbons before they clip to white. This preserves
+    // distinct aurora colours while keeping text readable over the sky.
+    float peak = max(finalColour.r, max(finalColour.g, finalColour.b));
+    finalColour /= 1.0 + max(0.0, peak - 0.62) * 1.35;
+    finalColour = pow(max(finalColour, vec3(0.0)), vec3(1.08));
+
+    gl_FragColor = vec4(clamp(finalColour, 0.0, 0.88), 1.0);
   }
 
 `;
@@ -372,7 +378,7 @@ function stopAnimation() {
 }
 
 function setAuroraIntensity(value) {
-  auroraConfig.intensity = Math.max(0, Math.min(1.25, Number(value) || 0));
+  auroraConfig.intensity = Math.max(0, Math.min(0.95, Number(value) || 0));
   if (program) {
     program.uniforms.uIntensity.value = auroraConfig.intensity;
     renderFrame();
@@ -388,8 +394,8 @@ function setAuroraSpeed(value) {
 
 function setAuroraBrightness(value) {
   auroraConfig.brightness = Math.max(
-    0.35,
-    Math.min(1.35, Number(value) || 1.02),
+    0.3,
+    Math.min(1.0, Number(value) || 0.82),
   );
   if (program) {
     program.uniforms.uBrightness.value = auroraConfig.brightness;
