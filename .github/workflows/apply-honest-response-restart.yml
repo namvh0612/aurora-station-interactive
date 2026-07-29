@@ -1,0 +1,43 @@
+name: Apply honest-response onboarding and restart
+
+on:
+  push:
+    branches: [honest-response-restart-20260729]
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: honest-response-restart-20260729
+          fetch-depth: 0
+
+      - name: Apply content and interface pass
+        run: node .ux-pass/apply-honest-response-restart.mjs
+
+      - name: Validate syntax and regression contracts
+        run: |
+          node --check content/Aurora_Station_Content.js
+          node --check core.js
+          node --check app.js
+          node tests.mjs
+
+      - name: Run Impeccable detector
+        id: impeccable
+        continue-on-error: true
+        run: npx --yes impeccable detect .
+
+      - name: Commit verified implementation
+        run: |
+          rm -rf .ux-pass
+          rm -f .github/workflows/apply-honest-response-restart.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Add honest-response onboarding and safe restart'
+          git push origin HEAD:honest-response-restart-20260729
