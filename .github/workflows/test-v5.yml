@@ -18,4 +18,5 @@ jobs:
           node-version: 22
       - run: node --check v5-payload/loader.js
       - run: node --check ux-scroll-v6.js
+      - run: node --check ux-scroll-v6-fix.js
       - run: node tests-v5-smoke.mjs
