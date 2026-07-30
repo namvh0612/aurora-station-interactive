@@ -12,11 +12,13 @@ const source = zlib.gunzipSync(Buffer.from(chunks.join(""), "base64")).toString(
 const index = read("index.html");
 const loader = read("v5-payload/loader.js");
 const bridge = read("ux-scroll-v6.js");
+const bridgeFix = read("ux-scroll-v6-fix.js");
 const bridgeCss = read("ux-scroll-v6.css");
 
 assert.match(index, /v5-payload\/loader\.js\?v=5\.0\.0/);
 assert.match(index, /ux-scroll-v6\.css\?v=6\.0\.0/);
 assert.match(index, /ux-scroll-v6\.js\?v=6\.0\.0/);
+assert.match(index, /ux-scroll-v6-fix\.js\?v=6\.0\.1/);
 assert.doesNotMatch(index, /app\.js\?v=4/);
 assert.match(loader, /DecompressionStream\("gzip"\)/);
 assert.match(source, /Strongly disagree/);
@@ -37,6 +39,8 @@ assert.match(bridge, /story-scroll-v6/);
 assert.match(bridge, /scroll-question-stage/);
 assert.match(bridge, /New passage below/);
 assert.match(bridge, /archive/);
+assert.match(bridgeFix, /candidateStatement/);
+assert.match(bridgeFix, /scroll-act-title/);
 assert.match(bridgeCss, /story-runtime-source/);
 assert.match(bridgeCss, /entry-signal-track::before/);
 assert.match(bridgeCss, /display:\s*none\s*!important/);
