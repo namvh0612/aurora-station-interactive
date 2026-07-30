@@ -3,21 +3,18 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Aurora Station — an interactive story and Big Five reflection."
-    />
+    <meta name="description" content="Aurora Station — an interactive story and Big Five reflection." />
     <meta name="color-scheme" content="dark light" />
     <meta name="theme-color" content="#06131d" />
     <title>Aurora Station — Your Journey</title>
     <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./ux-scroll-v6.css?v=6.0.0" />
+    <link rel="stylesheet" href="./styles-v7.css?v=7.0.0" />
     <script type="module" src="./aurora.js"></script>
     <script defer src="./content/Aurora_Station_Content.js"></script>
+    <script defer src="./core-v7.js?v=7.0.0"></script>
+    <script defer src="./pdf-export.js"></script>
     <script defer src="./audio.js"></script>
-    <script defer src="./v5-payload/loader.js?v=5.0.0"></script>
-    <script defer src="./ux-scroll-v6.js?v=6.0.0"></script>
-    <script defer src="./ux-scroll-v6-fix.js?v=6.0.1"></script>
+    <script defer src="./app-v7.js?v=7.0.0"></script>
   </head>
   <body>
     <div class="aurora-background" aria-hidden="true">
@@ -25,61 +22,25 @@
       <div class="aurora-dimming-layer"></div>
       <div class="aurora-vignette"></div>
     </div>
-
     <header class="reader-bar" aria-label="Reading progress">
       <a class="reader-brand" href="#story">Aurora Station</a>
-      <div
-        class="reader-progress"
-        role="progressbar"
-        aria-label="Journey progress"
-        aria-valuemin="0"
-        aria-valuemax="60"
-        aria-valuenow="0"
-      >
+      <div class="reader-progress" role="progressbar" aria-label="Journey progress" aria-valuemin="0" aria-valuemax="60" aria-valuenow="0">
         <span id="progress-fill"></span>
       </div>
       <span id="progress-label" class="progress-label">The final watch</span>
-      <button
-        id="sound-toggle"
-        class="sound-toggle"
-        type="button"
-        aria-pressed="true"
-        aria-label="Mute background soundtrack"
-        title="The soundtrack begins after your first interaction."
-      >
-        <span class="sound-meter" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
-        </span>
+      <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true" aria-label="Mute background soundtrack" title="The soundtrack begins after your first interaction.">
+        <span class="sound-meter" aria-hidden="true"><span></span><span></span><span></span></span>
         <span class="sound-label">Sound on</span>
       </button>
-      <button
-        id="restart-watch"
-        class="restart-watch"
-        type="button"
-        aria-label="Restart the watch and clear saved progress"
-        title="Restart the watch"
-        hidden
-      >
+      <button id="restart-watch" class="restart-watch" type="button" aria-label="Restart the watch and clear saved progress" title="Restart the watch" hidden>
         <span class="restart-icon" aria-hidden="true">↺</span>
         <span class="restart-label">Restart</span>
       </button>
     </header>
-
     <main id="main-content" class="story-content">
-      <article id="story" class="story">
-        <p class="loading-copy">Receiving the final watch…</p>
-      </article>
+      <article id="story" class="story"><p class="loading-copy">Receiving the final watch…</p></article>
     </main>
-
     <div id="screen-reader-status" class="sr-only" aria-live="assertive"></div>
-
-    <noscript>
-      <p class="noscript-message">
-        Aurora Station needs JavaScript enabled to remember choices and build
-        the story.
-      </p>
-    </noscript>
+    <noscript><p class="noscript-message">Aurora Station needs JavaScript enabled to remember choices and build the story.</p></noscript>
   </body>
 </html>
