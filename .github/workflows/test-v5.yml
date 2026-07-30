@@ -1,4 +1,4 @@
-name: Test Aurora scroll experience
+name: Test Aurora cumulative story
 
 on:
   push:
@@ -16,7 +16,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --check v5-payload/loader.js
-      - run: node --check ux-scroll-v6.js
-      - run: node --check ux-scroll-v6-fix.js
-      - run: node tests-v5-smoke.mjs
+      - run: node --check core-v7.js
+      - run: node --check app-v7.js
+      - run: node tests-v7.mjs
