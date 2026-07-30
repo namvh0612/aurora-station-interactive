@@ -1,0 +1,390 @@
+/* Aurora Station v6 — cumulative story reading layer */
+
+.story-runtime-source {
+  position: fixed !important;
+  inset: 0 auto auto -200vw !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.story-runtime-visible {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Remove the connector that visually strikes through response buttons. */
+.entry-signal-track::before,
+.entry-signal-track::after,
+.spectrum-choices::before,
+.spectrum-choices::after,
+.signal-line,
+.entry-signal-choice::before,
+.entry-signal-choice::after,
+.spectrum-choice::before,
+.spectrum-choice::after {
+  display: none !important;
+  content: none !important;
+}
+
+.entry-signal-choice,
+.spectrum-choice {
+  isolation: isolate;
+  background: rgba(8, 29, 40, 0.96) !important;
+}
+
+.entry-signal-choice.is-selected,
+.spectrum-choice.is-selected {
+  background: rgba(31, 71, 82, 0.98) !important;
+}
+
+.entry-signal-choice.is-selected .response-number,
+.spectrum-choice.is-selected .response-number {
+  color: #eafcff !important;
+}
+
+.story-scroll-v6 {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: clamp(6rem, 10vw, 9rem) 0 18rem;
+}
+
+.scroll-act {
+  position: relative;
+  margin: 0 0 clamp(10rem, 18vh, 16rem);
+}
+
+.scroll-act-opening {
+  min-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(3rem, 8vw, 7rem) clamp(0rem, 3vw, 2rem);
+  border-top: 1px solid rgba(122, 220, 232, 0.2);
+}
+
+.scroll-act-header {
+  max-width: 960px;
+}
+
+.scroll-act-kicker,
+.scroll-question-index,
+.scroll-response-label,
+.scroll-question-local,
+.scroll-playback-label {
+  margin: 0 0 1.25rem;
+  color: #72dfee;
+  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.scroll-act-title {
+  max-width: 1000px;
+  margin: 0;
+  color: #f2f6f4;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: clamp(3.25rem, 7vw, 6.5rem);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+.scroll-act-copy {
+  max-width: 880px;
+  margin-top: clamp(2rem, 5vw, 4rem);
+}
+
+.scroll-story-paragraph {
+  max-width: 860px;
+  margin: 0 0 1.4rem;
+  color: #c7d7dc;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: clamp(1.28rem, 2.1vw, 1.72rem);
+  line-height: 1.58;
+}
+
+.scroll-question-stage {
+  position: relative;
+  margin: clamp(2rem, 8vh, 7rem) 0;
+  padding: clamp(2rem, 5vw, 4rem);
+  border: 1px solid rgba(117, 208, 220, 0.22);
+  border-radius: 2rem;
+  background:
+    linear-gradient(180deg, rgba(12, 43, 56, 0.8), rgba(5, 22, 32, 0.94));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.24);
+}
+
+.scroll-question-stage[hidden],
+.scroll-playback-controls[hidden] {
+  display: none !important;
+}
+
+.scroll-question-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.scroll-question-local {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(148, 210, 220, 0.34);
+  border-radius: 999px;
+  color: #e9f6f7;
+  letter-spacing: 0.08em;
+}
+
+.scroll-question-statement {
+  max-width: 820px;
+  margin: clamp(2rem, 5vw, 4rem) auto;
+  color: #f1f5f3;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: clamp(2rem, 4.5vw, 3.7rem);
+  line-height: 1.16;
+  text-align: center;
+}
+
+.scroll-response-scale {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.scroll-response-anchors,
+.scroll-response-signal {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #9bb2bb;
+  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.07em;
+}
+
+.scroll-response-signal {
+  margin-top: 1.7rem;
+  align-items: baseline;
+}
+
+.scroll-response-description {
+  color: #b8cad0;
+  text-align: right;
+}
+
+.scroll-response-choices {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(0.55rem, 1.5vw, 1rem);
+  margin-top: 2.1rem;
+}
+
+.scroll-response-choice {
+  min-width: 0;
+  min-height: 5rem;
+  border: 1px solid rgba(114, 184, 198, 0.3);
+  border-radius: 1.4rem;
+  background: rgba(7, 29, 40, 0.98);
+  color: #94aeb8;
+  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.scroll-response-choice:hover,
+.scroll-response-choice:focus-visible {
+  border-color: rgba(116, 224, 238, 0.75);
+  color: #dffaff;
+  transform: translateY(-2px);
+}
+
+.scroll-response-choice.is-selected {
+  border-color: #78e3ef;
+  background: rgba(35, 77, 88, 0.98);
+  color: #f2fdff;
+  box-shadow:
+    0 0 0 4px rgba(81, 202, 218, 0.14),
+    0 16px 36px rgba(0, 0, 0, 0.22);
+}
+
+.scroll-response-choice:disabled {
+  cursor: default;
+}
+
+.scroll-question-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.scroll-question-back,
+.scroll-playback-button,
+.new-passage-button {
+  min-height: 44px;
+  border: 1px solid rgba(118, 196, 208, 0.32);
+  border-radius: 999px;
+  background: rgba(7, 29, 40, 0.92);
+  color: #c4d9de;
+  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.scroll-question-back,
+.scroll-playback-button {
+  padding: 0.7rem 1rem;
+}
+
+.scroll-question-note {
+  margin: 0;
+  color: #9bb2bb;
+  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.scroll-playback-controls {
+  position: sticky;
+  z-index: 4;
+  bottom: 1rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 1.5rem 0 2.5rem auto;
+  padding: 0.7rem;
+  border: 1px solid rgba(118, 196, 208, 0.22);
+  border-radius: 999px;
+  background: rgba(4, 20, 29, 0.9);
+  backdrop-filter: blur(16px);
+}
+
+.scroll-playback-label {
+  margin: 0 0.4rem 0 0.2rem;
+  color: #8ba8b1;
+}
+
+.scroll-playback-button.is-active {
+  border-color: #71dbe8;
+  color: #e6fbfe;
+  background: rgba(30, 76, 86, 0.95);
+}
+
+.scroll-act-narrative {
+  min-height: 4rem;
+  padding: 2rem clamp(0rem, 3vw, 2rem) 0;
+}
+
+.story-reveal {
+  opacity: 0;
+  transform: translateY(1rem);
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease;
+}
+
+.story-reveal.is-visible,
+.scroll-story-paragraph.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.new-passage-button {
+  position: fixed;
+  z-index: 100;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  padding: 0.8rem 1rem;
+  border-color: rgba(113, 219, 232, 0.58);
+  color: #e8fbfd;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 720px) {
+  .story-scroll-v6 {
+    width: min(100% - 1rem, 1120px);
+    padding-top: 5rem;
+  }
+
+  .scroll-act-opening {
+    min-height: 78vh;
+    padding-inline: 0.75rem;
+  }
+
+  .scroll-act-title {
+    font-size: clamp(3rem, 15vw, 4.8rem);
+  }
+
+  .scroll-question-stage {
+    padding: 1.45rem 1rem 1.25rem;
+    border-radius: 1.35rem;
+  }
+
+  .scroll-question-statement {
+    margin-block: 2rem;
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  .scroll-response-anchors,
+  .scroll-response-signal {
+    font-size: 0.64rem;
+  }
+
+  .scroll-response-description {
+    max-width: 55%;
+  }
+
+  .scroll-response-choices {
+    gap: 0.38rem;
+  }
+
+  .scroll-response-choice {
+    min-height: 3.75rem;
+    border-radius: 1rem;
+    font-size: 1.35rem;
+  }
+
+  .scroll-question-footer {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+  }
+
+  .scroll-question-note {
+    text-align: left;
+  }
+
+  .scroll-playback-controls {
+    width: 100%;
+    margin-left: 0;
+    border-radius: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-reveal,
+  .scroll-response-choice {
+    transition: none !important;
+  }
+}
