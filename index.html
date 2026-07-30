@@ -13,10 +13,8 @@
     <link rel="stylesheet" href="./styles.css" />
     <script type="module" src="./aurora.js"></script>
     <script defer src="./content/Aurora_Station_Content.js"></script>
-    <script defer src="./core.js"></script>
-    <script defer src="./pdf-export.js"></script>
     <script defer src="./audio.js"></script>
-    <script defer src="./app.js?v=4.1.2"></script>
+    <script defer src="./v5-payload/loader.js?v=5.0.0"></script>
   </head>
   <body>
     <div class="aurora-background" aria-hidden="true">
@@ -26,7 +24,7 @@
     </div>
 
     <header class="reader-bar" aria-label="Reading progress">
-      <a class="reader-brand" href="#story-start">Aurora Station</a>
+      <a class="reader-brand" href="#story">Aurora Station</a>
       <div
         class="reader-progress"
         role="progressbar"
@@ -57,7 +55,6 @@
         id="restart-watch"
         class="restart-watch"
         type="button"
-        aria-haspopup="dialog"
         aria-label="Restart the watch and clear saved progress"
         title="Restart the watch"
         hidden
@@ -68,7 +65,7 @@
     </header>
 
     <main id="main-content" class="story-content">
-      <article id="story" class="story" aria-live="polite">
+      <article id="story" class="story">
         <p class="loading-copy">Receiving the final watch…</p>
       </article>
     </main>

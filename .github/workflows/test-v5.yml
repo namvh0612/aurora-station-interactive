@@ -1,0 +1,20 @@
+name: Test Aurora v5
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check v5-payload/loader.js
+      - run: node tests-v5-smoke.mjs
