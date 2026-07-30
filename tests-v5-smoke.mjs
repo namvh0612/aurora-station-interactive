@@ -11,8 +11,12 @@ const chunks = Array.from({ length: 7 }, (_, index) =>
 const source = zlib.gunzipSync(Buffer.from(chunks.join(""), "base64")).toString("utf8");
 const index = read("index.html");
 const loader = read("v5-payload/loader.js");
+const bridge = read("ux-scroll-v6.js");
+const bridgeCss = read("ux-scroll-v6.css");
 
 assert.match(index, /v5-payload\/loader\.js\?v=5\.0\.0/);
+assert.match(index, /ux-scroll-v6\.css\?v=6\.0\.0/);
+assert.match(index, /ux-scroll-v6\.js\?v=6\.0\.0/);
 assert.doesNotMatch(index, /app\.js\?v=4/);
 assert.match(loader, /DecompressionStream\("gzip"\)/);
 assert.match(source, /Strongly disagree/);
@@ -29,4 +33,17 @@ assert.match(source, /\/ 5/);
 assert.doesNotMatch(source, /renderReserve\(/);
 assert.doesNotMatch(source, /reserve-options/);
 
-console.log("Aurora Station packaged v5 smoke tests passed.");
+assert.match(bridge, /story-scroll-v6/);
+assert.match(bridge, /scroll-question-stage/);
+assert.match(bridge, /New passage below/);
+assert.match(bridge, /archive/);
+assert.match(bridgeCss, /story-runtime-source/);
+assert.match(bridgeCss, /entry-signal-track::before/);
+assert.match(bridgeCss, /display:\s*none\s*!important/);
+assert.match(bridgeCss, /min-height:\s*72vh/);
+assert.match(bridgeCss, /scroll-response-choices/);
+
+assert.equal(fs.existsSync(path.join(root, "IMPECCABLE_AUDIT.md")), false);
+assert.equal(fs.existsSync(path.join(root, "IMPECCABLE_AUDIT_V5.md")), false);
+
+console.log("Aurora Station scroll UX smoke tests passed.");
