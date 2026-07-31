@@ -778,8 +778,26 @@ check("state records stay separate", () => {
   assert.doesNotMatch(clearBlock, /PREFERENCES_KEY/);
 });
 
+// GitHub Actions only surfaces annotations to anyone who cannot read the raw
+// log, so a failing check reports itself as one as well as printing normally.
+function reportFailure(label, error) {
+  process.stdout.write(`  FAIL  ${label}\n`);
+  if (process.env.GITHUB_ACTIONS) {
+    const encode = (value) =>
+      String(value).replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
+    process.stdout.write(
+      `::error title=${encode(label)}::${encode(`${error.message}\n${error.stack || ""}`)}\n`,
+    );
+  }
+}
+
 for (const [label, run] of registered) {
-  await run();
+  try {
+    await run();
+  } catch (error) {
+    reportFailure(label, error);
+    throw error;
+  }
   process.stdout.write(`  ok  ${label}\n`);
 }
 
