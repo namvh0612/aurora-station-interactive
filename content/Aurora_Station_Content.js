@@ -1,15 +1,23 @@
 /* Edit this data file to update the story; no rebuild is required. */
 window.AURORA_STATION_DATA = {
   "schemaVersion": "1.0.0",
-  "contentVersion": "4.1.0-honest-response-onboarding",
+  "contentVersion": "5.0.0-cumulative-five-point",
   "id": "aurora-station",
   "title": "Aurora Station",
   "subtitle": "The Final Watch",
   "language": "en",
   "runtimeContract": {
     "platform": "Static HTML/CSS/JavaScript",
-    "dataLoading": "Classic script; works from file:// and GitHub Pages",
-    "persistence": "Browser localStorage with in-memory fallback",
+    "dataLoading": "Classic scripts; works from file:// and GitHub Pages",
+    "modules": [
+      "content/Aurora_Station_Content.js",
+      "core.js",
+      "pdf-export.js",
+      "audio.js",
+      "app.js"
+    ],
+    "renderer": "One cumulative #story document rendered append-only",
+    "persistence": "Browser localStorage with in-memory fallback; answers, journey and preferences stored separately",
     "export": "Direct personalised story PDF and multi-page profile PDF downloads"
   },
   "assessment": {
@@ -18,42 +26,49 @@ window.AURORA_STATION_DATA = {
     "actCount": 12,
     "itemsPerAct": 5,
     "spectrum": {
-      "id": "self-fit-6",
+      "id": "agreement-5",
       "min": 1,
-      "max": 6,
+      "max": 5,
       "positions": [
         1,
         2,
         3,
         4,
-        5,
-        6
+        5
       ],
-      "leftAnchor": "Not how I would respond",
-      "rightAnchor": "Exactly how I would respond",
+      "leftAnchor": "Strongly disagree",
+      "rightAnchor": "Strongly agree",
       "showIntermediateLabels": false,
+      "responseLabels": [
+        "Strongly disagree",
+        "Disagree a little",
+        "Neither agree nor disagree",
+        "Agree a little",
+        "Strongly agree"
+      ],
       "bands": {
         "low": [
           1,
           2
         ],
         "mid": [
-          3,
-          4
+          3
         ],
         "high": [
-          5,
-          6
+          4,
+          5
         ]
       }
     },
     "scoring": {
       "positiveKey": "corrected = raw",
-      "reverseKey": "corrected = 7 - raw",
+      "reverseKey": "corrected = 6 - raw",
       "facetScore": "mean of six corrected items assigned to the facet",
       "traitScore": "mean of the two equally weighted facet scores",
       "waterRule": "Score Emotional Stability directly. Reverse at the raw-score level only if an OCEAN Neuroticism score is required.",
-      "normingRule": "Do not calculate percentiles or a dominant Element without an appropriate validated reference group."
+      "normingRule": "Do not calculate percentiles or a dominant Element without an appropriate validated reference group.",
+      "narrativeKey": "Narrative branches always use the raw response, including reverse-keyed items: 1-2 selects the low branch, 3 the midpoint branch and 4-5 the high branch. Reverse scoring is applied separately and only to the score.",
+      "normalisation": "chartPosition = (score - 1) / 4"
     },
     "elements": {
       "WO": {
@@ -289,7 +304,7 @@ window.AURORA_STATION_DATA = {
         }
       }
     },
-    "methodNote": "Narrative-adapted Big Five OCEAN self-report using one behavioural statement per item and a six-point Likert self-fit scale. This adaptation requires empirical validation before normative or diagnostic claims."
+    "methodNote": "Narrative-adapted Big Five OCEAN self-report using one behavioural statement per item and a five-point Likert agreement scale. This adaptation requires empirical validation before normative or diagnostic claims."
   },
   "story": {
     "prologue": {
@@ -311,7 +326,7 @@ window.AURORA_STATION_DATA = {
             "title": "Six Words",
             "context": "Mira's note lists three Sector C spikes. Her completed checks sit across the alarm history and a handwritten page.",
             "statement": "I would want the completed checks and open questions organised clearly before taking over.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
@@ -319,11 +334,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Orderliness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -332,23 +347,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You close the folder and mark the line for review. Mira leaves; the alarm history carries the missing detail."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You add the last timestamps and one unresolved check. Mira answers, then leaves."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You ask Mira to list the checks, the causes she ruled out and the questions still open. Her rest begins a few minutes later."
               }
             },
@@ -360,19 +374,19 @@ window.AURORA_STATION_DATA = {
             "title": "At the Door",
             "context": "The written procedure gives one safe return trigger. Mira's own threshold is slightly more cautious.",
             "statement": "I would use the written boundary without asking Mira to restate her judgement.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Assertiveness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Assertiveness",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -381,23 +395,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You stop her at the door and ask. She gives you the boundary before leaving."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You let her step into the corridor, then confirm the boundary over the radio."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You close the door and find the rule in the manual. It gives the trigger, but not Mira's reasoning."
               }
             },
@@ -409,7 +422,7 @@ window.AURORA_STATION_DATA = {
             "title": "The Window",
             "context": "Ilan watches the storm while the old Sector C records remain open beside him. His recorder check is unfinished.",
             "statement": "I would notice how the shutdown was affecting Ilan and invite him to speak.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
@@ -417,11 +430,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Empathy",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -430,23 +443,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You hand him a recorder check. The task steadies his hands, and he begins to talk while working."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You ask whether he can continue the watch. He says the shutdown feels like a closing door."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You wait beside him and ask what this night means to him. The first console check waits with you."
               }
             },
@@ -458,7 +470,7 @@ window.AURORA_STATION_DATA = {
             "title": "Two Explanations",
             "context": "Sensor noise explains most of the trace. One feature still matches Ilan's older anomaly.",
             "statement": "I would keep another plausible explanation in mind while testing the familiar one.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
@@ -466,11 +478,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Ideas",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -479,23 +491,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You close the archive and work only from sensor noise, with a clear test for abandoning it."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You lead with sensor noise and add the magnetic channel to the screen."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You keep both explanations in the log and write what would separate them."
               }
             },
@@ -507,7 +518,7 @@ window.AURORA_STATION_DATA = {
             "title": "The Quiet Minute",
             "context": "Sector C remains unresolved. The rest of Aurora continues through its normal watch cycle.",
             "statement": "I would return my attention to the wider watch without dwelling on Sector C.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
@@ -515,11 +526,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Calmness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -528,23 +539,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep Sector C at the front of every scan. The rest of the station receives less of your attention."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You make one extra check, then return to the normal cycle."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You hold to the planned interval and let the rest of the station back into view."
               }
             },
@@ -566,19 +576,19 @@ window.AURORA_STATION_DATA = {
             "title": "The Shape",
             "context": "All readings remain below their limits. The traces repeat the same order and spacing.",
             "statement": "I would focus on the defined limits rather than the pattern formed by the traces.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Aesthetics",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Aesthetics",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -587,23 +597,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You enlarge the traces and compare their spacing. A faint magnetic lead appears."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You check the limits, then save a short replay that preserves the sequence."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You keep the response tied to individual readings. Ilan later notices the repeated rhythm."
               }
             },
@@ -615,7 +624,7 @@ window.AURORA_STATION_DATA = {
             "title": "Before It Fades",
             "context": "The event has cleared. Its cleanest data is still available before the next shutdown task begins.",
             "statement": "I would begin the cross-check while the evidence was still fresh.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
@@ -623,11 +632,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Industriousness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -636,23 +645,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You save the event and continue the shutdown list until another change confirms it."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You run one calibration check and make deeper work depend on a second event."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You open the alarm history, calibration record and backup channels at once."
               }
             },
@@ -664,19 +672,19 @@ window.AURORA_STATION_DATA = {
             "title": "Three Views",
             "context": "Mira knows the hardware, Ilan knows the archive and you hold the live readings.",
             "statement": "I would form my own view before combining it with theirs.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Cooperation",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Cooperation",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -685,23 +693,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You ask for all three readings before choosing a cause. The discussion starts wide."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You state a provisional view and ask each person for one fact that could overturn it."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You finish your own interpretation before inviting either person to challenge it."
               }
             },
@@ -713,7 +720,7 @@ window.AURORA_STATION_DATA = {
             "title": "Move",
             "context": "The inspection window is closing. Mira and Ilan are ready, but neither has started moving.",
             "statement": "I would make my energy and urgency visible enough to start the group moving.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
@@ -721,11 +728,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Enthusiasm",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -734,23 +741,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You assign the first tasks in a quiet voice. The room moves without a change in tone."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You name the next three actions and send each person to one."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You stand, call the inspection and make the start impossible to miss."
               }
             },
@@ -762,7 +768,7 @@ window.AURORA_STATION_DATA = {
             "title": "After the Alarm",
             "context": "A second spike drives the alarm red for less than a second. The tone stops.",
             "statement": "I would return my attention to the evidence quickly after the alarm.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
@@ -770,11 +776,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Resilience",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -783,23 +789,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "The sound stays with you. You slow the inspection start and check the room once more."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You take one breath, confirm the alarm cleared and begin."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You return to the trace almost at once and call the first measurement."
               }
             },
@@ -821,19 +826,19 @@ window.AURORA_STATION_DATA = {
             "title": "The Green Light",
             "context": "The cabinet is hot while its local indicator remains green. A direct measurement is ready.",
             "statement": "I would stay with the most familiar explanation until direct evidence challenged it.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Ideas",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Ideas",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -842,23 +847,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You widen the fault model before opening the panel and include the upstream supply."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You test the sensor first while keeping the common supply on the watch list."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You stay with the sensor explanation and begin the direct check at its likely failure point."
               }
             },
@@ -870,19 +874,19 @@ window.AURORA_STATION_DATA = {
             "title": "Behind the Cover",
             "context": "The likely hot point is behind the front cover. The checklist begins with several wider checks.",
             "statement": "I would move towards the suspected point before completing the full sequence.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Orderliness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Orderliness",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -891,23 +895,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You finish the remaining confirmations, then open the cover with the full sequence complete."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You complete only the checks that could still change the safety boundary, then move inward."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You move to the hot section while Mira tracks the deferred confirmations over the radio."
               }
             },
@@ -919,7 +922,7 @@ window.AURORA_STATION_DATA = {
             "title": "One Authority",
             "context": "Mira watches the generator, Ilan watches the trace and you hold the isolation switch.",
             "statement": "I would state clearly who controlled each role and the final switch.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
@@ -927,11 +930,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Assertiveness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -940,23 +943,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You let expertise organise the work. The first exchange reveals who is waiting for whom."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You name the stop condition and critical roles, then leave the sequence to Mira."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You name every role, callout and the single switching authority."
               }
             },
@@ -968,7 +970,7 @@ window.AURORA_STATION_DATA = {
             "title": "Radio Picture",
             "context": "Mira and Ilan cannot see the corridor. They can only hear your breathing and short radio calls.",
             "statement": "I would notice when their uncertainty needed a brief reassuring update.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
@@ -976,11 +978,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Empathy",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -989,23 +991,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep the radio to measurements and commands. Their questions wait for a pause."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You report what is visible at each decision point and leave the smaller uncertainties unspoken."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You give position, visible risk, uncertainty and next action before every change."
               }
             },
@@ -1017,7 +1018,7 @@ window.AURORA_STATION_DATA = {
             "title": "The Smell of Fire",
             "context": "The burnt smell grows stronger. The next isolation step is ready and no flame is visible.",
             "statement": "I would keep most of my attention on the next confirmed step.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
@@ -1025,11 +1026,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Calmness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1038,23 +1039,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You scan the corridor, generator and exit before returning to the cabinet."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You name the wider risks once, then return to the isolation point."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You stay with the meter, switch and cabinet boundary while remote alarms watch the rest."
               }
             },
@@ -1076,19 +1076,19 @@ window.AURORA_STATION_DATA = {
             "title": "Ninety Seconds",
             "context": "The backup catches unevenly. Mira is still reading the values that will shape the first cut.",
             "statement": "I would feel pressure to act before the critical readings were complete.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Calmness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Calmness",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1097,23 +1097,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You let the pressure pass through the room without becoming the order. Mira calls for a precise forty-percent cut."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You ask only for the values that can still change the first action."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "The falling number drives an immediate cut; you narrow it as Mira's readings arrive."
               }
             },
@@ -1125,7 +1124,7 @@ window.AURORA_STATION_DATA = {
             "title": "Keep Going",
             "context": "Emergency power is stable. Several useful diagnostic checks remain, and the team has not rested.",
             "statement": "I would continue purposeful checks before taking a break.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
@@ -1133,11 +1132,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Industriousness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1146,23 +1145,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You protect the stable state and call a short recovery break before deeper work."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You complete the single check most likely to change the plan, then pause."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You finish the decision-relevant checks while the evidence is fresh, then release the team to rest."
               }
             },
@@ -1174,7 +1172,7 @@ window.AURORA_STATION_DATA = {
             "title": "One Plan",
             "context": "Mira tests the generator, Ilan follows the traces and you manage the live loads.",
             "statement": "I would coordinate the three workstreams through one shared plan.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
@@ -1182,11 +1180,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Cooperation",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1195,23 +1193,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You let each stream run alone and connect them only when one changes another."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You set shared checkpoints and leave each person independent between them."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You place all three streams on one sequence where every dependency is visible."
               }
             },
@@ -1223,19 +1220,19 @@ window.AURORA_STATION_DATA = {
             "title": "The Red Room",
             "context": "The restart attempt ends. Mira and Ilan become quiet while the generator note fills the room.",
             "statement": "I would let the room recover without trying to lift its mood.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Enthusiasm",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Enthusiasm",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1244,23 +1241,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You name what the team has already secured and give the next task a clear beginning."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You keep the tone low but mark each completed step aloud."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You return to your own work without making the room's progress visible."
               }
             },
@@ -1272,7 +1268,7 @@ window.AURORA_STATION_DATA = {
             "title": "The Generator's Note",
             "context": "Before each correction, the generator changes pitch and a vibration reaches the console.",
             "statement": "I would include the changing sound and vibration in the diagnosis.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
@@ -1280,11 +1276,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Aesthetics",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1293,23 +1289,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep the record to instrument values until Mira mentions the vibration."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You use the sound only to choose which part of the trace to inspect."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You mark each change in pitch and vibration against the electrical corrections."
               }
             },
@@ -1331,7 +1326,7 @@ window.AURORA_STATION_DATA = {
             "title": "Other Routes",
             "context": "The long-range route is dead. Several low-power communication paths remain technically possible.",
             "statement": "I would explore less conventional ways to make contact before accepting the isolation.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
@@ -1339,11 +1334,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Ideas",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1352,23 +1347,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You protect the budget for one conventional call path and stop when it fails."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You test the two routes with the strongest evidence, then stop."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You use the fixed budget across several distinct, plausible routes and rule each one in or out."
               }
             },
@@ -1380,19 +1374,19 @@ window.AURORA_STATION_DATA = {
             "title": "Calls in the Static",
             "context": "The static changes from minute to minute. A fixed call schedule sits beside the radio.",
             "statement": "I would retry when conditions seemed favourable rather than follow the fixed schedule.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Orderliness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Orderliness",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1401,23 +1395,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You log the channels and set timed calls around the midnight status."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You keep short call windows and allow them to move with the storm."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You transmit whenever the static thins. Ilan keeps a minimal note of each attempt."
               }
             },
@@ -1429,7 +1422,7 @@ window.AURORA_STATION_DATA = {
             "title": "Say It Plainly",
             "context": "Mira expects contact to return soon. Ilan speaks as though rescue is already moving.",
             "statement": "I would state the present situation and the next priority plainly.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
@@ -1437,11 +1430,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Assertiveness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1450,23 +1443,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You call contact temporarily unavailable and turn to the heat budget."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You state the present limit and pair it with the next action."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You name the isolation, the missed-call safeguard and the heat calculation that comes next."
               }
             },
@@ -1478,19 +1470,19 @@ window.AURORA_STATION_DATA = {
             "title": "After the News",
             "context": "Mira becomes still. Ilan turns to the window. The heating screen is waiting.",
             "statement": "I would keep the update task-focused and check on them at the next pause.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Empathy",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Empathy",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1499,23 +1491,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You stop for a brief fitness check before opening the heat model."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You let the news settle, then ask whether the next task feels manageable."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You move directly to heating. Their reactions remain private for now."
               }
             },
@@ -1527,7 +1518,7 @@ window.AURORA_STATION_DATA = {
             "title": "What Is Left",
             "context": "The radio cannot be repaired here. Heat, shelter and local monitoring can still be managed.",
             "statement": "I would return most of my attention to what remained under local control.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
@@ -1535,11 +1526,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Resilience",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1548,23 +1539,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "The failed call stays at the front of your attention until the thermal alarm sounds."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You name what cannot be changed and list what still can."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You place contact outside the immediate problem and return to local systems."
               }
             },
@@ -1586,7 +1576,7 @@ window.AURORA_STATION_DATA = {
             "title": "One Warm Room",
             "context": "Mira marks the control room, Ilan marks the refuge and you hold a third workable plan.",
             "statement": "I would bring the different views into one discussion before fixing the heat allocation.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
@@ -1594,11 +1584,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Cooperation",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1607,23 +1597,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You choose the loop with the lowest heat loss and explain it during setup."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You hear each priority and test only the assumptions that could change the choice."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You place all three plans against the same loss rates, occupancy and access limits."
               }
             },
@@ -1635,7 +1624,7 @@ window.AURORA_STATION_DATA = {
             "title": "Small Loads",
             "context": "The major loads are off. Several small lights, chargers and heat leaks remain.",
             "statement": "I would keep looking for useful small savings after the main work was complete.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
@@ -1643,11 +1632,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Industriousness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1656,23 +1645,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You stop after the major savings and begin the rest cycle."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You test only the small changes with the clearest return."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You continue until the remaining checks no longer offer a credible saving. Several extra minutes appear in the estimate."
               }
             },
@@ -1684,19 +1672,19 @@ window.AURORA_STATION_DATA = {
             "title": "When the Fans Stop",
             "context": "The final fan stops. In the quiet, a faint grouped sound enters through the floor.",
             "statement": "I would stay with the instruments rather than turn towards the unfamiliar sound.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Aesthetics",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Aesthetics",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1705,23 +1693,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You step away from the display and listen beside the wall."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You finish the current check, then listen through the pause."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You stay with the instruments until Ilan asks everyone to be still."
               }
             },
@@ -1733,19 +1720,19 @@ window.AURORA_STATION_DATA = {
             "title": "The Cold Routine",
             "context": "Checks and radio calls repeat. Between them, the room becomes quiet and inward.",
             "statement": "I would let each person manage their own social energy during the routine.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Enthusiasm",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Enthusiasm",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1754,23 +1741,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep a low current of conversation moving between checks."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You make brief contact at each handover and allow silence between them."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You leave the quiet intact and speak only when the task requires it."
               }
             },
@@ -1782,7 +1768,7 @@ window.AURORA_STATION_DATA = {
             "title": "Frost at the Door",
             "context": "Frost reaches the door seal. The refuge remains within its limits, but the sight unsettles the room.",
             "statement": "I would regain focus after noticing the frost and continue with the agreed checks.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
@@ -1790,11 +1776,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Resilience",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1803,23 +1789,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "The image of the frost stays with you. You reopen the calculation and begin checking assumptions again."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You compare the trend with the trigger points, then take another check to settle your attention."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You register the concern, confirm the limits and return fully to the working rhythm."
               }
             },
@@ -1841,7 +1826,7 @@ window.AURORA_STATION_DATA = {
             "title": "The Whole Pulse",
             "context": "Mira wants the safety values. Ilan wants the full shape, spacing and sound of the pulse.",
             "statement": "I would preserve the signal's rhythm and sensory detail in the record.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
@@ -1849,11 +1834,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Aesthetics",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1862,23 +1847,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep the compact safety record and allow one short waveform."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You preserve one complete group beside the summary."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You reserve enough capacity for the full shape, spacing, sound and room conditions around several groups."
               }
             },
@@ -1890,7 +1874,7 @@ window.AURORA_STATION_DATA = {
             "title": "Before Record",
             "context": "The pulse may return at any time. Mira asks for a duration, power limit and stop conditions.",
             "statement": "I would agree the limits before switching the recorder on.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
@@ -1898,11 +1882,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Orderliness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1911,23 +1895,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You start the recorder while the limits are still being discussed."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You agree the power ceiling and stop conditions, then finish the timing while it runs."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You set the duration, load and stop rules before Mira closes the switch."
               }
             },
@@ -1939,7 +1922,7 @@ window.AURORA_STATION_DATA = {
             "title": "Two Years",
             "context": "Ilan keeps both hands on the recorder case. He has spent two years returning to these traces.",
             "statement": "I would acknowledge what the opportunity meant to Ilan before setting the limit.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
@@ -1947,11 +1930,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Empathy",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -1960,23 +1943,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep the exchange to watts and minutes and let the authorised run speak for itself."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You recognise the time behind his request, then return to the limit."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You name what stopping may cost him before setting the boundary."
               }
             },
@@ -1988,7 +1970,7 @@ window.AURORA_STATION_DATA = {
             "title": "Twenty or Forty",
             "context": "Mira asks for twenty minutes. Ilan asks for forty. Neither adds new information.",
             "statement": "I would set the operating limit myself when the discussion stopped moving.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
@@ -1996,11 +1978,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Assertiveness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2009,23 +1991,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You allow one more round and wait for a shared number."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You set the non-negotiable stops and let them work inside those limits."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You set the ceiling, end time and stop authority."
               }
             },
@@ -2037,19 +2018,19 @@ window.AURORA_STATION_DATA = {
             "title": "Under the Floor",
             "context": "With the fans silent, the pulse seems to rise through your boots rather than the speakers.",
             "statement": "I would experience the unknown source as personally threatening.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Calmness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Calmness",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2058,23 +2039,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You treat the pulse as strange, not personal, and keep your eyes on the instruments."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "Unease rises with the next group; you return to the measured interval."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "The sound begins to feel close and intentional, competing with the instrument task."
               }
             },
@@ -2096,19 +2076,19 @@ window.AURORA_STATION_DATA = {
             "title": "Someone Outside",
             "context": "Ilan points into the whiteout. Your first reply comes out sharper than you intended.",
             "statement": "I would need time before my voice settled during the verification.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Resilience",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Resilience",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2117,23 +2097,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "Your first reply sharpens, then settles. You ask for place, movement and duration."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You pause long enough to turn the tension into a factual question."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "The tension remains in your voice and keeps pulling the check back towards the fear in the room."
               }
             },
@@ -2145,7 +2124,7 @@ window.AURORA_STATION_DATA = {
             "title": "Fear First",
             "context": "Ilan is cold and frightened. He keeps looking at the same point in the glass.",
             "statement": "I would acknowledge his fear before deciding what he had seen.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
@@ -2153,11 +2132,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Empathy",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2166,23 +2145,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You move straight to verification and let the work carry the response."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You say the sight was frightening, then separate that from its cause."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You name his fear before beginning the check."
               }
             },
@@ -2194,7 +2172,7 @@ window.AURORA_STATION_DATA = {
             "title": "What It Could Be",
             "context": "Reflection, ice, camera error, exhaustion and a real figure remain possible.",
             "statement": "I would keep more than one explanation in mind while the checks ran.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
@@ -2202,11 +2180,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Ideas",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2215,23 +2193,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You test the most likely cause first. The room light removes most of the shape."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You compare reflection and camera error before widening the search."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You keep several causes open and choose checks that separate them."
               }
             },
@@ -2243,19 +2220,19 @@ window.AURORA_STATION_DATA = {
             "title": "Nine More Checks",
             "context": "The first camera and door checks show no entry. Nine additional checks remain.",
             "statement": "I would be ready to stop after the first checks showed nothing.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Industriousness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Industriousness",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2264,23 +2241,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You continue until the remaining checks can no longer change the safety plan."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You complete only the checks that could alter the refuge plan."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You close the review after the first camera and door checks."
               }
             },
@@ -2292,7 +2268,7 @@ window.AURORA_STATION_DATA = {
             "title": "Back Together",
             "context": "Mira returns to fuel. Ilan folds around the recorder. The room separates into three silences.",
             "statement": "I would create a shared rhythm that brought the group back into contact.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
@@ -2300,11 +2276,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Enthusiasm",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2313,23 +2289,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You let the quiet hold until the next formal handover."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You call a short reset for water, warmth and the next two tasks."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You bring everyone into a brief shared check-in, then restart the watch as one group."
               }
             },
@@ -2351,7 +2326,7 @@ window.AURORA_STATION_DATA = {
             "title": "The Sky Enters",
             "context": "Green and violet light moves across the ceiling while the alarm band stays red.",
             "statement": "I would take a few seconds to absorb the aurora's colour and scale.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
@@ -2359,11 +2334,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Aesthetics",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2372,23 +2347,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep your eyes on the instruments and let the sky remain outside the record."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You look once, then return to the panel and save a short image."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You let the colour and movement enter your attention before returning to the emergency."
               }
             },
@@ -2400,7 +2374,7 @@ window.AURORA_STATION_DATA = {
             "title": "Drifting Baselines",
             "context": "Several instrument baselines begin to drift. The fixed observation list remains beside the screen.",
             "statement": "I would keep the same observation order while the instruments drifted.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
@@ -2408,11 +2382,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Orderliness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2421,23 +2395,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You abandon the list and follow whichever channel changes next."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You preserve the core order but break it for short-lived changes."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You continue through the fixed sequence, marking every deviation in the same place."
               }
             },
@@ -2449,19 +2422,19 @@ window.AURORA_STATION_DATA = {
             "title": "Two Emergencies",
             "context": "Mira watches survival systems. Ilan watches the signal. Their tasks no longer overlap naturally.",
             "statement": "I would let them remain separate and coordinate mainly at planned handovers.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Cooperation",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Cooperation",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2470,23 +2443,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You bring both streams together whenever one changes the other's limit."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You set short handovers and leave them separate between those points."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You let each specialist remain deep in one task until the next planned handover."
               }
             },
@@ -2498,7 +2470,7 @@ window.AURORA_STATION_DATA = {
             "title": "Reconnect the Room",
             "context": "Mira and Ilan speak only to their own instruments. Neither hears the other's latest number.",
             "statement": "I would make my engagement visible enough to reconnect the room.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
@@ -2506,11 +2478,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Enthusiasm",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2519,23 +2491,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You allow the separate focus to continue until the next deadline forces contact."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You call one shared update, then return both people to their work."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You step between the stations, restate the common problem with visible energy and make each person answer the other."
               }
             },
@@ -2547,7 +2518,7 @@ window.AURORA_STATION_DATA = {
             "title": "A Deliberate Sound",
             "context": "The pulse repeats like a call. The resemblance raises unease, though the measurements remain stable.",
             "statement": "I would steady my attention and continue treating the pulse as measured data.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
@@ -2555,11 +2526,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Calmness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2568,23 +2539,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "The resemblance takes over the room. You check the walls and window before returning to the trace."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You name the feeling, then bring your attention back to timing and amplitude."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You hold the unease beside the data and continue the measured check without narrowing your attention."
               }
             },
@@ -2606,7 +2576,7 @@ window.AURORA_STATION_DATA = {
             "title": "One More Calculation",
             "context": "The fuel estimate is falling faster than before. Some assumptions may still be wrong.",
             "statement": "I would recheck the parts of the calculation most likely to change the decision.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
@@ -2614,11 +2584,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Industriousness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2627,23 +2597,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You accept the latest estimate and move directly to the choice."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You verify the single assumption most likely to move the result."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You check every assumption that could still change the choice and leave the rest untouched."
               }
             },
@@ -2655,19 +2624,19 @@ window.AURORA_STATION_DATA = {
             "title": "A Third Plan",
             "context": "Mira's heat plan and Ilan's recording plan are complete. A third approach remains possible.",
             "statement": "I would compare the two complete plans before developing another option.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
               "facet": "Ideas",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Ideas",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2676,23 +2645,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You use the blank line to build a timed split and calculate the switching loss."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You compare the two plans, then sketch a split only where their minimums overlap."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You keep the decision between the two complete plans."
               }
             },
@@ -2704,7 +2672,7 @@ window.AURORA_STATION_DATA = {
             "title": "Cross-Examination",
             "context": "Mira and Ilan hold different assumptions. Both are ready to answer one direct question from the other.",
             "statement": "I would invite them to test each other's assumptions openly.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
@@ -2712,11 +2680,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Cooperation",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2725,23 +2693,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You question each plan separately and carry the answers between them."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You ask one direct question from each person to the other."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You make them test each other's figures and state what would disqualify their own plan."
               }
             },
@@ -2753,7 +2720,7 @@ window.AURORA_STATION_DATA = {
             "title": "The Circle",
             "context": "The same figures return louder each time. The switch sequence is waiting.",
             "statement": "I would interrupt the repetition and take control of the final exchange.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
@@ -2761,11 +2728,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Assertiveness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2774,23 +2741,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You allow one more round and wait for either person to move."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You stop the repeated points and ask for one final new fact from each."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You end the circle, set the speaking order and call the decision point."
               }
             },
@@ -2802,19 +2768,19 @@ window.AURORA_STATION_DATA = {
             "title": "Two Urgencies",
             "context": "Mira names the danger of cold. Ilan names the loss of the signal. The pressure rises.",
             "statement": "I would remain pulled towards whichever loss felt most immediate.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
               "facet": "Resilience",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Resilience",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2823,23 +2789,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You let the urgency register, then return to the criteria without carrying either voice into the comparison."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "The urgency pulls at you, but a deliberate pause returns your attention to the written limits."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "The pressure keeps displacing the criteria, and the nearer loss begins to dominate the choice."
               }
             },
@@ -2861,19 +2826,19 @@ window.AURORA_STATION_DATA = {
             "title": "Behind the Numbers",
             "context": "Mira's page carries three names under HEAT. Ilan's carries two years of dates under RECORD.",
             "statement": "I would keep the personal meaning separate from the measurable comparison.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
               "facet": "Empathy",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Empathy",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2882,23 +2847,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You name what each plan means to the person defending it before returning to the figures."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You acknowledge the stakes briefly and keep them beside, not inside, the calculation."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You remove the personal history from the comparison and work only from measured outcomes."
               }
             },
@@ -2910,7 +2874,7 @@ window.AURORA_STATION_DATA = {
             "title": "One Grid",
             "context": "The three plans use different units and assumptions. A blank grid waits on the console.",
             "statement": "I would place all three plans into the same structure before choosing.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
@@ -2918,11 +2882,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Orderliness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2931,23 +2895,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You compare the plans in their existing forms and preserve their differences."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You standardise the critical values only."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You rewrite all three plans into one set of columns and thresholds."
               }
             },
@@ -2959,7 +2922,7 @@ window.AURORA_STATION_DATA = {
             "title": "The Unmeasured Cost",
             "context": "The immediate figures are close. Several consequences remain uncertain and may appear only later.",
             "statement": "I would consider less-visible consequences before closing the decision.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
@@ -2967,11 +2930,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Ideas",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -2980,23 +2943,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep the decision to outcomes that can be measured now."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You name one uncertain consequence but give it less weight than the current figures."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You test several plausible hidden consequences and ask whether any could reverse the ranking."
               }
             },
@@ -3008,7 +2970,7 @@ window.AURORA_STATION_DATA = {
             "title": "Without Certainty",
             "context": "No plan removes every risk. The final comparison is complete and the switch window is closing.",
             "statement": "I would steady myself enough to commit while uncertainty remained.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
@@ -3016,11 +2978,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Calmness",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -3029,23 +2991,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "The remaining uncertainty keeps the choice open while you look for one more disqualifying fact."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You state what remains unknown, steady the room and choose."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You hold the uncertainty without letting it become the decision, then call the plan."
               }
             },
@@ -3057,19 +3018,19 @@ window.AURORA_STATION_DATA = {
             "title": "The Duty Lead",
             "context": "The choice is made. Mira and Ilan understand it, but one final challenge is still possible.",
             "statement": "I would present the direction as provisional until they had one last chance to challenge it.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
               "facet": "Assertiveness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Assertiveness",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -3078,23 +3039,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You state the final direction and move directly to execution."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You state the decision, allow one question about execution and close the discussion."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You present the direction as provisional and invite one final challenge before the switch moves."
               }
             },
@@ -3116,7 +3076,7 @@ window.AURORA_STATION_DATA = {
             "title": "Three Sleeping Bags",
             "context": "The smallest warm room can hold all three. The sleeping positions and watch roles still need agreement.",
             "statement": "I would work with the others to arrange one shared refuge plan.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "EA",
@@ -3124,11 +3084,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Cooperation",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -3137,23 +3097,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep everyone warm but let each person manage a separate routine and resting position."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You share one warm zone and coordinate only at fixed checks."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You build one rotation that coordinates rest, radio watch, symptom checks and the limited space."
               }
             },
@@ -3165,19 +3124,19 @@ window.AURORA_STATION_DATA = {
             "title": "What Still Works",
             "context": "No powered system can be changed. Radio listening and survival checks still remain.",
             "statement": "I would stop the regular routine and conserve energy until conditions changed.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "ME",
               "facet": "Industriousness",
               "key": "R",
-              "correctedScoreFormula": "7 - raw",
+              "correctedScoreFormula": "6 - raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Industriousness",
                 "keyDirection": "R",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -3186,23 +3145,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep a minimal watch of radio, symptoms, battery and entry point."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You lengthen the intervals and keep only survival checks."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You suspend the regular cycle until the group agrees on a smaller one."
               }
             },
@@ -3214,7 +3172,7 @@ window.AURORA_STATION_DATA = {
             "title": "Keep Time Moving",
             "context": "Between radio checks, the chemical light barely moves. Silence hides how alert each person remains.",
             "statement": "I would keep a quiet conversation moving through the wait.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "FI",
@@ -3222,11 +3180,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Enthusiasm",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -3235,23 +3193,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You choose silence and use names only at scheduled checks."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You ask brief questions at each interval and allow silence between them."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You keep a low current of practical conversation moving."
               }
             },
@@ -3263,7 +3220,7 @@ window.AURORA_STATION_DATA = {
             "title": "Thirty-Four Minutes",
             "context": "Ridge is thirty-four minutes away. Relief enters the room before the rescue team does.",
             "statement": "I would settle back into the next routine quickly after hearing Ridge's voice.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WA",
@@ -3271,11 +3228,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Resilience",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -3284,23 +3241,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "Relief breaks the routine for several minutes before the next check begins."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You let the relief register, then restate the final interval."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You return at once to radio, warmth and safe-entry preparation."
               }
             },
@@ -3312,7 +3268,7 @@ window.AURORA_STATION_DATA = {
             "title": "What the Log Misses",
             "context": "The fault log holds times, loads and alarms, but not the light or the knocks.",
             "statement": "I would record the night's colours, sounds and unanswered details beside the technical report.",
-            "spectrumId": "self-fit-6",
+            "spectrumId": "agreement-5",
             "assessment": {
               "visibility": "internal",
               "elementCode": "WO",
@@ -3320,11 +3276,11 @@ window.AURORA_STATION_DATA = {
               "key": "+",
               "correctedScoreFormula": "raw",
               "constructContract": {
-                "format": "single-statement Likert 1-6",
+                "format": "single-statement Likert 1-5",
                 "targetFacet": "Aesthetics",
                 "keyDirection": "+",
                 "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how closely the statement matches the player’s likely response"
+                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
               }
             },
             "responseBranches": {
@@ -3333,23 +3289,22 @@ window.AURORA_STATION_DATA = {
                   1,
                   2
                 ],
-                "narrativeMeaning": "Low fit with the stated reaction",
+                "narrativeMeaning": "Disagreement with the statement",
                 "transition": "You keep the final entry factual and leave interpretation for later."
               },
               "mid": {
                 "responses": [
-                  3,
-                  4
+                  3
                 ],
-                "narrativeMeaning": "Partial or conditional fit with the stated reaction",
+                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
                 "transition": "You complete the fault log and add a separate observation note."
               },
               "high": {
                 "responses": [
-                  5,
-                  6
+                  4,
+                  5
                 ],
-                "narrativeMeaning": "High fit with the stated reaction",
+                "narrativeMeaning": "Agreement with the statement",
                 "transition": "You place colour, sound and uncertainty beside the technical record."
               }
             },
@@ -3367,7 +3322,7 @@ window.AURORA_STATION_DATA = {
     "insertAfterActId": "act-11",
     "branchInsertBeforeActId": "act-12",
     "title": "The Final Reserve",
-    "note": "Unscored. This decision changes the night, not your Five-Element scores.",
+    "note": "Unscored. This outcome follows from your recorded responses and changes the night, not your Five-Element scores.",
     "prompt": "One major load can remain. What does Aurora protect?",
     "options": [
       {
@@ -3403,7 +3358,15 @@ window.AURORA_STATION_DATA = {
           "dataLegacy": "The four-minute record confirms the magnetic-to-acoustic sequence but ends before the repeating structure can be demonstrated."
         }
       }
-    ]
+    ],
+    "selection": "derived",
+    "derivation": "The station's last major load is not a separate question. It follows from the responses already given: Wood pulls the reserve towards the recording, Earth and Water pull it towards the crew, and a close balance produces the narrow third path.",
+    "derivationMap": {
+      "discovery": "Wood clearly ahead of the crew currents",
+      "safety": "Earth and Water clearly ahead of Wood",
+      "bounded": "Wood and the crew currents within a narrow margin"
+    },
+    "margin": 0.4
   },
   "ending": {
     "rescue": "Ridge technicians isolate the damaged bus before connecting their portable generator to the safe service inlet. Heat returns first, then radio light, then the low ordinary hum of a working room.\n\nThe pulse beneath the ice disappears into that noise.",
@@ -3426,6 +3389,57 @@ window.AURORA_STATION_DATA = {
       "scoring",
       "branch balance"
     ],
-    "revision": "Senior editorial integrity pass: continuity, construct clarity, response neutrality and restrained hard-SF delivery."
+    "revision": "Senior editorial integrity pass: continuity, construct clarity, response neutrality and restrained hard-SF delivery.",
+    "reveal": "Revealed by sentence, short paragraph or narrative beat into one cumulative document. Nothing already revealed is replaced or removed."
+  },
+  "prelude": {
+    "kicker": "AURORA STATION · PRELUDE",
+    "steps": [
+      {
+        "id": "identity",
+        "indicator": "PRELUDE 01 / 03",
+        "title": "Before the watch begins",
+        "summary": "The station log needs a watchkeeper name. It will appear on the final record and on your reflective profile.",
+        "fieldLabel": "WATCHKEEPER NAME",
+        "placeholder": "Enter your name",
+        "note": "Stored only in this browser and used for your final record and report.",
+        "error": "Please enter your name to continue.",
+        "primary": "Continue to response guide"
+      },
+      {
+        "id": "calibration",
+        "indicator": "PRELUDE 02 / 03",
+        "title": "How to answer the watch",
+        "summary": "Each statement describes how you generally tend to be. Choose how strongly you agree or disagree, from 1 for strongly disagree to 5 for strongly agree.",
+        "prompt": "Try the scale once before the first decision. This practice response is not recorded and is not scored.",
+        "statement": "I like to know what is expected of me before I begin something new.",
+        "back": "← Edit name",
+        "primary": "Continue"
+      },
+      {
+        "id": "orientation",
+        "indicator": "PRELUDE 03 / 03",
+        "title": "The path changes with you",
+        "summary": "There is no answer key. This is a subjective reflection of how you see yourself, and the story records the route your responses take.",
+        "lead": "Every response changes the route the story records. Across the watch, your choices shape your profile, and later decisions shape the ending you reach.",
+        "guidance": [
+          {
+            "label": "No right or wrong",
+            "copy": "Higher is not better. Each point only shows how strongly you agree that the statement describes you."
+          },
+          {
+            "label": "Answer as you are",
+            "copy": "Choose what is generally true of you—not what sounds ideal, capable or expected of a duty lead."
+          },
+          {
+            "label": "Use the full scale",
+            "copy": "Choose 1 when you strongly disagree and 5 when you strongly agree. Use 3 only when you genuinely sit between the two."
+          }
+        ],
+        "disclaimer": "This is a subjective self-report, not a diagnosis or an objective measure of ability. Honest answers produce the most recognisable reflection.",
+        "back": "← Review the scale",
+        "primary": "Begin the final watch"
+      }
+    ]
   }
 };

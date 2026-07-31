@@ -81,11 +81,8 @@
 
   function phaseForState(data, state, core) {
     const step = core.currentStep(data, state);
-    if (step.type === "complete" || step.type === "ending") {
+    if (step.type !== "item") {
       return null;
-    }
-    if (step.type === "reserve") {
-      return "under-ice-pulse";
     }
 
     const act = data.story.acts.find((candidate) =>

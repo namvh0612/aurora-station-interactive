@@ -1,6 +1,8 @@
 # Aurora Station — The Final Watch
 
-**Aurora Station** is a narrative self-reflection experience inspired by the **Big Five personality framework**. Rather than asking participants to describe themselves through abstract labels, it places them inside a shared story and asks how closely each possible response reflects what they would genuinely be inclined to do.
+**Aurora Station** is a narrative self-reflection experience inspired by the **Big Five personality framework**. Rather than asking participants to describe themselves through abstract labels, it places them inside a shared story and asks how strongly they agree that each statement describes the way they generally tend to be.
+
+The story is one continuous document. Twelve Acts of five statements each build a single scrolling record that grows as you read, and nothing already written is taken away.
 
 The experience is designed to support thoughtful reflection and constructive conversation. It does not seek to identify one ideal personality, assign a fixed type, or determine whether someone is suitable for a role.
 
@@ -34,9 +36,11 @@ Higher and lower expressions of a dimension can both be valuable. Each may offer
 
 A single response should not be interpreted on its own. The profile reflects tendencies that emerge across multiple situations and different forms of pressure.
 
-### Direction rather than neutrality
+### An honest reading, including the middle
 
-The six-point response scale asks participants to choose the side that is closer to their likely behaviour. The aim is not to find a perfect answer, but to make an honest directional choice.
+The five-point agreement scale runs from 1 (strongly disagree) to 5 (strongly agree), with 3 as a genuine midpoint for statements that truly sit between the two. The aim is not to find a perfect answer, but to give an honest reading of yourself.
+
+Some statements are written in the opposite direction to the trait they measure. Those are reversed when the score is calculated, but never when the story is told: the passage you read always follows the response you actually chose.
 
 ### Reflection rather than ranking
 
@@ -62,7 +66,7 @@ For the most useful reflection:
 
 - answer according to what you would most likely do, not what appears ideal;
 - consider your typical behaviour while allowing for the situation described;
-- choose the closest response even when neither side feels exact;
+- use the whole scale, and keep 3 for statements you genuinely sit between;
 - avoid treating any option as morally better or professionally preferred; and
 - complete the experience with reasonable attention rather than over-analysing each choice.
 
@@ -106,3 +110,28 @@ Commercial use, commercial distribution or incorporation into a paid offering re
 ## Responsible use
 
 Aurora Station is most valuable when used to encourage curiosity rather than judgement. Results should open a conversation about context, contribution and adaptation—not close one with a label.
+
+## Running the project
+
+Aurora Station is a static site with no build step and no dependencies. Open `index.html`, or serve the folder over any static file server, and it runs from `file://` or GitHub Pages alike.
+
+Progress is kept in the browser only, in three separate records: your responses, how far the story has been revealed, and your reading preferences. Restarting the watch clears the first two and keeps the third, so sound and text speed survive.
+
+### Project structure
+
+| File | Responsibility |
+|---|---|
+| `content/Aurora_Station_Content.js` | All story, statement and interpretation content. Edit this to change the writing; no rebuild is required. |
+| `core.js` | State, scoring and the derived story node stream. No DOM access. |
+| `app.js` | The single `#story` renderer: reveals passages, runs the reflection panel and draws the results. |
+| `pdf-export.js` | Canvas-rendered story and profile PDFs, built from the same node stream the page shows. |
+| `audio.js` | The background soundtrack and its per-Act phases. |
+| `styles.css` | The reading theme and every layout. |
+
+### Checks
+
+```bash
+node tests.mjs
+```
+
+The same checks run on every push and pull request through `.github/workflows/test.yml`.

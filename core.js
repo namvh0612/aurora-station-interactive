@@ -1,12 +1,58 @@
+/*
+ * Aurora Station core.
+ *
+ * Owns three logically separate records:
+ *   responses   - the watchkeeper name and the 60 raw assessment answers
+ *   journey     - how much of the cumulative story has been revealed
+ *   preferences - reader settings that survive a restart
+ *
+ * It also derives the story node stream. The renderer and the PDF exporter
+ * both read that same stream, so the page and the exported story can never
+ * drift apart.
+ */
 (function attachAuroraCore(globalScope) {
   "use strict";
 
-  const STORAGE_KEY = "aurora-station-journey-v2";
+  const RESPONSES_KEY = "aurora-station-responses-v1";
+  const JOURNEY_KEY = "aurora-station-journey-v1";
+  const PREFERENCES_KEY = "aurora-station-preferences-v1";
+
+  const ITEMS_PER_ACT = 5;
+  const ITEM_COUNT = 60;
+  const MIN_RESPONSE = 1;
+  const MAX_RESPONSE = 5;
+  const SCALE_MIDPOINT = 3;
+  const SCALE_SPAN = MAX_RESPONSE - MIN_RESPONSE;
+  const REVERSE_CONSTANT = MIN_RESPONSE + MAX_RESPONSE;
+
+  const TEXT_SPEEDS = {
+    slow: 2600,
+    normal: 1500,
+    fast: 700,
+  };
+
+  const RESPONSE_LABELS = [
+    "Strongly disagree",
+    "Disagree a little",
+    "Neither agree nor disagree",
+    "Agree a little",
+    "Strongly agree",
+  ];
+
+  /* ------------------------------------------------------------------ data */
+
   function flattenItems(data) {
     return data.story.acts
       .flatMap((act) => act.items)
       .slice()
       .sort((left, right) => left.number - right.number);
+  }
+
+  function responseLabels(data) {
+    const configured = data?.assessment?.spectrum?.responseLabels;
+    return Array.isArray(configured) && configured.length === MAX_RESPONSE
+      ? configured
+      : RESPONSE_LABELS;
   }
 
   function splitParagraphs(value) {
@@ -18,22 +64,76 @@
 
   function branchKeyForRaw(data, raw) {
     const bands = data.assessment.spectrum.bands;
-    return Object.keys(bands).find((key) => bands[key].includes(raw));
+    return Object.keys(bands).find((key) => bands[key].includes(raw)) || null;
   }
 
+  /*
+   * Narrative branches always follow the raw response, including on
+   * reverse-keyed items. Reverse scoring is applied separately, in
+   * correctedScore, and never changes which passage the reader sees.
+   */
   function branchForRaw(data, item, raw) {
     const branchKey = branchKeyForRaw(data, raw);
-    return branchKey ? item.responseBranches[branchKey] : null;
+    return branchKey ? item.responseBranches[branchKey] || null : null;
   }
 
-  function emptyState() {
-    return {
-      playerName: "",
-      onboardingComplete: false,
-      answers: [],
-      reserveChoice: null,
-      endingAcknowledged: false,
-    };
+  function correctedScore(item, raw) {
+    return item.assessment.key === "R" ? REVERSE_CONSTANT - raw : raw;
+  }
+
+  // Strict on purpose: a stored record should never contain "4" where 4 was
+  // meant, and silently coercing it would hide a corrupted save.
+  function isValidResponse(value) {
+    return (
+      typeof value === "number" &&
+      Number.isInteger(value) &&
+      value >= MIN_RESPONSE &&
+      value <= MAX_RESPONSE
+    );
+  }
+
+  /* ----------------------------------------------------------- storage I/O */
+
+  function readRecord(storage, key) {
+    if (!storage) {
+      return null;
+    }
+    try {
+      const saved = storage.getItem(key);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeRecord(storage, key, value) {
+    if (!storage) {
+      return false;
+    }
+    try {
+      storage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function removeRecord(storage, key) {
+    if (!storage) {
+      return false;
+    }
+    try {
+      storage.removeItem(key);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /* ---------------------------------------------------------- responses */
+
+  function emptyResponses() {
+    return { playerName: "", onboardingComplete: false, answers: [] };
   }
 
   function normalisePlayerName(value) {
@@ -45,237 +145,425 @@
 
   function sanitiseState(data, candidate) {
     const itemCount = flattenItems(data).length;
-    const reserveIds = new Set(data.finalReserve.options.map((option) => option.id));
-    const sourceAnswers = Array.isArray(candidate && candidate.answers)
-      ? candidate.answers
-      : [];
+    const source = Array.isArray(candidate?.answers) ? candidate.answers : [];
     const answers = [];
 
-    for (const value of sourceAnswers.slice(0, itemCount)) {
-      const raw = Number(value);
-      if (!Number.isInteger(raw) || raw < 1 || raw > 6) {
+    // Answers are a prefix of the journey: stop at the first invalid entry so
+    // a corrupted record can never open a gap in the middle of the story.
+    for (const value of source.slice(0, itemCount)) {
+      if (!isValidResponse(value)) {
         break;
       }
-      answers.push(raw);
+      answers.push(value);
     }
 
-    let reserveChoice =
-      candidate && reserveIds.has(candidate.reserveChoice)
-        ? candidate.reserveChoice
-        : null;
-
-    if (answers.length < 55) {
-      reserveChoice = null;
-    }
-
-    if (answers.length > 55 && !reserveChoice) {
-      answers.length = 55;
-    }
-
-    const playerName = normalisePlayerName(candidate && candidate.playerName);
-    const onboardingComplete = Boolean(
-      candidate && candidate.onboardingComplete && playerName,
-    );
-    const endingAcknowledged = Boolean(
-      candidate &&
-        candidate.endingAcknowledged &&
-        answers.length === itemCount &&
-        reserveChoice,
-    );
+    const playerName = normalisePlayerName(candidate?.playerName);
 
     return {
       playerName,
-      onboardingComplete,
+      onboardingComplete: Boolean(candidate?.onboardingComplete && playerName),
       answers,
-      reserveChoice,
-      endingAcknowledged,
     };
   }
 
-  function setPlayerIdentity(data, state, name) {
-    const safeState = sanitiseState(data, state);
+  function loadResponses(data, storage) {
+    const saved = readRecord(storage, RESPONSES_KEY);
+    return saved ? sanitiseState(data, saved) : emptyResponses();
+  }
+
+  function saveResponses(data, responses, storage) {
+    return writeRecord(storage, RESPONSES_KEY, sanitiseState(data, responses));
+  }
+
+  function setPlayerIdentity(data, responses, name) {
+    const safe = sanitiseState(data, responses);
     const playerName = normalisePlayerName(name);
-
-    if (!playerName) {
-      return safeState;
-    }
-
-    return {
-      ...safeState,
-      playerName,
-      onboardingComplete: true,
-    };
+    return playerName
+      ? { ...safe, playerName, onboardingComplete: true }
+      : safe;
   }
 
-  function loadState(data, storage) {
-    if (!storage) {
-      return emptyState();
+  function answerAt(data, responses, index, rawValue) {
+    const safe = sanitiseState(data, responses);
+    const raw = rawValue;
+
+    if (
+      !isValidResponse(raw) ||
+      index < 0 ||
+      index >= flattenItems(data).length ||
+      index > safe.answers.length
+    ) {
+      return safe;
     }
 
-    try {
-      const saved = storage.getItem(STORAGE_KEY);
-      return saved ? sanitiseState(data, JSON.parse(saved)) : emptyState();
-    } catch {
-      return emptyState();
-    }
+    const answers = safe.answers.slice(0, index);
+    answers.push(raw);
+    return { ...safe, answers };
   }
 
-  function saveState(data, state, storage) {
-    if (!storage) {
-      return false;
-    }
-
-    try {
-      storage.setItem(STORAGE_KEY, JSON.stringify(sanitiseState(data, state)));
-      return true;
-    } catch {
-      return false;
-    }
+  function answerCurrent(data, responses, rawValue) {
+    const safe = sanitiseState(data, responses);
+    return answerAt(data, safe, safe.answers.length, rawValue);
   }
 
-  function clearState(storage) {
-    if (!storage) {
-      return false;
-    }
-
-    try {
-      storage.removeItem(STORAGE_KEY);
-      return true;
-    } catch {
-      return false;
-    }
+  /*
+   * Back is offered only inside the Act the reader is standing in, and only
+   * while that Act still has an unanswered question. Once the fifth response
+   * lands the Act's narrative starts revealing and the responses are settled.
+   */
+  function canStepBack(data, responses) {
+    const answered = sanitiseState(data, responses).answers.length;
+    return answered > 0 && answered % ITEMS_PER_ACT !== 0;
   }
 
-  function currentStep(data, state) {
-    const safeState = sanitiseState(data, state);
+  function stepBack(data, responses) {
+    const safe = sanitiseState(data, responses);
+    if (!canStepBack(data, safe)) {
+      return safe;
+    }
+    return { ...safe, answers: safe.answers.slice(0, -1) };
+  }
+
+  function currentStep(data, responses) {
+    const safe = sanitiseState(data, responses);
     const items = flattenItems(data);
 
-    if (safeState.answers.length === items.length) {
-      return safeState.endingAcknowledged
-        ? { type: "complete" }
-        : { type: "ending" };
-    }
-
-    if (safeState.answers.length === 55 && !safeState.reserveChoice) {
-      return { type: "reserve" };
+    if (safe.answers.length >= items.length) {
+      return { type: "complete" };
     }
 
     return {
       type: "item",
-      item: items[safeState.answers.length],
-      index: safeState.answers.length,
+      item: items[safe.answers.length],
+      index: safe.answers.length,
     };
   }
 
-  function answerCurrent(data, state, rawValue) {
-    const safeState = sanitiseState(data, state);
-    const raw = Number(rawValue);
-    const step = currentStep(data, safeState);
-
-    if (
-      step.type !== "item" ||
-      !Number.isInteger(raw) ||
-      raw < 1 ||
-      raw > 6
-    ) {
-      return safeState;
-    }
-
-    return {
-      playerName: safeState.playerName,
-      onboardingComplete: safeState.onboardingComplete,
-      answers: safeState.answers.concat(raw),
-      reserveChoice: safeState.reserveChoice,
-      endingAcknowledged: false,
-    };
-  }
-
-  function chooseReserve(data, state, optionId) {
-    const safeState = sanitiseState(data, state);
-    const step = currentStep(data, safeState);
-    const valid = data.finalReserve.options.some(
-      (option) => option.id === optionId,
-    );
-
-    if (step.type !== "reserve" || !valid) {
-      return safeState;
-    }
-
-    return {
-      playerName: safeState.playerName,
-      onboardingComplete: safeState.onboardingComplete,
-      answers: safeState.answers.slice(),
-      reserveChoice: optionId,
-      endingAcknowledged: false,
-    };
-  }
-
-  function acknowledgeEnding(data, state) {
-    const safeState = sanitiseState(data, state);
-    const step = currentStep(data, safeState);
-    if (step.type !== "ending") {
-      return safeState;
-    }
-    return {
-      ...safeState,
-      endingAcknowledged: true,
-    };
-  }
-
-  function undoLast(data, state) {
-    const safeState = sanitiseState(data, state);
-
-    if (safeState.endingAcknowledged) {
-      return {
-        ...safeState,
-        endingAcknowledged: false,
-      };
-    }
-
-    if (
-      safeState.answers.length === 55 &&
-      safeState.reserveChoice !== null
-    ) {
-      return {
-        playerName: safeState.playerName,
-        onboardingComplete: safeState.onboardingComplete,
-        answers: safeState.answers.slice(),
-        reserveChoice: null,
-        endingAcknowledged: false,
-      };
-    }
-
-    if (safeState.answers.length > 0) {
-      return {
-        playerName: safeState.playerName,
-        onboardingComplete: safeState.onboardingComplete,
-        answers: safeState.answers.slice(0, -1),
-        reserveChoice: safeState.reserveChoice,
-        endingAcknowledged: false,
-      };
-    }
-
-    return safeState;
-  }
-
-  function selectedReserve(data, state) {
-    return (
-      data.finalReserve.options.find(
-        (option) => option.id === state.reserveChoice,
-      ) || null
+  function actIndexForAnswerCount(answered) {
+    return Math.min(
+      Math.floor(answered / ITEMS_PER_ACT),
+      ITEM_COUNT / ITEMS_PER_ACT - 1,
     );
   }
 
-  function mean(values) {
-    if (!values.length) {
+  /* ------------------------------------------------------------- journey */
+
+  function emptyJourney() {
+    return { revealed: 0, scrollY: 0 };
+  }
+
+  function sanitiseJourney(candidate, nodeCount) {
+    const revealed = Number(candidate?.revealed);
+    const scrollY = Number(candidate?.scrollY);
+    const limit = Number.isFinite(nodeCount) ? nodeCount : Infinity;
+    return {
+      revealed: Number.isFinite(revealed)
+        ? Math.max(0, Math.min(limit, Math.floor(revealed)))
+        : 0,
+      scrollY: Number.isFinite(scrollY) ? Math.max(0, Math.floor(scrollY)) : 0,
+    };
+  }
+
+  function loadJourney(storage, nodeCount) {
+    return sanitiseJourney(readRecord(storage, JOURNEY_KEY), nodeCount);
+  }
+
+  function saveJourney(journey, storage, nodeCount) {
+    return writeRecord(storage, JOURNEY_KEY, sanitiseJourney(journey, nodeCount));
+  }
+
+  /* --------------------------------------------------------- preferences */
+
+  function defaultPreferences() {
+    return { textSpeed: "normal", paused: false };
+  }
+
+  function sanitisePreferences(candidate) {
+    const textSpeed = String(candidate?.textSpeed || "");
+    return {
+      textSpeed: Object.prototype.hasOwnProperty.call(TEXT_SPEEDS, textSpeed)
+        ? textSpeed
+        : "normal",
+      paused: Boolean(candidate?.paused),
+    };
+  }
+
+  function loadPreferences(storage) {
+    return sanitisePreferences(readRecord(storage, PREFERENCES_KEY));
+  }
+
+  function savePreferences(preferences, storage) {
+    return writeRecord(
+      storage,
+      PREFERENCES_KEY,
+      sanitisePreferences(preferences),
+    );
+  }
+
+  function revealDelay(preferences) {
+    return TEXT_SPEEDS[sanitisePreferences(preferences).textSpeed];
+  }
+
+  /*
+   * Restart clears the watchkeeper, the answers and the journey. Preferences
+   * are deliberately left alone: sound and text speed are how the reader likes
+   * to read, not part of the story they are starting again.
+   */
+  function clearJourneyState(storage) {
+    const responsesCleared = removeRecord(storage, RESPONSES_KEY);
+    const journeyCleared = removeRecord(storage, JOURNEY_KEY);
+    return responsesCleared && journeyCleared;
+  }
+
+  /* --------------------------------------------------------- final reserve */
+
+  function reserveOption(data, id) {
+    return data.finalReserve.options.find((option) => option.id === id) || null;
+  }
+
+  /*
+   * The last major load is not a separate question — that would be another
+   * button in a story that has none. It is derived from the responses already
+   * given, and only from the 55 answers that exist before Act 11 closes, so
+   * the outcome cannot change underneath Act 12.
+   */
+  function selectedReserve(data, responses) {
+    const safe = sanitiseState(data, responses);
+    const decisionPoint = ITEMS_PER_ACT * 11;
+    if (safe.answers.length < decisionPoint) {
       return null;
     }
 
-    return values.reduce((sum, value) => sum + value, 0) / values.length;
+    const scored = scoreAssessment(data, {
+      ...safe,
+      answers: safe.answers.slice(0, decisionPoint),
+    });
+    const byCode = Object.fromEntries(
+      scored.elements.map((element) => [element.code, element.score]),
+    );
+    const exploration = byCode.WO;
+    const crew = mean(
+      [byCode.EA, byCode.WA].filter((value) => Number.isFinite(value)),
+    );
+    const margin = Number(data.finalReserve.margin) || 0.4;
+
+    if (!Number.isFinite(exploration) || !Number.isFinite(crew)) {
+      return reserveOption(data, "bounded");
+    }
+    if (exploration - crew >= margin) {
+      return reserveOption(data, "discovery");
+    }
+    if (crew - exploration >= margin) {
+      return reserveOption(data, "safety");
+    }
+    return reserveOption(data, "bounded");
   }
 
-  function scoreAssessment(data, state) {
-    const safeState = sanitiseState(data, state);
+  /* ----------------------------------------------------------- node stream */
+
+  function bodyNodes(key, value, type, extra) {
+    return splitParagraphs(value).map((text, index) => ({
+      key: `${key}-${index}`,
+      type: type || "body",
+      text,
+      ...(extra || {}),
+    }));
+  }
+
+  /*
+   * The whole story as one ordered list of nodes. Narrative nodes are revealed
+   * on the playback timer; question nodes are gates that wait for the reader.
+   * The list is generated up to and including the first unanswered question,
+   * which keeps it a pure function of the answers recorded so far.
+   */
+  function buildNodes(data, responses) {
+    const safe = sanitiseState(data, responses);
+    const answers = safe.answers;
+    const nodes = [];
+
+    nodes.push({
+      key: "prologue-heading",
+      type: "prologue-heading",
+      title: data.story.prologue.title,
+      eyebrow: data.subtitle,
+    });
+    nodes.push(...bodyNodes("prologue", data.story.prologue.text, "body"));
+
+    for (const act of data.story.acts) {
+      const actStart = (act.number - 1) * ITEMS_PER_ACT;
+      if (answers.length < actStart) {
+        return nodes;
+      }
+
+      nodes.push({
+        key: `${act.id}-heading`,
+        type: "act-heading",
+        actId: act.id,
+        actNumber: act.number,
+        title: act.title,
+        time: act.time,
+      });
+      nodes.push(
+        ...bodyNodes(`${act.id}-opening`, act.opening, "body", {
+          actId: act.id,
+        }),
+      );
+
+      for (let offset = 0; offset < act.items.length; offset += 1) {
+        const item = act.items[offset];
+        const index = actStart + offset;
+        nodes.push({
+          key: `question-${item.number}`,
+          type: "question",
+          actId: act.id,
+          item,
+          index,
+          offset,
+          answered: index < answers.length,
+          raw: index < answers.length ? answers[index] : null,
+        });
+        if (index >= answers.length) {
+          return nodes;
+        }
+      }
+
+      // All five responses are in, so the Act's personalised passages exist.
+      for (let offset = 0; offset < act.items.length; offset += 1) {
+        const item = act.items[offset];
+        const raw = answers[actStart + offset];
+        const branchKey = branchKeyForRaw(data, raw);
+        const branch = branchForRaw(data, item, raw);
+        const shared = { actId: act.id, itemNumber: item.number };
+
+        nodes.push(
+          ...bodyNodes(`q${item.number}-context`, item.context, "context", shared),
+        );
+        if (branch) {
+          nodes.push(
+            ...bodyNodes(`q${item.number}-chosen`, branch.transition, "chosen", {
+              ...shared,
+              band: branchKey,
+              raw,
+            }),
+          );
+        }
+        nodes.push(
+          ...bodyNodes(
+            `q${item.number}-convergence`,
+            item.convergence,
+            "convergence",
+            shared,
+          ),
+        );
+      }
+
+      nodes.push(
+        ...bodyNodes(`${act.id}-closing`, act.closing, "closing", {
+          actId: act.id,
+        }),
+      );
+
+      if (act.id === data.finalReserve.insertAfterActId) {
+        const reserve = selectedReserve(data, safe);
+        if (!reserve) {
+          return nodes;
+        }
+        nodes.push({
+          key: "reserve-heading",
+          type: "interlude-heading",
+          title: reserve.title,
+          eyebrow: "THE FINAL RESERVE",
+          note: data.finalReserve.note,
+        });
+        nodes.push(
+          ...bodyNodes("reserve-immediate", reserve.immediate, "chosen", {
+            band: "reserve",
+          }),
+        );
+        nodes.push(...bodyNodes("reserve-opening", reserve.act12Opening, "body"));
+      }
+    }
+
+    if (answers.length < ITEM_COUNT) {
+      return nodes;
+    }
+
+    const reserve = selectedReserve(data, safe);
+    nodes.push({
+      key: "ending-heading",
+      type: "interlude-heading",
+      title: "What remained unresolved",
+      eyebrow: "THE FINAL RECORD",
+    });
+    nodes.push(...bodyNodes("ending-rescue", data.ending.rescue, "body"));
+    if (reserve) {
+      nodes.push(
+        ...bodyNodes(
+          "ending-consequence",
+          reserve.endingConsequence.rescueState,
+          "chosen",
+          { band: "reserve" },
+        ),
+      );
+      nodes.push(
+        ...bodyNodes(
+          "ending-legacy",
+          reserve.endingConsequence.dataLegacy,
+          "body",
+        ),
+      );
+    }
+    nodes.push(...bodyNodes("ending-shared", data.ending.shared, "ending"));
+    nodes.push({ key: "results", type: "results" });
+
+    return nodes;
+  }
+
+  function pendingQuestion(nodes, revealed) {
+    const node = nodes[revealed];
+    return node && node.type === "question" && !node.answered ? node : null;
+  }
+
+  function buildPlainStory(data, responses) {
+    return buildNodes(data, responses)
+      .map((node) => {
+        if (node.type === "question") {
+          return node.answered ? "" : `${node.item.context}\n\n${node.item.statement}`;
+        }
+        if (node.type === "results") {
+          return "";
+        }
+        if (node.type === "prologue-heading" || node.type === "interlude-heading") {
+          return node.title;
+        }
+        if (node.type === "act-heading") {
+          return `${node.title}\n\n${node.time}`;
+        }
+        return node.text;
+      })
+      .filter(Boolean)
+      .join("\n\n");
+  }
+
+  /* -------------------------------------------------------------- scoring */
+
+  function mean(values) {
+    const usable = values.filter((value) => Number.isFinite(value));
+    if (!usable.length) {
+      return null;
+    }
+    return usable.reduce((sum, value) => sum + value, 0) / usable.length;
+  }
+
+  function normalisePosition(score) {
+    if (!Number.isFinite(score)) {
+      return 0.5;
+    }
+    return Math.max(0, Math.min(1, (score - MIN_RESPONSE) / SCALE_SPAN));
+  }
+
+  function scoreAssessment(data, responses) {
+    const safe = sanitiseState(data, responses);
     const items = flattenItems(data);
     const buckets = {};
 
@@ -286,47 +574,39 @@
       });
     });
 
-    safeState.answers.forEach((raw, index) => {
+    safe.answers.forEach((raw, index) => {
       const item = items[index];
       if (!item) {
         return;
       }
-
-      const corrected =
-        item.assessment.key === "R" ? 7 - raw : raw;
       buckets[item.assessment.elementCode][item.assessment.facet].push(
-        corrected,
+        correctedScore(item, raw),
       );
     });
 
     const elements = Object.entries(data.assessment.elements).map(
       ([code, definition]) => {
-        const facets = definition.facets.map((name) => {
-          const values = buckets[code][name];
-          return {
-            name,
-            score: mean(values),
-            answered: values.length,
-          };
-        });
-        const completedFacetScores = facets
-          .map((facet) => facet.score)
-          .filter((value) => value !== null);
+        const facets = definition.facets.map((name) => ({
+          name,
+          score: mean(buckets[code][name]),
+          answered: buckets[code][name].length,
+        }));
 
         return {
           code,
           element: definition.element,
           trait: definition.trait,
           colour: definition.colour,
-          score: mean(completedFacetScores),
+          score: mean(facets.map((facet) => facet.score)),
           facets,
         };
       },
     );
 
     return {
-      answered: safeState.answers.length,
-      complete: safeState.answers.length === items.length,
+      answered: safe.answers.length,
+      complete: safe.answers.length === items.length,
+      facetCount: elements.reduce((total, item) => total + item.facets.length, 0),
       elements,
     };
   }
@@ -404,32 +684,37 @@
     bounded: { WO: 0.55, FI: 0.45, EA: 0.65, ME: 1, WA: 0.85 },
   };
 
-  function correctedScore(item, raw) {
-    return item.assessment.key === "R" ? 7 - raw : raw;
-  }
+  // Band edges are the six-point thresholds re-expressed on the five-point
+  // scale, so the proportion of the range each band covers is unchanged.
+  const BAND_EDGES = {
+    clearLower: 2.2,
+    moderateLower: 2.8,
+    balanced: 3.2,
+    moderateHigher: 3.8,
+  };
 
   function scoreBand(score) {
-    if (score === null) {
+    if (!Number.isFinite(score)) {
       return { id: "unavailable", label: "Not available", side: "balanced" };
     }
-    if (score <= 2.49) {
+    if (score <= BAND_EDGES.clearLower) {
       return { id: "clear-lower", label: "Clear lower-pole lean", side: "lower" };
     }
-    if (score <= 3.24) {
+    if (score <= BAND_EDGES.moderateLower) {
       return {
         id: "moderate-lower",
         label: "Moderate lower-pole lean",
         side: "lower",
       };
     }
-    if (score <= 3.75) {
+    if (score <= BAND_EDGES.balanced) {
       return {
         id: "balanced",
         label: "Balanced or context-sensitive",
         side: "balanced",
       };
     }
-    if (score <= 4.5) {
+    if (score <= BAND_EDGES.moderateHigher) {
       return {
         id: "moderate-higher",
         label: "Moderate higher-pole lean",
@@ -441,7 +726,7 @@
 
   function describeElement(result, definition, band) {
     const interpretation = definition.interpretation;
-    if (!interpretation || result.score === null) {
+    if (!interpretation || !Number.isFinite(result.score)) {
       return "";
     }
 
@@ -453,37 +738,49 @@
       );
     }
 
-    const direction = band.side === "higher" ? interpretation.higher : interpretation.lower;
+    const direction =
+      band.side === "higher" ? interpretation.higher : interpretation.lower;
     const strength = band.id.startsWith("clear") ? "a clear" : "a moderate";
     return `Your responses showed ${strength} lean toward a style that ${direction}.`;
   }
 
+  const FACET_ALIGNED_GAP = 0.32;
+  const FACET_PRONOUNCED_GAP = 0.64;
+
   function describeFacetPattern(result, guide) {
-    const available = result.facets.filter((facet) => facet.score !== null);
-    if (available.length !== 2 || !guide) {
+    const available = result.facets.filter((facet) =>
+      Number.isFinite(facet.score),
+    );
+    if (available.length < 2 || !guide) {
       return "";
     }
 
-    const [first, second] = available;
-    const difference = Math.abs(first.score - second.score);
-    const firstFocus = guide.facetFocus[first.name] || first.name.toLowerCase();
-    const secondFocus = guide.facetFocus[second.name] || second.name.toLowerCase();
+    const sorted = available
+      .slice()
+      .sort((left, right) => right.score - left.score);
+    const leading = sorted[0];
+    const quieter = sorted[sorted.length - 1];
+    const difference = leading.score - quieter.score;
+    const focusFor = (facet) =>
+      guide.facetFocus?.[facet.name] || facet.name.toLowerCase();
 
-    if (difference < 0.4) {
+    if (difference < FACET_ALIGNED_GAP) {
+      const focuses = available.map(focusFor);
+      const list =
+        focuses.length === 2
+          ? `${focuses[0]} and ${focuses[1]}`
+          : `${focuses.slice(0, -1).join(", ")} and ${focuses.at(-1)}`;
       return (
-        `The facets were broadly aligned: ${firstFocus} and ${secondFocus} ` +
-        "appeared at a similar level across the station scenarios."
+        `The facets were broadly aligned: ${list} appeared at a similar level ` +
+        "across the station scenarios."
       );
     }
 
-    const leading = first.score > second.score ? first : second;
-    const quieter = leading === first ? second : first;
-    const leadingFocus = guide.facetFocus[leading.name] || leading.name.toLowerCase();
-    const emphasis = difference >= 0.8 ? "a pronounced" : "a noticeable";
-
+    const emphasis =
+      difference >= FACET_PRONOUNCED_GAP ? "a pronounced" : "a noticeable";
     return (
       `There was ${emphasis} difference between the facets. ${leading.name} came ` +
-      `forward more consistently than ${quieter.name}; ${leadingFocus} was more ` +
+      `forward more consistently than ${quieter.name}; ${focusFor(leading)} was more ` +
       "readily available in this journey."
     );
   }
@@ -494,8 +791,11 @@
     );
   }
 
-  function scoreContextMovement(data, state) {
-    const safeState = sanitiseState(data, state);
+  const MOVEMENT_NOTICEABLE = 0.28;
+  const MOVEMENT_PRONOUNCED = 0.6;
+
+  function scoreContextMovement(data, responses) {
+    const safe = sanitiseState(data, responses);
     const items = flattenItems(data);
     const buckets = {};
 
@@ -506,10 +806,10 @@
       });
     });
 
-    safeState.answers.forEach((raw, index) => {
+    safe.answers.forEach((raw, index) => {
       const item = items[index];
       const stage = item && stageForItem(item);
-      if (!item || !stage) {
+      if (!stage) {
         return;
       }
       buckets[stage.id][item.assessment.elementCode].push(
@@ -525,26 +825,34 @@
       }));
       const start = stages[0].score;
       const finish = stages[2].score;
-      const delta = start === null || finish === null ? null : finish - start;
+      const delta =
+        Number.isFinite(start) && Number.isFinite(finish) ? finish - start : null;
+
       let label = "Broadly stable";
-      if (delta !== null && Math.abs(delta) >= 0.75) {
+      if (delta !== null && Math.abs(delta) >= MOVEMENT_PRONOUNCED) {
         label = delta > 0 ? "Pronounced increase" : "Pronounced decrease";
-      } else if (delta !== null && Math.abs(delta) >= 0.35) {
+      } else if (delta !== null && Math.abs(delta) >= MOVEMENT_NOTICEABLE) {
         label = delta > 0 ? "Noticeable increase" : "Noticeable decrease";
       }
+
       return { code, stages, delta, label };
     });
 
-    const moved = elements
-      .filter((item) => item.delta !== null && Math.abs(item.delta) >= 0.35)
+    const highlights = elements
+      .filter(
+        (item) => item.delta !== null && Math.abs(item.delta) >= MOVEMENT_NOTICEABLE,
+      )
       .slice()
-      .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta));
-
-    const highlights = moved.slice(0, 3).map((item) => {
-      const element = data.assessment.elements[item.code].element;
-      const direction = item.delta > 0 ? "became more available" : "became less available";
-      return `${element} ${direction} from the opening conditions to late pressure (${item.delta > 0 ? "+" : ""}${item.delta.toFixed(1)}).`;
-    });
+      .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta))
+      .slice(0, 3)
+      .map((item) => {
+        const element = data.assessment.elements[item.code].element;
+        const direction =
+          item.delta > 0 ? "became more available" : "became less available";
+        return `${element} ${direction} from the opening conditions to late pressure (${
+          item.delta > 0 ? "+" : ""
+        }${item.delta.toFixed(1)}).`;
+      });
 
     return {
       stages: PROFILE_STAGES.map((stage) => ({ ...stage })),
@@ -558,8 +866,10 @@
     };
   }
 
-  function responseQuality(data, state) {
-    const values = sanitiseState(data, state).answers;
+  const LOW_VARIATION_DEVIATION = 0.52;
+
+  function responseQuality(data, responses) {
+    const values = sanitiseState(data, responses).answers;
     if (!values.length) {
       return {
         status: "Not available",
@@ -570,8 +880,9 @@
     }
 
     const average = mean(values);
-    const variance = mean(values.map((value) => (value - average) ** 2));
-    const deviation = Math.sqrt(variance || 0);
+    const deviation = Math.sqrt(
+      mean(values.map((value) => (value - average) ** 2)) || 0,
+    );
     const counts = new Map();
     let longestRun = 1;
     let currentRun = 1;
@@ -588,13 +899,12 @@
       }
     });
 
-    const dominantCount = Math.max(...counts.values());
-    const dominantRate = dominantCount / values.length;
+    const dominantRate = Math.max(...counts.values()) / values.length;
     const flags = [];
     if (dominantRate >= 0.75) {
       flags.push("one response level was used for most items");
     }
-    if (deviation < 0.65) {
+    if (deviation < LOW_VARIATION_DEVIATION) {
       flags.push("responses showed very little variation");
     }
     if (longestRun >= 18) {
@@ -616,26 +926,22 @@
       status: "Suitable for reflection",
       level: "clear",
       summary:
-        "Your responses used the six-point range with enough variation to support a differentiated reflective profile. This remains a self-report, not a diagnostic assessment.",
+        "Your responses used the five-point range with enough variation to support a differentiated reflective profile. This remains a self-report, not a diagnostic assessment.",
       metrics: { deviation, dominantRate, longestRun },
     };
   }
 
-  function missionWeightsForState(state) {
-    return MISSION_WEIGHTS[state.reserveChoice] || {
-      WO: 0.5,
-      FI: 0.5,
-      EA: 0.5,
-      ME: 0.5,
-      WA: 0.5,
-    };
-  }
-
-  function normaliseRoleInput(value) {
-    if (!Number.isFinite(value)) {
-      return 0.5;
-    }
-    return Math.max(0, Math.min(1, (value - 1) / 5));
+  function missionWeightsForState(data, responses) {
+    const reserve = selectedReserve(data, responses);
+    return (
+      (reserve && MISSION_WEIGHTS[reserve.id]) || {
+        WO: 0.5,
+        FI: 0.5,
+        EA: 0.5,
+        ME: 0.5,
+        WA: 0.5,
+      }
+    );
   }
 
   function roleMetric(result) {
@@ -645,56 +951,54 @@
       .map((facet) => Number(facet.score))
       .filter(Number.isFinite);
     const facetFloor = facetScores.length ? Math.min(...facetScores) : overall;
-    const profileSuitability =
-      normaliseRoleInput(overall) * 0.6 +
-      normaliseRoleInput(latePressure) * 0.25 +
-      normaliseRoleInput(facetFloor) * 0.15;
 
     return {
       overall,
       latePressure,
       facetFloor,
-      profileSuitability,
+      profileSuitability:
+        normalisePosition(overall) * 0.6 +
+        normalisePosition(latePressure) * 0.25 +
+        normalisePosition(facetFloor) * 0.15,
     };
   }
 
-  function roleTieWeight(state, code) {
-    return Number(missionWeightsForState(state)[code] ?? 0.5);
-  }
+  // The solo guardrail keeps a role that the profile barely supports from
+  // being recommended: 2.8 of 5 is the five-point equivalent of the previous
+  // 3.25 of 6 threshold.
+  const ROLE_GUARDRAIL = 2.8;
 
-  function recommendRole(data, state, elements, options) {
+  function recommendRole(data, responses, elements, options) {
     const settings = options || {};
     const teamWeights = settings.teamComposition || null;
     const missionWeights = settings.missionRequirement || null;
-    const groupMode = Boolean(teamWeights || missionWeights || settings.mode === "group");
-    const allowStretchRoles = Boolean(settings.allowStretchRoles);
-    const availableElements = elements.filter(
-      (result) => Number.isFinite(result.score),
+    const groupMode = Boolean(
+      teamWeights || missionWeights || settings.mode === "group",
     );
+    const allowStretchRoles = Boolean(settings.allowStretchRoles);
+    const tieWeights = missionWeightsForState(data, responses);
 
-    const candidates = availableElements.map((result) => {
-      const metric = roleMetric(result);
-      const teamNeed = Number(teamWeights?.[result.code] ?? 0.5);
-      const missionNeed = Number(missionWeights?.[result.code] ?? 0.5);
-      const stretch = metric.overall < 3.25;
-      const finalScore = groupMode
-        ? metric.profileSuitability * 0.45 +
-          teamNeed * 0.3 +
-          missionNeed * 0.25
-        : metric.profileSuitability;
+    const candidates = elements
+      .filter((result) => Number.isFinite(result.score))
+      .map((result) => {
+        const metric = roleMetric(result);
+        const teamNeed = Number(teamWeights?.[result.code] ?? 0.5);
+        const missionNeed = Number(missionWeights?.[result.code] ?? 0.5);
 
-      return {
-        code: result.code,
-        finalScore,
-        profileSuitability: metric.profileSuitability,
-        overall: metric.overall,
-        latePressure: metric.latePressure,
-        facetFloor: metric.facetFloor,
-        teamNeed,
-        missionNeed,
-        stretch,
-      };
-    });
+        return {
+          code: result.code,
+          finalScore: groupMode
+            ? metric.profileSuitability * 0.45 + teamNeed * 0.3 + missionNeed * 0.25
+            : metric.profileSuitability,
+          profileSuitability: metric.profileSuitability,
+          overall: metric.overall,
+          latePressure: metric.latePressure,
+          facetFloor: metric.facetFloor,
+          teamNeed,
+          missionNeed,
+          stretch: metric.overall < ROLE_GUARDRAIL,
+        };
+      });
 
     let selectable = candidates.filter(
       (candidate) => !candidate.stretch || (groupMode && allowStretchRoles),
@@ -703,45 +1007,34 @@
       selectable = candidates.slice();
     }
 
+    const epsilon = 0.000001;
     selectable.sort((left, right) => {
-      const finalDifference = right.finalScore - left.finalScore;
-      if (Math.abs(finalDifference) > 0.000001) {
-        return finalDifference;
+      const comparisons = [
+        right.finalScore - left.finalScore,
+        ...(groupMode
+          ? [right.teamNeed - left.teamNeed, right.missionNeed - left.missionNeed]
+          : []),
+        right.overall - left.overall,
+        right.latePressure - left.latePressure,
+        right.facetFloor - left.facetFloor,
+      ];
+      const decisive = comparisons.find(
+        (difference) => Math.abs(difference) > epsilon,
+      );
+      if (decisive !== undefined) {
+        return decisive;
       }
-
-      if (groupMode) {
-        const teamDifference = right.teamNeed - left.teamNeed;
-        if (Math.abs(teamDifference) > 0.000001) {
-          return teamDifference;
-        }
-        const missionDifference = right.missionNeed - left.missionNeed;
-        if (Math.abs(missionDifference) > 0.000001) {
-          return missionDifference;
-        }
-      }
-
-      const overallDifference = right.overall - left.overall;
-      if (Math.abs(overallDifference) > 0.000001) {
-        return overallDifference;
-      }
-      const pressureDifference = right.latePressure - left.latePressure;
-      if (Math.abs(pressureDifference) > 0.000001) {
-        return pressureDifference;
-      }
-      const facetDifference = right.facetFloor - left.facetFloor;
-      if (Math.abs(facetDifference) > 0.000001) {
-        return facetDifference;
-      }
-
-      // A final narrative decision is used only when all profile metrics tie.
-      return roleTieWeight(state, right.code) - roleTieWeight(state, left.code);
+      // The derived narrative outcome breaks a tie only when every profile
+      // metric is exactly matched.
+      return (
+        Number(tieWeights[right.code] ?? 0.5) -
+        Number(tieWeights[left.code] ?? 0.5)
+      );
     });
 
     const selected = selectable[0];
     const runnerUp = selectable[1] || null;
-    const scoreGap = runnerUp
-      ? selected.finalScore - runnerUp.finalScore
-      : 1;
+    const scoreGap = runnerUp ? selected.finalScore - runnerUp.finalScore : 1;
     const result = elements.find((element) => element.code === selected.code);
     const definition = ROLE_DEFINITIONS[selected.code];
 
@@ -763,10 +1056,10 @@
         "This recommendation combines profile suitability, the contribution currently needed by the team and the requirements of this mission.";
     } else if (fit === "Balanced fit") {
       basis =
-        "This recommendation was selected from closely matched contributions using overall availability, late-pressure availability and facet balance. Your final operational choice was used only as a last tie-break.";
+        "This recommendation was selected from closely matched contributions using overall availability, late-pressure availability and facet balance. The night's derived outcome was used only as a last tie-break.";
     } else {
       basis =
-        "This solo recommendation is led by your profile: overall availability, late-pressure availability and the lower of the two facet scores.";
+        "This solo recommendation is led by your profile: overall availability, late-pressure availability and the lowest facet score.";
     }
 
     const closeFitText =
@@ -775,11 +1068,6 @@
         : closeFits.length === 1
           ? closeFits[0]
           : `${closeFits.slice(0, -1).join(", ")}, and ${closeFits.at(-1)}`;
-    const why =
-      `${result.element} produced the strongest eligible profile suitability ` +
-      `(${selected.profileSuitability.toFixed(2)}) after combining overall availability, ` +
-      "late-pressure availability and facet balance." +
-      (closeFitText ? ` ${closeFitText} remained close alternatives.` : "");
 
     return {
       ...definition,
@@ -799,7 +1087,11 @@
       whatYouBring: definition.bring,
       watchFor: result.overextension,
       basis,
-      why,
+      why:
+        `${result.element} produced the strongest eligible profile suitability ` +
+        `(${selected.profileSuitability.toFixed(2)}) after combining overall availability, ` +
+        "late-pressure availability and facet balance." +
+        (closeFitText ? ` ${closeFitText} remained close alternatives.` : ""),
       scoreGap,
       definition:
         "Your Aurora Role is the contribution your Five-Element profile is best placed to make in this mission. It is not a fixed personality type.",
@@ -808,8 +1100,8 @@
     };
   }
 
-  function finalChoiceSummary(data, state) {
-    const reserve = selectedReserve(data, state);
+  function finalChoiceSummary(data, responses) {
+    const reserve = selectedReserve(data, responses);
     if (!reserve) {
       return null;
     }
@@ -817,15 +1109,14 @@
       id: reserve.id,
       title: reserve.title,
       text: reserve.text,
-      note:
-        "This narrative decision is not included in any Five-Element score. In a solo journey, it is used only as a final tie-break when all profile metrics are exactly matched.",
+      note: data.finalReserve.note,
     };
   }
 
-  function analyseProfile(data, state, options) {
-    const safeState = sanitiseState(data, state);
-    const assessment = scoreAssessment(data, safeState);
-    const context = scoreContextMovement(data, safeState);
+  function analyseProfile(data, responses, options) {
+    const safe = sanitiseState(data, responses);
+    const assessment = scoreAssessment(data, safe);
+    const context = scoreContextMovement(data, safe);
     const contextByCode = Object.fromEntries(
       context.elements.map((item) => [item.code, item]),
     );
@@ -834,26 +1125,36 @@
       const definition = data.assessment.elements[result.code];
       const guide = definition.interpretation?.guide;
       const band = scoreBand(result.score);
-      const side = band.side === "balanced" ? (result.score >= 3.5 ? "higher" : "lower") : band.side;
+      const side =
+        band.side === "balanced"
+          ? result.score >= SCALE_MIDPOINT
+            ? "higher"
+            : "lower"
+          : band.side;
       const spectrum = SPECTRUM_LABELS[result.code];
-      const potentialAdvantage = band.side === "balanced"
-        ? guide?.adaptiveRange || ""
-        : guide?.[`${side}Use`] || "";
-      const overextension = band.side === "balanced"
-        ? "Access to both ends of the range can become hesitation when the situation needs a clear and explicit choice."
-        : guide?.[`${side}TradeOff`] || "";
-      const reflection = band.side === "balanced"
-        ? `Which end of the ${spectrum.lower.toLowerCase()}–${spectrum.higher.toLowerCase()} range does the current situation require you to make more explicit?`
-        : guide?.[`${side}Balance`] || "";
+
+      const potentialAdvantage =
+        band.side === "balanced"
+          ? guide?.adaptiveRange || ""
+          : guide?.[`${side}Use`] || "";
+      const overextension =
+        band.side === "balanced"
+          ? "Access to both ends of the range can become hesitation when the situation needs a clear and explicit choice."
+          : guide?.[`${side}TradeOff`] || "";
+      const reflection =
+        band.side === "balanced"
+          ? `Which end of the ${spectrum.lower.toLowerCase()}–${spectrum.higher.toLowerCase()} range does the current situation require you to make more explicit?`
+          : guide?.[`${side}Balance`] || "";
 
       return {
         ...result,
+        scaleMax: MAX_RESPONSE,
         lens: definition.interpretation?.lens || result.trait,
         description: describeElement(result, definition, band),
         expression: band.label,
         band,
         spectrum,
-        position: result.score === null ? 0.5 : Math.max(0, Math.min(1, (result.score - 1) / 5)),
+        position: normalisePosition(result.score),
         facetDefinitions: definition.interpretation?.facets || {},
         facetPattern: describeFacetPattern(result, guide),
         potentialAdvantage,
@@ -869,21 +1170,20 @@
       };
     });
 
-    const role = recommendRole(data, safeState, elements, options);
-    const quality = responseQuality(data, safeState);
-    const overview =
-      "Like an aurora, this profile is a spectrum of several colours rather than a single type. " +
-      "The five currents below show how you responded across Aurora Station; the recommended role translates that pattern into one practical contribution for this mission.";
+    const role = recommendRole(data, safe, elements, options);
 
     return {
       ...assessment,
-      playerName: safeState.playerName,
-      overview,
+      playerName: safe.playerName,
+      scaleMax: MAX_RESPONSE,
+      overview:
+        "Like an aurora, this profile is a spectrum of several colours rather than a single type. " +
+        "The five currents below show how you responded across Aurora Station; the recommended role translates that pattern into one practical contribution for this mission.",
       elements,
       role,
       context,
-      quality,
-      finalChoice: finalChoiceSummary(data, safeState),
+      quality: responseQuality(data, safe),
+      finalChoice: finalChoiceSummary(data, safe),
       roleModel:
         role.mode === "group"
           ? "Recommended Role = 45% profile suitability + 30% team composition need + 25% mission requirement."
@@ -891,85 +1191,54 @@
     };
   }
 
-  function buildPlainStory(data, state) {
-    const safeState = sanitiseState(data, state);
-    const items = flattenItems(data);
-    const sections = [data.title, data.subtitle, data.story.prologue.title];
-    sections.push(...splitParagraphs(data.story.prologue.text));
-
-    for (const act of data.story.acts) {
-      const firstIndex = act.items[0].number - 1;
-      if (safeState.answers.length < firstIndex) {
-        break;
-      }
-
-      sections.push(act.title, act.time, ...splitParagraphs(act.opening));
-
-      for (const item of act.items) {
-        const answerIndex = item.number - 1;
-        if (answerIndex >= safeState.answers.length) {
-          sections.push(item.context, item.statement);
-          return sections.join("\n\n");
-        }
-
-        const raw = safeState.answers[answerIndex];
-        const branch = branchForRaw(data, item, raw);
-        sections.push(item.context);
-        if (branch) {
-          sections.push(branch.transition);
-        }
-        sections.push(item.convergence);
-      }
-
-      sections.push(...splitParagraphs(act.closing));
-
-      if (act.id === data.finalReserve.insertAfterActId) {
-        const reserve = selectedReserve(data, safeState);
-        if (!reserve) {
-          sections.push(data.finalReserve.prompt);
-          return sections.join("\n\n");
-        }
-        sections.push(reserve.immediate, reserve.act12Opening);
-      }
-    }
-
-    if (safeState.answers.length === items.length) {
-      const reserve = selectedReserve(data, safeState);
-      sections.push(...splitParagraphs(data.ending.rescue));
-      if (reserve) {
-        sections.push(
-          reserve.endingConsequence.rescueState,
-          reserve.endingConsequence.dataLegacy,
-        );
-      }
-      sections.push(...splitParagraphs(data.ending.shared));
-    }
-
-    return sections.join("\n\n");
-  }
-
   const api = {
-    STORAGE_KEY,
-    acknowledgeEnding,
+    RESPONSES_KEY,
+    JOURNEY_KEY,
+    PREFERENCES_KEY,
+    TEXT_SPEEDS,
+    ITEMS_PER_ACT,
+    ITEM_COUNT,
+    MIN_RESPONSE,
+    MAX_RESPONSE,
+    actIndexForAnswerCount,
+    analyseProfile,
+    answerAt,
     answerCurrent,
     branchForRaw,
+    branchKeyForRaw,
+    buildNodes,
     buildPlainStory,
-    chooseReserve,
-    clearState,
+    canStepBack,
+    clearJourneyState,
+    correctedScore,
     currentStep,
-    emptyState,
+    defaultPreferences,
+    emptyJourney,
+    emptyResponses,
+    // Retained for callers that still speak the older single-state vocabulary.
+    emptyState: emptyResponses,
     flattenItems,
-    loadState,
+    loadJourney,
+    loadPreferences,
+    loadResponses,
     normalisePlayerName,
-    analyseProfile,
+    normalisePosition,
+    pendingQuestion,
     recommendRole,
+    responseLabels,
+    revealDelay,
+    saveJourney,
+    savePreferences,
+    saveResponses,
+    scoreBand,
+    sanitiseJourney,
+    sanitisePreferences,
     sanitiseState,
-    saveState,
     scoreAssessment,
     selectedReserve,
     setPlayerIdentity,
     splitParagraphs,
-    undoLast,
+    stepBack,
   };
 
   globalScope.AuroraCore = api;

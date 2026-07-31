@@ -8,39 +8,84 @@
     <meta name="theme-color" content="#06131d" />
     <title>Aurora Station — Your Journey</title>
     <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./styles-v7.css?v=7.0.0" />
-    <script type="module" src="./aurora.js"></script>
     <script defer src="./content/Aurora_Station_Content.js"></script>
-    <script defer src="./core-v7.js?v=7.0.0"></script>
+    <script defer src="./core.js"></script>
     <script defer src="./pdf-export.js"></script>
     <script defer src="./audio.js"></script>
-    <script defer src="./app-v7.js?v=7.0.0"></script>
+    <script defer src="./app.js"></script>
   </head>
   <body>
     <div class="aurora-background" aria-hidden="true">
-      <canvas id="aurora-canvas"></canvas>
       <div class="aurora-dimming-layer"></div>
       <div class="aurora-vignette"></div>
     </div>
-    <header class="reader-bar" aria-label="Reading progress">
-      <a class="reader-brand" href="#story">Aurora Station</a>
-      <div class="reader-progress" role="progressbar" aria-label="Journey progress" aria-valuemin="0" aria-valuemax="60" aria-valuenow="0">
-        <span id="progress-fill"></span>
+    <a class="skip-link" href="#story">Skip to the story</a>
+    <header class="reader-bar">
+      <div class="reader-bar-primary">
+        <a class="reader-brand" href="#story">Aurora Station</a>
+        <div
+          class="reader-progress"
+          role="progressbar"
+          aria-label="Journey progress"
+          aria-valuemin="0"
+          aria-valuemax="60"
+          aria-valuenow="0"
+        >
+          <span id="progress-fill"></span>
+        </div>
+        <span id="progress-label" class="progress-label">The final watch</span>
       </div>
-      <span id="progress-label" class="progress-label">The final watch</span>
-      <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true" aria-label="Mute background soundtrack" title="The soundtrack begins after your first interaction.">
-        <span class="sound-meter" aria-hidden="true"><span></span><span></span><span></span></span>
-        <span class="sound-label">Sound on</span>
-      </button>
-      <button id="restart-watch" class="restart-watch" type="button" aria-label="Restart the watch and clear saved progress" title="Restart the watch" hidden>
-        <span class="restart-icon" aria-hidden="true">↺</span>
-        <span class="restart-label">Restart</span>
-      </button>
+      <div class="reader-bar-tools">
+        <div id="playback-controls" class="playback-controls" role="group" aria-label="Text playback">
+          <button id="playback-toggle" class="tool-button" type="button" aria-pressed="false">
+            <span class="tool-label">Pause</span>
+          </button>
+          <button id="playback-show-now" class="tool-button" type="button">
+            <span class="tool-label">Show now</span>
+          </button>
+          <div id="speed-control" class="speed-control" role="radiogroup" aria-label="Text speed">
+            <button class="speed-choice" type="button" role="radio" data-speed="slow" aria-checked="false">Slow</button>
+            <button class="speed-choice" type="button" role="radio" data-speed="normal" aria-checked="true">Normal</button>
+            <button class="speed-choice" type="button" role="radio" data-speed="fast" aria-checked="false">Fast</button>
+          </div>
+        </div>
+        <button
+          id="sound-toggle"
+          class="tool-button sound-toggle"
+          type="button"
+          aria-pressed="true"
+          aria-label="Mute background soundtrack"
+          title="The soundtrack begins after your first interaction."
+        >
+          <span class="sound-meter" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span class="tool-label sound-label">Sound on</span>
+        </button>
+        <button
+          id="restart-watch"
+          class="tool-button restart-watch"
+          type="button"
+          aria-label="Restart the watch and clear saved progress"
+          title="Restart the watch"
+          hidden
+        >
+          <span class="restart-icon" aria-hidden="true">↺</span>
+          <span class="tool-label restart-label">Restart</span>
+        </button>
+      </div>
     </header>
     <main id="main-content" class="story-content">
-      <article id="story" class="story"><p class="loading-copy">Receiving the final watch…</p></article>
+      <article id="story" class="story" tabindex="-1">
+        <p class="loading-copy">Receiving the final watch…</p>
+      </article>
     </main>
-    <div id="screen-reader-status" class="sr-only" aria-live="assertive"></div>
-    <noscript><p class="noscript-message">Aurora Station needs JavaScript enabled to remember choices and build the story.</p></noscript>
+    <button id="new-passage" class="new-passage-button" type="button" hidden>
+      New passage below <span aria-hidden="true">↓</span>
+    </button>
+    <div id="screen-reader-status" class="sr-only" role="status" aria-live="polite"></div>
+    <noscript>
+      <p class="noscript-message">
+        Aurora Station needs JavaScript enabled to remember choices and build the story.
+      </p>
+    </noscript>
   </body>
 </html>
