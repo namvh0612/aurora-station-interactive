@@ -54,6 +54,13 @@
     return `${scoreText(value)} / ${core.MAX_RESPONSE}`;
   }
 
+  /* The domain's colour, matching its vertex on the overview chart. */
+  function domainMarker() {
+    const marker = element("span", "domain-marker");
+    marker.setAttribute("aria-hidden", "true");
+    return marker;
+  }
+
   function fileSafeName(value) {
     const safe = String(value || "Watchkeeper")
       .normalize("NFKD")
@@ -277,8 +284,10 @@
     profile.domains.forEach((domain) => {
       const tile = element("article", "domain-tile");
       tile.style.setProperty("--domain-colour", domain.colour);
+      const tileName = element("p", "technical-label domain-tile-name");
+      tileName.append(domainMarker(), domain.name.toUpperCase());
       tile.append(
-        element("p", "technical-label domain-tile-name", domain.name.toUpperCase()),
+        tileName,
         element("strong", "domain-tile-score", outOfFive(domain.score)),
         element("p", "domain-tile-band", domain.bandLabel),
       );
@@ -302,8 +311,10 @@
 
       const summary = element("div", "domain-panel-summary");
       const heading = element("div", "domain-panel-heading");
+      const panelName = element("h3", "");
+      panelName.append(domainMarker(), domain.name);
       heading.append(
-        element("h3", "", domain.name),
+        panelName,
         element("strong", "domain-panel-score", outOfFive(domain.score)),
       );
       summary.append(

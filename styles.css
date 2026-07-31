@@ -1119,9 +1119,23 @@ body.results-page {
 .domain-tile {
   padding: 1.1rem;
   border: 1px solid var(--dawn-line);
-  border-left: 4px solid var(--domain-colour, var(--dawn-line));
   border-radius: var(--radius);
   background: var(--dawn-raised);
+}
+
+/*
+ * Each domain carries its colour as a small marker that matches its vertex on
+ * the overview chart, so the tile and the chart read as one system. Text keeps
+ * full contrast rather than being tinted.
+ */
+.domain-marker {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.45rem;
+  border-radius: 50%;
+  background: var(--domain-colour, var(--dawn-ink));
+  vertical-align: baseline;
 }
 
 .domain-tile-name {
@@ -1148,7 +1162,6 @@ body.results-page {
   margin-bottom: 1rem;
   padding: 1.5rem;
   border: 1px solid var(--dawn-line);
-  border-left: 4px solid var(--domain-colour, var(--dawn-line));
   border-radius: var(--radius);
   background: var(--dawn-raised);
   grid-template-columns: 35fr 65fr;
