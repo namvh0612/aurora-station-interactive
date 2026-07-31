@@ -7,12 +7,16 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 
-const sandbox = { window: {} };
-vm.runInNewContext(
+// The content file is a classic browser script, so it needs a `window`. It is
+// deliberately run in *this* realm rather than a fresh vm context: objects from
+// a separate context carry a different Array.prototype, and deepStrictEqual
+// treats those as unequal even when the contents match.
+globalThis.window = globalThis;
+vm.runInThisContext(
   fs.readFileSync("./content/Aurora_Station_Content.js", "utf8"),
-  sandbox,
+  { filename: "Aurora_Station_Content.js" },
 );
-const data = sandbox.window.AURORA_STATION_DATA;
+const data = globalThis.AURORA_STATION_DATA;
 
 await import("./core.js");
 await import("./pdf-export.js");
