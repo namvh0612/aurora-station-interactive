@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Aurora Station — your Watchkeeper Profile." />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f2f1ea" />
+    <meta name="robots" content="noindex" />
+    <title>Aurora Station — Watchkeeper Profile</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./content/Aurora_Station_Content.js"></script>
+    <script defer src="./core.js"></script>
+    <script defer src="./pdf-export.js"></script>
+    <script defer src="./audio.js"></script>
+    <script defer src="./results.js"></script>
+  </head>
+  <body class="results-page">
+    <a class="skip-link" href="#results">Skip to the profile</a>
+    <main id="results" class="results-shell" tabindex="-1">
+      <p class="loading-copy">Recalculating your profile…</p>
+    </main>
+    <div id="screen-reader-status" class="sr-only" role="status" aria-live="polite"></div>
+    <noscript>
+      <p class="noscript-message">
+        Aurora Station needs JavaScript enabled to calculate your profile.
+      </p>
+    </noscript>
+  </body>
+</html>

@@ -63,30 +63,50 @@
     }
   }
 
+  /*
+   * Sound sits in the shared reading-preferences record alongside text speed,
+   * so that a restart keeps both. The legacy standalone key is still read once
+   * so an existing reader does not lose their setting.
+   */
   function readPreference() {
     const storage = safeStorage();
     if (!storage) {
       return true;
     }
+    const core = globalScope.AuroraCore;
+    if (core) {
+      const stored = storage.getItem(core.PREFERENCES_KEY);
+      if (stored) {
+        return core.loadPreferences(storage).soundEnabled;
+      }
+    }
     return storage.getItem(PREFERENCE_KEY) !== "off";
   }
 
   function savePreference() {
+    const storage = safeStorage();
+    const core = globalScope.AuroraCore;
+    if (!storage || !core) {
+      return;
+    }
     try {
-      safeStorage()?.setItem(PREFERENCE_KEY, enabled ? "on" : "off");
+      core.savePreferences(
+        { ...core.loadPreferences(storage), soundEnabled: enabled },
+        storage,
+      );
     } catch {
       // Sound remains usable when storage is unavailable.
     }
   }
 
   function phaseForState(data, state, core) {
-    const step = core.currentStep(data, state);
-    if (step.type !== "item") {
+    const item = core.currentItem(data, state);
+    if (!item) {
       return null;
     }
 
     const act = data.story.acts.find((candidate) =>
-      candidate.items.some((item) => item.number === step.item.number),
+      candidate.items.some((entry) => entry.id === item.id),
     );
     return act ? phaseByAct.get(act.id) || null : null;
   }

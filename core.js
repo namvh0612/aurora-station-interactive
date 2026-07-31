@@ -1,43 +1,47 @@
 /*
  * Aurora Station core.
  *
- * Owns three logically separate records:
- *   responses   - the watchkeeper name and the 60 raw assessment answers
- *   journey     - how much of the cumulative story has been revealed
- *   preferences - reader settings that survive a restart
+ * Scoring, state, validation and persistence. No DOM access.
  *
- * It also derives the story node stream. The renderer and the PDF exporter
- * both read that same stream, so the page and the exported story can never
- * drift apart.
+ * Two systems are kept deliberately separate:
+ *   - the narrative branch, which always follows the raw response
+ *   - the keyed score, which applies reverse keying
+ * Reverse keying must never influence which passage the reader sees.
  */
 (function attachAuroraCore(globalScope) {
   "use strict";
 
-  const RESPONSES_KEY = "aurora-station-responses-v1";
-  const JOURNEY_KEY = "aurora-station-journey-v1";
+  const JOURNEY_KEY = "aurora-station-journey-v2";
   const PREFERENCES_KEY = "aurora-station-preferences-v1";
+  const SCHEMA_VERSION = 2;
 
   const ITEMS_PER_ACT = 5;
-  const ITEM_COUNT = 60;
+  const ACT_COUNT = 12;
+  const ITEM_COUNT = ITEMS_PER_ACT * ACT_COUNT;
+  const ITEMS_PER_DOMAIN = 12;
+  const ITEMS_PER_FACET = 4;
   const MIN_RESPONSE = 1;
   const MAX_RESPONSE = 5;
-  const SCALE_MIDPOINT = 3;
-  const SCALE_SPAN = MAX_RESPONSE - MIN_RESPONSE;
   const REVERSE_CONSTANT = MIN_RESPONSE + MAX_RESPONSE;
+  const MAX_NAME_LENGTH = 40;
 
+  // Reveal pacing. All delays are configurable constants.
   const TEXT_SPEEDS = {
-    slow: 2600,
-    normal: 1500,
-    fast: 700,
+    slow: 2400,
+    normal: 1200,
+    fast: 500,
   };
+  const REDUCED_MOTION_DELAY = 0;
 
-  const RESPONSE_LABELS = [
-    "Strongly disagree",
-    "Disagree a little",
-    "Neither agree nor disagree",
-    "Agree a little",
-    "Strongly agree",
+  const DOMAIN_ORDER = [
+    "extraversion",
+    "agreeableness",
+    "conscientiousness",
+    "negativeEmotionality",
+    "openMindedness",
   ];
+
+  const PHASES = ["prelude", "questions", "reveal", "complete"];
 
   /* ------------------------------------------------------------------ data */
 
@@ -45,14 +49,15 @@
     return data.story.acts
       .flatMap((act) => act.items)
       .slice()
-      .sort((left, right) => left.number - right.number);
+      .sort((left, right) => left.bfiItem - right.bfiItem);
   }
 
   function responseLabels(data) {
-    const configured = data?.assessment?.spectrum?.responseLabels;
-    return Array.isArray(configured) && configured.length === MAX_RESPONSE
-      ? configured
-      : RESPONSE_LABELS;
+    return data.assessment.spectrum.responseLabels;
+  }
+
+  function domainDefinitions(data) {
+    return DOMAIN_ORDER.map((code) => data.assessment.domains[code]);
   }
 
   function splitParagraphs(value) {
@@ -62,27 +67,29 @@
       .filter(Boolean);
   }
 
-  function branchKeyForRaw(data, raw) {
-    const bands = data.assessment.spectrum.bands;
-    return Object.keys(bands).find((key) => bands[key].includes(raw)) || null;
-  }
-
   /*
-   * Narrative branches always follow the raw response, including on
-   * reverse-keyed items. Reverse scoring is applied separately, in
-   * correctedScore, and never changes which passage the reader sees.
+   * Narrative selection. Raw response only — a reverse-keyed item still shows
+   * the high branch when the reader agrees with it.
    */
-  function branchForRaw(data, item, raw) {
-    const branchKey = branchKeyForRaw(data, raw);
-    return branchKey ? item.responseBranches[branchKey] || null : null;
+  function getNarrativeBand(rawResponse) {
+    if (rawResponse <= 2) {
+      return "low";
+    }
+    if (rawResponse === 3) {
+      return "mid";
+    }
+    return "high";
   }
 
-  function correctedScore(item, raw) {
-    return item.assessment.key === "R" ? REVERSE_CONSTANT - raw : raw;
+  function narrativeForRaw(item, rawResponse) {
+    return item.narrative[getNarrativeBand(rawResponse)] || "";
   }
 
-  // Strict on purpose: a stored record should never contain "4" where 4 was
-  // meant, and silently coercing it would hide a corrupted save.
+  /* Scoring. Reverse keying applies here and nowhere else. */
+  function getKeyedScore(rawResponse, reverse) {
+    return reverse ? REVERSE_CONSTANT - rawResponse : rawResponse;
+  }
+
   function isValidResponse(value) {
     return (
       typeof value === "number" &&
@@ -92,7 +99,290 @@
     );
   }
 
-  /* ----------------------------------------------------------- storage I/O */
+  /* ------------------------------------------------------------ validation */
+
+  /*
+   * Structural validation of the content file. Nothing is inferred from
+   * visible text: every item declares its own scoring metadata.
+   */
+  function validateContent(data) {
+    const problems = [];
+    const complain = (condition, message) => {
+      if (!condition) {
+        problems.push(message);
+      }
+    };
+
+    const acts = data.story.acts;
+    complain(acts.length === ACT_COUNT, `expected ${ACT_COUNT} acts, found ${acts.length}`);
+
+    const items = flattenItems(data);
+    complain(items.length === ITEM_COUNT, `expected ${ITEM_COUNT} items, found ${items.length}`);
+
+    const seenIds = new Set();
+    const domainCounts = {};
+    const domainReverse = {};
+    const facetCounts = {};
+    const facetReverse = {};
+
+    acts.forEach((act) => {
+      complain(
+        act.items.length === ITEMS_PER_ACT,
+        `${act.id} has ${act.items.length} items, expected ${ITEMS_PER_ACT}`,
+      );
+      act.items.forEach((item, index) => {
+        complain(item.act === act.number, `${item.id} declares act ${item.act}`);
+        complain(
+          item.positionInAct === index + 1,
+          `${item.id} declares position ${item.positionInAct}`,
+        );
+      });
+    });
+
+    items.forEach((item, index) => {
+      complain(!seenIds.has(item.id), `duplicate item id ${item.id}`);
+      seenIds.add(item.id);
+      complain(item.bfiItem === index + 1, `${item.id} is out of BFI-2 order`);
+      complain(
+        DOMAIN_ORDER.includes(item.domain),
+        `${item.id} has unknown domain ${item.domain}`,
+      );
+      complain(typeof item.reverse === "boolean", `${item.id} has no keying`);
+      complain(Boolean(item.statement), `${item.id} has no statement`);
+      ["low", "mid", "high"].forEach((band) => {
+        complain(
+          Boolean(item.narrative && item.narrative[band]),
+          `${item.id} is missing the ${band} branch`,
+        );
+      });
+
+      const definition = data.assessment.domains[item.domain];
+      complain(
+        Boolean(definition) && definition.facets.includes(item.facet),
+        `${item.id} facet ${item.facet} does not belong to ${item.domain}`,
+      );
+
+      domainCounts[item.domain] = (domainCounts[item.domain] || 0) + 1;
+      facetCounts[item.facet] = (facetCounts[item.facet] || 0) + 1;
+      if (item.reverse) {
+        domainReverse[item.domain] = (domainReverse[item.domain] || 0) + 1;
+        facetReverse[item.facet] = (facetReverse[item.facet] || 0) + 1;
+      }
+    });
+
+    DOMAIN_ORDER.forEach((code) => {
+      complain(
+        domainCounts[code] === ITEMS_PER_DOMAIN,
+        `${code} has ${domainCounts[code] || 0} items, expected ${ITEMS_PER_DOMAIN}`,
+      );
+      complain(
+        domainReverse[code] === ITEMS_PER_DOMAIN / 2,
+        `${code} has ${domainReverse[code] || 0} reverse items, expected ${ITEMS_PER_DOMAIN / 2}`,
+      );
+      const facets = data.assessment.domains[code].facets;
+      complain(facets.length === 3, `${code} declares ${facets.length} facets, expected 3`);
+      facets.forEach((facet) => {
+        complain(
+          facetCounts[facet] === ITEMS_PER_FACET,
+          `${facet} has ${facetCounts[facet] || 0} items, expected ${ITEMS_PER_FACET}`,
+        );
+        complain(
+          facetReverse[facet] === ITEMS_PER_FACET / 2,
+          `${facet} has ${facetReverse[facet] || 0} reverse items, expected ${ITEMS_PER_FACET / 2}`,
+        );
+      });
+    });
+
+    return { valid: problems.length === 0, problems };
+  }
+
+  /* ------------------------------------------------------------------ state */
+
+  function emptyState() {
+    return {
+      schemaVersion: SCHEMA_VERSION,
+      participant: { name: "" },
+      phase: "prelude",
+      assessment: {
+        answers: {},
+        currentAct: 1,
+        currentQuestionInAct: 1,
+        lockedActs: [],
+      },
+      narrative: {
+        completedActs: [],
+        activeRevealAct: null,
+        revealedBeatCount: {},
+        paused: false,
+      },
+      completedAt: null,
+      scrollY: 0,
+    };
+  }
+
+  function normalisePlayerName(value) {
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, MAX_NAME_LENGTH);
+  }
+
+  function answeredCount(state) {
+    let count = 0;
+    while (isValidResponse(state.assessment.answers[`q${pad(count + 1)}`])) {
+      count += 1;
+    }
+    return count;
+  }
+
+  function pad(number) {
+    return String(number).padStart(2, "0");
+  }
+
+  function itemIdForNumber(number) {
+    return `q${pad(number)}`;
+  }
+
+  /*
+   * Answers are stored by item id but must remain a gapless prefix: a record
+   * with a hole in it is truncated rather than silently scored.
+   */
+  function sanitiseState(data, candidate) {
+    const safe = emptyState();
+    if (!candidate || typeof candidate !== "object") {
+      return safe;
+    }
+
+    safe.participant.name = normalisePlayerName(candidate.participant?.name);
+
+    const source = candidate.assessment?.answers;
+    if (source && typeof source === "object") {
+      for (let number = 1; number <= ITEM_COUNT; number += 1) {
+        const id = itemIdForNumber(number);
+        const value = source[id];
+        if (!isValidResponse(value)) {
+          break;
+        }
+        safe.assessment.answers[id] = value;
+      }
+    }
+
+    const answered = answeredCount(safe);
+    safe.assessment.currentAct = Math.min(
+      ACT_COUNT,
+      Math.floor(answered / ITEMS_PER_ACT) + 1,
+    );
+    safe.assessment.currentQuestionInAct = (answered % ITEMS_PER_ACT) + 1;
+    safe.assessment.lockedActs = [];
+    for (let act = 1; act <= Math.floor(answered / ITEMS_PER_ACT); act += 1) {
+      safe.assessment.lockedActs.push(act);
+    }
+
+    const revealed = candidate.narrative?.revealedBeatCount;
+    if (revealed && typeof revealed === "object") {
+      Object.keys(revealed).forEach((key) => {
+        const count = Number(revealed[key]);
+        if (Number.isFinite(count) && count >= 0) {
+          safe.narrative.revealedBeatCount[key] = Math.floor(count);
+        }
+      });
+    }
+    if (Array.isArray(candidate.narrative?.completedActs)) {
+      safe.narrative.completedActs = candidate.narrative.completedActs
+        .map(Number)
+        .filter((act) => Number.isInteger(act) && act >= 1 && act <= ACT_COUNT)
+        .filter((act) => safe.assessment.lockedActs.includes(act));
+    }
+    const activeReveal = Number(candidate.narrative?.activeRevealAct);
+    safe.narrative.activeRevealAct =
+      Number.isInteger(activeReveal) && activeReveal >= 1 && activeReveal <= ACT_COUNT
+        ? activeReveal
+        : null;
+    safe.narrative.paused = Boolean(candidate.narrative?.paused);
+
+    const scrollY = Number(candidate.scrollY);
+    safe.scrollY = Number.isFinite(scrollY) && scrollY > 0 ? Math.floor(scrollY) : 0;
+
+    const completedAt = Number(candidate.completedAt);
+    safe.completedAt =
+      answered >= ITEM_COUNT && Number.isFinite(completedAt) && completedAt > 0
+        ? completedAt
+        : null;
+
+    const phase = String(candidate.phase || "");
+    safe.phase = PHASES.includes(phase) ? phase : "prelude";
+    if (!safe.participant.name) {
+      safe.phase = "prelude";
+    } else if (answered >= ITEM_COUNT) {
+      safe.phase = "complete";
+    } else if (safe.phase === "prelude" || safe.phase === "complete") {
+      safe.phase = "questions";
+    }
+
+    return safe;
+  }
+
+  function isComplete(state) {
+    return answeredCount(state) >= ITEM_COUNT;
+  }
+
+  function setPlayerName(data, state, name) {
+    const safe = sanitiseState(data, state);
+    const playerName = normalisePlayerName(name);
+    if (!playerName) {
+      return safe;
+    }
+    safe.participant.name = playerName;
+    safe.phase = isComplete(safe) ? "complete" : "questions";
+    return safe;
+  }
+
+  function currentItem(data, state) {
+    const safe = sanitiseState(data, state);
+    const answered = answeredCount(safe);
+    return answered >= ITEM_COUNT ? null : flattenItems(data)[answered];
+  }
+
+  function recordResponse(data, state, itemId, rawResponse) {
+    const safe = sanitiseState(data, state);
+    const item = currentItem(data, safe);
+    if (!item || item.id !== itemId || !isValidResponse(rawResponse)) {
+      return safe;
+    }
+    safe.assessment.answers[itemId] = rawResponse;
+    if (isComplete(safe) && !safe.completedAt) {
+      safe.completedAt = Date.now();
+    }
+    return sanitiseState(data, safe);
+  }
+
+  /*
+   * Back is offered only inside the Act being answered, and only before that
+   * Act's narrative reveal has begun. A locked Act can never be reopened.
+   */
+  function canGoBack(data, state) {
+    const safe = sanitiseState(data, state);
+    const answered = answeredCount(safe);
+    return answered > 0 && answered % ITEMS_PER_ACT !== 0;
+  }
+
+  function goBack(data, state) {
+    const safe = sanitiseState(data, state);
+    if (!canGoBack(data, safe)) {
+      return safe;
+    }
+    const answered = answeredCount(safe);
+    delete safe.assessment.answers[itemIdForNumber(answered)];
+    return sanitiseState(data, safe);
+  }
+
+  function previousResponse(data, state) {
+    const safe = sanitiseState(data, state);
+    const answered = answeredCount(safe);
+    return answered > 0 ? safe.assessment.answers[itemIdForNumber(answered)] : null;
+  }
+
+  /* ----------------------------------------------------------- persistence */
 
   function readRecord(storage, key) {
     if (!storage) {
@@ -118,164 +408,16 @@
     }
   }
 
-  function removeRecord(storage, key) {
-    if (!storage) {
-      return false;
-    }
-    try {
-      storage.removeItem(key);
-      return true;
-    } catch {
-      return false;
-    }
+  function loadState(data, storage) {
+    return sanitiseState(data, readRecord(storage, JOURNEY_KEY));
   }
 
-  /* ---------------------------------------------------------- responses */
-
-  function emptyResponses() {
-    return { playerName: "", onboardingComplete: false, answers: [] };
+  function saveState(data, state, storage) {
+    return writeRecord(storage, JOURNEY_KEY, sanitiseState(data, state));
   }
-
-  function normalisePlayerName(value) {
-    return String(value || "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 60);
-  }
-
-  function sanitiseState(data, candidate) {
-    const itemCount = flattenItems(data).length;
-    const source = Array.isArray(candidate?.answers) ? candidate.answers : [];
-    const answers = [];
-
-    // Answers are a prefix of the journey: stop at the first invalid entry so
-    // a corrupted record can never open a gap in the middle of the story.
-    for (const value of source.slice(0, itemCount)) {
-      if (!isValidResponse(value)) {
-        break;
-      }
-      answers.push(value);
-    }
-
-    const playerName = normalisePlayerName(candidate?.playerName);
-
-    return {
-      playerName,
-      onboardingComplete: Boolean(candidate?.onboardingComplete && playerName),
-      answers,
-    };
-  }
-
-  function loadResponses(data, storage) {
-    const saved = readRecord(storage, RESPONSES_KEY);
-    return saved ? sanitiseState(data, saved) : emptyResponses();
-  }
-
-  function saveResponses(data, responses, storage) {
-    return writeRecord(storage, RESPONSES_KEY, sanitiseState(data, responses));
-  }
-
-  function setPlayerIdentity(data, responses, name) {
-    const safe = sanitiseState(data, responses);
-    const playerName = normalisePlayerName(name);
-    return playerName
-      ? { ...safe, playerName, onboardingComplete: true }
-      : safe;
-  }
-
-  function answerAt(data, responses, index, rawValue) {
-    const safe = sanitiseState(data, responses);
-    const raw = rawValue;
-
-    if (
-      !isValidResponse(raw) ||
-      index < 0 ||
-      index >= flattenItems(data).length ||
-      index > safe.answers.length
-    ) {
-      return safe;
-    }
-
-    const answers = safe.answers.slice(0, index);
-    answers.push(raw);
-    return { ...safe, answers };
-  }
-
-  function answerCurrent(data, responses, rawValue) {
-    const safe = sanitiseState(data, responses);
-    return answerAt(data, safe, safe.answers.length, rawValue);
-  }
-
-  /*
-   * Back is offered only inside the Act the reader is standing in, and only
-   * while that Act still has an unanswered question. Once the fifth response
-   * lands the Act's narrative starts revealing and the responses are settled.
-   */
-  function canStepBack(data, responses) {
-    const answered = sanitiseState(data, responses).answers.length;
-    return answered > 0 && answered % ITEMS_PER_ACT !== 0;
-  }
-
-  function stepBack(data, responses) {
-    const safe = sanitiseState(data, responses);
-    if (!canStepBack(data, safe)) {
-      return safe;
-    }
-    return { ...safe, answers: safe.answers.slice(0, -1) };
-  }
-
-  function currentStep(data, responses) {
-    const safe = sanitiseState(data, responses);
-    const items = flattenItems(data);
-
-    if (safe.answers.length >= items.length) {
-      return { type: "complete" };
-    }
-
-    return {
-      type: "item",
-      item: items[safe.answers.length],
-      index: safe.answers.length,
-    };
-  }
-
-  function actIndexForAnswerCount(answered) {
-    return Math.min(
-      Math.floor(answered / ITEMS_PER_ACT),
-      ITEM_COUNT / ITEMS_PER_ACT - 1,
-    );
-  }
-
-  /* ------------------------------------------------------------- journey */
-
-  function emptyJourney() {
-    return { revealed: 0, scrollY: 0 };
-  }
-
-  function sanitiseJourney(candidate, nodeCount) {
-    const revealed = Number(candidate?.revealed);
-    const scrollY = Number(candidate?.scrollY);
-    const limit = Number.isFinite(nodeCount) ? nodeCount : Infinity;
-    return {
-      revealed: Number.isFinite(revealed)
-        ? Math.max(0, Math.min(limit, Math.floor(revealed)))
-        : 0,
-      scrollY: Number.isFinite(scrollY) ? Math.max(0, Math.floor(scrollY)) : 0,
-    };
-  }
-
-  function loadJourney(storage, nodeCount) {
-    return sanitiseJourney(readRecord(storage, JOURNEY_KEY), nodeCount);
-  }
-
-  function saveJourney(journey, storage, nodeCount) {
-    return writeRecord(storage, JOURNEY_KEY, sanitiseJourney(journey, nodeCount));
-  }
-
-  /* --------------------------------------------------------- preferences */
 
   function defaultPreferences() {
-    return { textSpeed: "normal", paused: false };
+    return { textSpeed: "normal", soundEnabled: true };
   }
 
   function sanitisePreferences(candidate) {
@@ -284,7 +426,7 @@
       textSpeed: Object.prototype.hasOwnProperty.call(TEXT_SPEEDS, textSpeed)
         ? textSpeed
         : "normal",
-      paused: Boolean(candidate?.paused),
+      soundEnabled: candidate?.soundEnabled !== false,
     };
   }
 
@@ -293,75 +435,35 @@
   }
 
   function savePreferences(preferences, storage) {
-    return writeRecord(
-      storage,
-      PREFERENCES_KEY,
-      sanitisePreferences(preferences),
-    );
+    return writeRecord(storage, PREFERENCES_KEY, sanitisePreferences(preferences));
   }
 
-  function revealDelay(preferences) {
+  function revealDelay(preferences, reducedMotion) {
+    if (reducedMotion) {
+      return REDUCED_MOTION_DELAY;
+    }
     return TEXT_SPEEDS[sanitisePreferences(preferences).textSpeed];
   }
 
   /*
-   * Restart clears the watchkeeper, the answers and the journey. Preferences
-   * are deliberately left alone: sound and text speed are how the reader likes
-   * to read, not part of the story they are starting again.
+   * Restart clears the journey and keeps the reading preferences: sound and
+   * text speed are how the reader likes to read, not part of the story.
    */
-  function clearJourneyState(storage) {
-    const responsesCleared = removeRecord(storage, RESPONSES_KEY);
-    const journeyCleared = removeRecord(storage, JOURNEY_KEY);
-    return responsesCleared && journeyCleared;
+  function clearJourney(storage) {
+    if (!storage) {
+      return false;
+    }
+    try {
+      storage.removeItem(JOURNEY_KEY);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
-  /* --------------------------------------------------------- final reserve */
+  /* ------------------------------------------------------------ node stream */
 
-  function reserveOption(data, id) {
-    return data.finalReserve.options.find((option) => option.id === id) || null;
-  }
-
-  /*
-   * The last major load is not a separate question — that would be another
-   * button in a story that has none. It is derived from the responses already
-   * given, and only from the 55 answers that exist before Act 11 closes, so
-   * the outcome cannot change underneath Act 12.
-   */
-  function selectedReserve(data, responses) {
-    const safe = sanitiseState(data, responses);
-    const decisionPoint = ITEMS_PER_ACT * 11;
-    if (safe.answers.length < decisionPoint) {
-      return null;
-    }
-
-    const scored = scoreAssessment(data, {
-      ...safe,
-      answers: safe.answers.slice(0, decisionPoint),
-    });
-    const byCode = Object.fromEntries(
-      scored.elements.map((element) => [element.code, element.score]),
-    );
-    const exploration = byCode.WO;
-    const crew = mean(
-      [byCode.EA, byCode.WA].filter((value) => Number.isFinite(value)),
-    );
-    const margin = Number(data.finalReserve.margin) || 0.4;
-
-    if (!Number.isFinite(exploration) || !Number.isFinite(crew)) {
-      return reserveOption(data, "bounded");
-    }
-    if (exploration - crew >= margin) {
-      return reserveOption(data, "discovery");
-    }
-    if (crew - exploration >= margin) {
-      return reserveOption(data, "safety");
-    }
-    return reserveOption(data, "bounded");
-  }
-
-  /* ----------------------------------------------------------- node stream */
-
-  function bodyNodes(key, value, type, extra) {
+  function beats(key, value, type, extra) {
     return splitParagraphs(value).map((text, index) => ({
       key: `${key}-${index}`,
       type: type || "body",
@@ -371,14 +473,14 @@
   }
 
   /*
-   * The whole story as one ordered list of nodes. Narrative nodes are revealed
-   * on the playback timer; question nodes are gates that wait for the reader.
-   * The list is generated up to and including the first unanswered question,
-   * which keeps it a pure function of the answers recorded so far.
+   * The story as one ordered list of nodes, derived from the recorded answers.
+   * Narrative nodes are revealed on the playback timer; question nodes are
+   * gates that wait for the reader. The list stops at the first unanswered
+   * question, so it is a pure function of the responses so far.
    */
-  function buildNodes(data, responses) {
-    const safe = sanitiseState(data, responses);
-    const answers = safe.answers;
+  function buildNodes(data, state) {
+    const safe = sanitiseState(data, state);
+    const answers = safe.assessment.answers;
     const nodes = [];
 
     nodes.push({
@@ -387,11 +489,11 @@
       title: data.story.prologue.title,
       eyebrow: data.subtitle,
     });
-    nodes.push(...bodyNodes("prologue", data.story.prologue.text, "body"));
+    nodes.push(...beats("prologue", data.story.prologue.text, "body"));
 
     for (const act of data.story.acts) {
       const actStart = (act.number - 1) * ITEMS_PER_ACT;
-      if (answers.length < actStart) {
+      if (answeredCount(safe) < actStart) {
         return nodes;
       }
 
@@ -403,118 +505,58 @@
         title: act.title,
         time: act.time,
       });
-      nodes.push(
-        ...bodyNodes(`${act.id}-opening`, act.opening, "body", {
-          actId: act.id,
-        }),
-      );
+      nodes.push(...beats(`${act.id}-opening`, act.opening, "body", { actId: act.id }));
 
-      for (let offset = 0; offset < act.items.length; offset += 1) {
-        const item = act.items[offset];
-        const index = actStart + offset;
+      for (const item of act.items) {
+        const raw = answers[item.id];
         nodes.push({
-          key: `question-${item.number}`,
+          key: `question-${item.id}`,
           type: "question",
           actId: act.id,
+          actNumber: act.number,
           item,
-          index,
-          offset,
-          answered: index < answers.length,
-          raw: index < answers.length ? answers[index] : null,
+          answered: isValidResponse(raw),
+          raw: isValidResponse(raw) ? raw : null,
         });
-        if (index >= answers.length) {
+        if (!isValidResponse(raw)) {
           return nodes;
         }
       }
 
-      // All five responses are in, so the Act's personalised passages exist.
-      for (let offset = 0; offset < act.items.length; offset += 1) {
-        const item = act.items[offset];
-        const raw = answers[actStart + offset];
-        const branchKey = branchKeyForRaw(data, raw);
-        const branch = branchForRaw(data, item, raw);
-        const shared = { actId: act.id, itemNumber: item.number };
-
+      // Every response is in, so the Act's personalised passages exist.
+      for (const item of act.items) {
+        const raw = answers[item.id];
+        const band = getNarrativeBand(raw);
+        const shared = { actId: act.id, itemId: item.id };
+        nodes.push(...beats(`${item.id}-context`, item.context, "context", shared));
         nodes.push(
-          ...bodyNodes(`q${item.number}-context`, item.context, "context", shared),
-        );
-        if (branch) {
-          nodes.push(
-            ...bodyNodes(`q${item.number}-chosen`, branch.transition, "chosen", {
-              ...shared,
-              band: branchKey,
-              raw,
-            }),
-          );
-        }
-        nodes.push(
-          ...bodyNodes(
-            `q${item.number}-convergence`,
-            item.convergence,
-            "convergence",
-            shared,
-          ),
-        );
-      }
-
-      nodes.push(
-        ...bodyNodes(`${act.id}-closing`, act.closing, "closing", {
-          actId: act.id,
-        }),
-      );
-
-      if (act.id === data.finalReserve.insertAfterActId) {
-        const reserve = selectedReserve(data, safe);
-        if (!reserve) {
-          return nodes;
-        }
-        nodes.push({
-          key: "reserve-heading",
-          type: "interlude-heading",
-          title: reserve.title,
-          eyebrow: "THE FINAL RESERVE",
-          note: data.finalReserve.note,
-        });
-        nodes.push(
-          ...bodyNodes("reserve-immediate", reserve.immediate, "chosen", {
-            band: "reserve",
+          ...beats(`${item.id}-selected`, narrativeForRaw(item, raw), "selected", {
+            ...shared,
+            band,
+            raw,
           }),
         );
-        nodes.push(...bodyNodes("reserve-opening", reserve.act12Opening, "body"));
+        nodes.push(
+          ...beats(`${item.id}-convergence`, item.convergence, "convergence", shared),
+        );
       }
+
+      nodes.push(...beats(`${act.id}-closing`, act.closing, "closing", { actId: act.id }));
     }
 
-    if (answers.length < ITEM_COUNT) {
+    if (answeredCount(safe) < ITEM_COUNT) {
       return nodes;
     }
 
-    const reserve = selectedReserve(data, safe);
     nodes.push({
       key: "ending-heading",
       type: "interlude-heading",
       title: "What remained unresolved",
       eyebrow: "THE FINAL RECORD",
     });
-    nodes.push(...bodyNodes("ending-rescue", data.ending.rescue, "body"));
-    if (reserve) {
-      nodes.push(
-        ...bodyNodes(
-          "ending-consequence",
-          reserve.endingConsequence.rescueState,
-          "chosen",
-          { band: "reserve" },
-        ),
-      );
-      nodes.push(
-        ...bodyNodes(
-          "ending-legacy",
-          reserve.endingConsequence.dataLegacy,
-          "body",
-        ),
-      );
-    }
-    nodes.push(...bodyNodes("ending-shared", data.ending.shared, "ending"));
-    nodes.push({ key: "results", type: "results" });
+    nodes.push(...beats("ending-rescue", data.ending.rescue, "body"));
+    nodes.push(...beats("ending-shared", data.ending.shared, "ending"));
+    nodes.push({ key: "completion", type: "completion" });
 
     return nodes;
   }
@@ -524,721 +566,191 @@
     return node && node.type === "question" && !node.answered ? node : null;
   }
 
-  function buildPlainStory(data, responses) {
-    return buildNodes(data, responses)
-      .map((node) => {
-        if (node.type === "question") {
-          return node.answered ? "" : `${node.item.context}\n\n${node.item.statement}`;
-        }
-        if (node.type === "results") {
-          return "";
-        }
-        if (node.type === "prologue-heading" || node.type === "interlude-heading") {
-          return node.title;
-        }
-        if (node.type === "act-heading") {
-          return `${node.title}\n\n${node.time}`;
-        }
-        return node.text;
-      })
-      .filter(Boolean)
-      .join("\n\n");
-  }
-
-  /* -------------------------------------------------------------- scoring */
+  /* --------------------------------------------------------------- scoring */
 
   function mean(values) {
     const usable = values.filter((value) => Number.isFinite(value));
-    if (!usable.length) {
-      return null;
-    }
-    return usable.reduce((sum, value) => sum + value, 0) / usable.length;
+    return usable.length
+      ? usable.reduce((sum, value) => sum + value, 0) / usable.length
+      : null;
   }
 
-  function normalisePosition(score) {
+  function normalise(score) {
     if (!Number.isFinite(score)) {
       return 0.5;
     }
-    return Math.max(0, Math.min(1, (score - MIN_RESPONSE) / SCALE_SPAN));
+    return Math.max(0, Math.min(1, (score - MIN_RESPONSE) / (MAX_RESPONSE - MIN_RESPONSE)));
   }
 
-  function scoreAssessment(data, responses) {
-    const safe = sanitiseState(data, responses);
-    const items = flattenItems(data);
-    const buckets = {};
-
-    Object.entries(data.assessment.elements).forEach(([code, definition]) => {
-      buckets[code] = {};
-      definition.facets.forEach((facet) => {
-        buckets[code][facet] = [];
-      });
-    });
-
-    safe.answers.forEach((raw, index) => {
-      const item = items[index];
-      if (!item) {
-        return;
-      }
-      buckets[item.assessment.elementCode][item.assessment.facet].push(
-        correctedScore(item, raw),
-      );
-    });
-
-    const elements = Object.entries(data.assessment.elements).map(
-      ([code, definition]) => {
-        const facets = definition.facets.map((name) => ({
-          name,
-          score: mean(buckets[code][name]),
-          answered: buckets[code][name].length,
-        }));
-
-        return {
-          code,
-          element: definition.element,
-          trait: definition.trait,
-          colour: definition.colour,
-          score: mean(facets.map((facet) => facet.score)),
-          facets,
-        };
-      },
-    );
-
-    return {
-      answered: safe.answers.length,
-      complete: safe.answers.length === items.length,
-      facetCount: elements.reduce((total, item) => total + item.facets.length, 0),
-      elements,
-    };
-  }
-
-  const PROFILE_STAGES = [
-    { id: "starting", label: "Starting conditions", from: 1, to: 20 },
-    { id: "escalation", label: "Escalation", from: 21, to: 40 },
-    { id: "pressure", label: "Late pressure", from: 41, to: 60 },
-  ];
-
-  const SPECTRUM_LABELS = {
-    WO: { lower: "Focused evidence", higher: "Exploration" },
-    FI: { lower: "Quiet influence", higher: "Visible direction" },
-    EA: { lower: "Firm boundaries", higher: "Human accommodation" },
-    ME: { lower: "Adaptive structure", higher: "Systematic structure" },
-    WA: { lower: "Threat sensitivity", higher: "Emotional steadiness" },
-  };
-
-  const ROLE_DEFINITIONS = {
-    WO: {
-      title: "The Pathfinder",
-      function:
-        "Keep unexplored possibilities visible before the crew closes on one explanation.",
-      bring:
-        "Alternative explanations, pattern recognition and room for a route the crew has not yet considered.",
-      actionTitle: "OPEN ANOTHER ROUTE",
-      action:
-        "Name one plausible option, signal or explanation the crew has not yet considered.",
-    },
-    FI: {
-      title: "The Catalyst",
-      function:
-        "Turn uncertainty into a visible decision and help the crew create forward momentum.",
-      bring:
-        "Visible direction, shared energy and the momentum required to move from discussion into action.",
-      actionTitle: "CALL THE DECISION",
-      action:
-        "State the decision that is being delayed and identify the next concrete move.",
-    },
-    EA: {
-      title: "The Steward",
-      function:
-        "Keep people, trust and coordination visible while the crew makes difficult decisions.",
-      bring:
-        "Awareness of human consequences, unspoken concerns and the conditions needed for workable cooperation.",
-      actionTitle: "CREW IMPACT SCAN",
-      action:
-        "Name one person, stakeholder or human consequence the current plan may have missed.",
-    },
-    ME: {
-      title: "The Architect",
-      function:
-        "Turn intent into clear boundaries, sequence and reliable follow-through.",
-      bring:
-        "Clear criteria, operational sequence and the discipline required to carry a decision through safely.",
-      actionTitle: "SET THE BOUNDARY",
-      action:
-        "Define the condition, standard or limit that must hold before the crew proceeds.",
-    },
-    WA: {
-      title: "The Sentinel",
-      function:
-        "Track unresolved risk, protect stability and clarify what evidence is still needed.",
-      bring:
-        "Calm observation, risk awareness and a clear view of what remains unresolved before the crew commits.",
-      actionTitle: "RISK CHECK",
-      action:
-        "Identify one unresolved risk and the evidence that would show it is sufficiently controlled.",
-    },
-  };
-
-  const MISSION_WEIGHTS = {
-    safety: { WO: 0.25, FI: 0.4, EA: 1, ME: 0.7, WA: 0.9 },
-    discovery: { WO: 1, FI: 0.45, EA: 0.3, ME: 0.55, WA: 0.75 },
-    bounded: { WO: 0.55, FI: 0.45, EA: 0.65, ME: 1, WA: 0.85 },
-  };
-
-  // Band edges are the six-point thresholds re-expressed on the five-point
-  // scale, so the proportion of the range each band covers is unchanged.
-  const BAND_EDGES = {
-    clearLower: 2.2,
-    moderateLower: 2.8,
-    balanced: 3.2,
-    moderateHigher: 3.8,
-  };
-
-  function scoreBand(score) {
+  function bandForScore(data, score) {
+    const bands = data.assessment.interpretationBands;
     if (!Number.isFinite(score)) {
-      return { id: "unavailable", label: "Not available", side: "balanced" };
+      return bands[1];
     }
-    if (score <= BAND_EDGES.clearLower) {
-      return { id: "clear-lower", label: "Clear lower-pole lean", side: "lower" };
-    }
-    if (score <= BAND_EDGES.moderateLower) {
-      return {
-        id: "moderate-lower",
-        label: "Moderate lower-pole lean",
-        side: "lower",
-      };
-    }
-    if (score <= BAND_EDGES.balanced) {
-      return {
-        id: "balanced",
-        label: "Balanced or context-sensitive",
-        side: "balanced",
-      };
-    }
-    if (score <= BAND_EDGES.moderateHigher) {
-      return {
-        id: "moderate-higher",
-        label: "Moderate higher-pole lean",
-        side: "higher",
-      };
-    }
-    return { id: "clear-higher", label: "Clear higher-pole lean", side: "higher" };
+    return bands.find((band) => score <= band.max) || bands[bands.length - 1];
   }
 
-  function describeElement(result, definition, band) {
-    const interpretation = definition.interpretation;
-    if (!interpretation || !Number.isFinite(result.score)) {
-      return "";
-    }
-
-    if (band.side === "balanced") {
-      return (
-        `Your responses moved between ${SPECTRUM_LABELS[result.code].lower.toLowerCase()} ` +
-        `and ${SPECTRUM_LABELS[result.code].higher.toLowerCase()}, suggesting that context ` +
-        "influenced which end of this range became more useful."
-      );
-    }
-
-    const direction =
-      band.side === "higher" ? interpretation.higher : interpretation.lower;
-    const strength = band.id.startsWith("clear") ? "a clear" : "a moderate";
-    return `Your responses showed ${strength} lean toward a style that ${direction}.`;
-  }
-
-  const FACET_ALIGNED_GAP = 0.32;
-  const FACET_PRONOUNCED_GAP = 0.64;
-
-  function describeFacetPattern(result, guide) {
-    const available = result.facets.filter((facet) =>
-      Number.isFinite(facet.score),
-    );
-    if (available.length < 2 || !guide) {
-      return "";
-    }
-
-    const sorted = available
-      .slice()
-      .sort((left, right) => right.score - left.score);
-    const leading = sorted[0];
-    const quieter = sorted[sorted.length - 1];
-    const difference = leading.score - quieter.score;
-    const focusFor = (facet) =>
-      guide.facetFocus?.[facet.name] || facet.name.toLowerCase();
-
-    if (difference < FACET_ALIGNED_GAP) {
-      const focuses = available.map(focusFor);
-      const list =
-        focuses.length === 2
-          ? `${focuses[0]} and ${focuses[1]}`
-          : `${focuses.slice(0, -1).join(", ")} and ${focuses.at(-1)}`;
-      return (
-        `The facets were broadly aligned: ${list} appeared at a similar level ` +
-        "across the station scenarios."
-      );
-    }
-
-    const emphasis =
-      difference >= FACET_PRONOUNCED_GAP ? "a pronounced" : "a noticeable";
-    return (
-      `There was ${emphasis} difference between the facets. ${leading.name} came ` +
-      `forward more consistently than ${quieter.name}; ${focusFor(leading)} was more ` +
-      "readily available in this journey."
-    );
-  }
-
-  function stageForItem(item) {
-    return PROFILE_STAGES.find(
-      (stage) => item.number >= stage.from && item.number <= stage.to,
-    );
-  }
-
-  const MOVEMENT_NOTICEABLE = 0.28;
-  const MOVEMENT_PRONOUNCED = 0.6;
-
-  function scoreContextMovement(data, responses) {
-    const safe = sanitiseState(data, responses);
-    const items = flattenItems(data);
-    const buckets = {};
-
-    PROFILE_STAGES.forEach((stage) => {
-      buckets[stage.id] = {};
-      Object.keys(data.assessment.elements).forEach((code) => {
-        buckets[stage.id][code] = [];
-      });
-    });
-
-    safe.answers.forEach((raw, index) => {
-      const item = items[index];
-      const stage = item && stageForItem(item);
-      if (!stage) {
-        return;
-      }
-      buckets[stage.id][item.assessment.elementCode].push(
-        correctedScore(item, raw),
-      );
-    });
-
-    const elements = Object.keys(data.assessment.elements).map((code) => {
-      const stages = PROFILE_STAGES.map((stage) => ({
-        id: stage.id,
-        label: stage.label,
-        score: mean(buckets[stage.id][code]),
-      }));
-      const start = stages[0].score;
-      const finish = stages[2].score;
-      const delta =
-        Number.isFinite(start) && Number.isFinite(finish) ? finish - start : null;
-
-      let label = "Broadly stable";
-      if (delta !== null && Math.abs(delta) >= MOVEMENT_PRONOUNCED) {
-        label = delta > 0 ? "Pronounced increase" : "Pronounced decrease";
-      } else if (delta !== null && Math.abs(delta) >= MOVEMENT_NOTICEABLE) {
-        label = delta > 0 ? "Noticeable increase" : "Noticeable decrease";
-      }
-
-      return { code, stages, delta, label };
-    });
-
-    const highlights = elements
-      .filter(
-        (item) => item.delta !== null && Math.abs(item.delta) >= MOVEMENT_NOTICEABLE,
-      )
-      .slice()
-      .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta))
-      .slice(0, 3)
-      .map((item) => {
-        const element = data.assessment.elements[item.code].element;
-        const direction =
-          item.delta > 0 ? "became more available" : "became less available";
-        return `${element} ${direction} from the opening conditions to late pressure (${
-          item.delta > 0 ? "+" : ""
-        }${item.delta.toFixed(1)}).`;
-      });
-
-    return {
-      stages: PROFILE_STAGES.map((stage) => ({ ...stage })),
-      elements,
-      highlights,
-      summary: highlights.length
-        ? highlights.join(" ")
-        : "Your five currents remained broadly stable across the three stages of the journey.",
-      note:
-        "These stage comparisons are exploratory context signals within Aurora Station, not separate validated personality scales.",
-    };
-  }
-
-  const LOW_VARIATION_DEVIATION = 0.52;
-
-  function responseQuality(data, responses) {
-    const values = sanitiseState(data, responses).answers;
-    if (!values.length) {
-      return {
-        status: "Not available",
-        level: "unavailable",
-        summary: "Complete the journey to review response variation.",
-        metrics: {},
-      };
-    }
-
-    const average = mean(values);
-    const deviation = Math.sqrt(
-      mean(values.map((value) => (value - average) ** 2)) || 0,
-    );
-    const counts = new Map();
-    let longestRun = 1;
-    let currentRun = 1;
-
-    values.forEach((value, index) => {
-      counts.set(value, (counts.get(value) || 0) + 1);
-      if (index > 0) {
-        if (value === values[index - 1]) {
-          currentRun += 1;
-          longestRun = Math.max(longestRun, currentRun);
-        } else {
-          currentRun = 1;
-        }
-      }
-    });
-
-    const dominantRate = Math.max(...counts.values()) / values.length;
-    const flags = [];
-    if (dominantRate >= 0.75) {
-      flags.push("one response level was used for most items");
-    }
-    if (deviation < LOW_VARIATION_DEVIATION) {
-      flags.push("responses showed very little variation");
-    }
-    if (longestRun >= 18) {
-      flags.push("a long sequence used the same response");
-    }
-
-    if (flags.length) {
-      return {
-        status: "Interpret with care",
-        level: "caution",
-        summary:
-          `The response pattern may provide less differentiation because ${flags.join(" and ")}. ` +
-          "Review the profile as a reflection prompt rather than a precise distinction between currents.",
-        metrics: { deviation, dominantRate, longestRun },
-      };
-    }
-
-    return {
-      status: "Suitable for reflection",
-      level: "clear",
-      summary:
-        "Your responses used the five-point range with enough variation to support a differentiated reflective profile. This remains a self-report, not a diagnostic assessment.",
-      metrics: { deviation, dominantRate, longestRun },
-    };
-  }
-
-  function missionWeightsForState(data, responses) {
-    const reserve = selectedReserve(data, responses);
-    return (
-      (reserve && MISSION_WEIGHTS[reserve.id]) || {
-        WO: 0.5,
-        FI: 0.5,
-        EA: 0.5,
-        ME: 0.5,
-        WA: 0.5,
-      }
-    );
-  }
-
-  function roleMetric(result) {
-    const overall = Number(result.score);
-    const latePressure = Number(result.context?.stages?.[2]?.score);
-    const facetScores = result.facets
-      .map((facet) => Number(facet.score))
-      .filter(Number.isFinite);
-    const facetFloor = facetScores.length ? Math.min(...facetScores) : overall;
-
-    return {
-      overall,
-      latePressure,
-      facetFloor,
-      profileSuitability:
-        normalisePosition(overall) * 0.6 +
-        normalisePosition(latePressure) * 0.25 +
-        normalisePosition(facetFloor) * 0.15,
-    };
-  }
-
-  // The solo guardrail keeps a role that the profile barely supports from
-  // being recommended: 2.8 of 5 is the five-point equivalent of the previous
-  // 3.25 of 6 threshold.
-  const ROLE_GUARDRAIL = 2.8;
-
-  function recommendRole(data, responses, elements, options) {
-    const settings = options || {};
-    const teamWeights = settings.teamComposition || null;
-    const missionWeights = settings.missionRequirement || null;
-    const groupMode = Boolean(
-      teamWeights || missionWeights || settings.mode === "group",
-    );
-    const allowStretchRoles = Boolean(settings.allowStretchRoles);
-    const tieWeights = missionWeightsForState(data, responses);
-
-    const candidates = elements
-      .filter((result) => Number.isFinite(result.score))
-      .map((result) => {
-        const metric = roleMetric(result);
-        const teamNeed = Number(teamWeights?.[result.code] ?? 0.5);
-        const missionNeed = Number(missionWeights?.[result.code] ?? 0.5);
-
-        return {
-          code: result.code,
-          finalScore: groupMode
-            ? metric.profileSuitability * 0.45 + teamNeed * 0.3 + missionNeed * 0.25
-            : metric.profileSuitability,
-          profileSuitability: metric.profileSuitability,
-          overall: metric.overall,
-          latePressure: metric.latePressure,
-          facetFloor: metric.facetFloor,
-          teamNeed,
-          missionNeed,
-          stretch: metric.overall < ROLE_GUARDRAIL,
-        };
-      });
-
-    let selectable = candidates.filter(
-      (candidate) => !candidate.stretch || (groupMode && allowStretchRoles),
-    );
-    if (!selectable.length) {
-      selectable = candidates.slice();
-    }
-
-    const epsilon = 0.000001;
-    selectable.sort((left, right) => {
-      const comparisons = [
-        right.finalScore - left.finalScore,
-        ...(groupMode
-          ? [right.teamNeed - left.teamNeed, right.missionNeed - left.missionNeed]
-          : []),
-        right.overall - left.overall,
-        right.latePressure - left.latePressure,
-        right.facetFloor - left.facetFloor,
-      ];
-      const decisive = comparisons.find(
-        (difference) => Math.abs(difference) > epsilon,
-      );
-      if (decisive !== undefined) {
-        return decisive;
-      }
-      // The derived narrative outcome breaks a tie only when every profile
-      // metric is exactly matched.
-      return (
-        Number(tieWeights[right.code] ?? 0.5) -
-        Number(tieWeights[left.code] ?? 0.5)
-      );
-    });
-
-    const selected = selectable[0];
-    const runnerUp = selectable[1] || null;
-    const scoreGap = runnerUp ? selected.finalScore - runnerUp.finalScore : 1;
-    const result = elements.find((element) => element.code === selected.code);
-    const definition = ROLE_DEFINITIONS[selected.code];
-
-    let fit = "Clear fit";
-    if (scoreGap < 0.04) {
-      fit = groupMode ? "Mission-based fit" : "Balanced fit";
-    } else if (scoreGap < 0.08) {
-      fit = "Close fit";
-    }
-
-    const closeFits = selectable
-      .slice(1)
-      .filter((candidate) => selected.finalScore - candidate.finalScore < 0.08)
-      .map((candidate) => ROLE_DEFINITIONS[candidate.code].title);
-
-    let basis;
-    if (groupMode) {
-      basis =
-        "This recommendation combines profile suitability, the contribution currently needed by the team and the requirements of this mission.";
-    } else if (fit === "Balanced fit") {
-      basis =
-        "This recommendation was selected from closely matched contributions using overall availability, late-pressure availability and facet balance. The night's derived outcome was used only as a last tie-break.";
-    } else {
-      basis =
-        "This solo recommendation is led by your profile: overall availability, late-pressure availability and the lowest facet score.";
-    }
-
-    const closeFitText =
-      closeFits.length === 0
-        ? ""
-        : closeFits.length === 1
-          ? closeFits[0]
-          : `${closeFits.slice(0, -1).join(", ")}, and ${closeFits.at(-1)}`;
-
-    return {
-      ...definition,
-      code: selected.code,
-      element: result.element,
-      trait: result.trait,
-      colour: result.colour,
-      fit,
-      profilePattern:
-        fit === "Balanced fit" || fit === "Mission-based fit"
-          ? "balanced"
-          : fit === "Close fit"
-            ? "close"
-            : "focused",
-      eligibleRoleCount: selectable.length,
-      closeFits,
-      whatYouBring: definition.bring,
-      watchFor: result.overextension,
-      basis,
-      why:
-        `${result.element} produced the strongest eligible profile suitability ` +
-        `(${selected.profileSuitability.toFixed(2)}) after combining overall availability, ` +
-        "late-pressure availability and facet balance." +
-        (closeFitText ? ` ${closeFitText} remained close alternatives.` : ""),
-      scoreGap,
-      definition:
-        "Your Aurora Role is the contribution your Five-Element profile is best placed to make in this mission. It is not a fixed personality type.",
-      candidates,
-      mode: groupMode ? "group" : "solo",
-    };
-  }
-
-  function finalChoiceSummary(data, responses) {
-    const reserve = selectedReserve(data, responses);
-    if (!reserve) {
+  /*
+   * Results are only produced from a complete set of raw responses. Nothing is
+   * imputed and no cached score is trusted.
+   */
+  function scoreProfile(data, state) {
+    const safe = sanitiseState(data, state);
+    if (!isComplete(safe)) {
       return null;
     }
-    return {
-      id: reserve.id,
-      title: reserve.title,
-      text: reserve.text,
-      note: data.finalReserve.note,
-    };
-  }
 
-  function analyseProfile(data, responses, options) {
-    const safe = sanitiseState(data, responses);
-    const assessment = scoreAssessment(data, safe);
-    const context = scoreContextMovement(data, safe);
-    const contextByCode = Object.fromEntries(
-      context.elements.map((item) => [item.code, item]),
-    );
+    const items = flattenItems(data);
+    const facetValues = {};
+    const domainValues = {};
 
-    const elements = assessment.elements.map((result) => {
-      const definition = data.assessment.elements[result.code];
-      const guide = definition.interpretation?.guide;
-      const band = scoreBand(result.score);
-      const side =
-        band.side === "balanced"
-          ? result.score >= SCALE_MIDPOINT
-            ? "higher"
-            : "lower"
-          : band.side;
-      const spectrum = SPECTRUM_LABELS[result.code];
+    items.forEach((item) => {
+      const keyed = getKeyedScore(safe.assessment.answers[item.id], item.reverse);
+      (facetValues[item.facet] = facetValues[item.facet] || []).push(keyed);
+      (domainValues[item.domain] = domainValues[item.domain] || []).push(keyed);
+    });
 
-      const potentialAdvantage =
-        band.side === "balanced"
-          ? guide?.adaptiveRange || ""
-          : guide?.[`${side}Use`] || "";
-      const overextension =
-        band.side === "balanced"
-          ? "Access to both ends of the range can become hesitation when the situation needs a clear and explicit choice."
-          : guide?.[`${side}TradeOff`] || "";
-      const reflection =
-        band.side === "balanced"
-          ? `Which end of the ${spectrum.lower.toLowerCase()}–${spectrum.higher.toLowerCase()} range does the current situation require you to make more explicit?`
-          : guide?.[`${side}Balance`] || "";
-
+    const domains = domainDefinitions(data).map((definition) => {
+      const score = mean(domainValues[definition.code]);
+      const band = bandForScore(data, score);
       return {
-        ...result,
-        scaleMax: MAX_RESPONSE,
-        lens: definition.interpretation?.lens || result.trait,
-        description: describeElement(result, definition, band),
-        expression: band.label,
-        band,
-        spectrum,
-        position: normalisePosition(result.score),
-        facetDefinitions: definition.interpretation?.facets || {},
-        facetPattern: describeFacetPattern(result, guide),
-        potentialAdvantage,
-        overextension,
-        reflection,
-        practicalReading: potentialAdvantage,
-        tradeOff: overextension,
-        balancePrompt: reflection,
-        plainMeaning: guide?.plainMeaning || "",
-        notSameAs: guide?.notSameAs || "",
-        adaptiveRange: guide?.adaptiveRange || "",
-        context: contextByCode[result.code],
+        code: definition.code,
+        name: definition.name,
+        colour: definition.colour,
+        focus: definition.focus,
+        score,
+        normalised: normalise(score),
+        band: band.id,
+        bandLabel: band.label,
+        interpretation: definition.interpretation[band.id],
+        facets: definition.facets.map((facet) => {
+          const facetScore = mean(facetValues[facet]);
+          return {
+            name: facet,
+            domain: definition.code,
+            meaning: data.assessment.facets[facet].meaning,
+            score: facetScore,
+            normalised: normalise(facetScore),
+            itemCount: facetValues[facet].length,
+          };
+        }),
       };
     });
 
-    const role = recommendRole(data, safe, elements, options);
-
     return {
-      ...assessment,
-      playerName: safe.playerName,
+      playerName: safe.participant.name,
+      complete: true,
+      domains,
+      facets: domains.flatMap((domain) => domain.facets),
+      scaleMin: MIN_RESPONSE,
       scaleMax: MAX_RESPONSE,
-      overview:
-        "Like an aurora, this profile is a spectrum of several colours rather than a single type. " +
-        "The five currents below show how you responded across Aurora Station; the recommended role translates that pattern into one practical contribution for this mission.",
-      elements,
-      role,
-      context,
-      quality: responseQuality(data, safe),
-      finalChoice: finalChoiceSummary(data, safe),
-      roleModel:
-        role.mode === "group"
-          ? "Recommended Role = 45% profile suitability + 30% team composition need + 25% mission requirement."
-          : "Solo Role = 60% overall availability + 25% late-pressure availability + 15% facet floor.",
     };
+  }
+
+  const SUMMARY_DISTANCE = 0.5;
+  const FACET_CONTRAST = 0.75;
+
+  /*
+   * Narrative summary rules. These thresholds are presentation rules, not
+   * BFI-2 norms, and no domain is ever described as the reader's "type".
+   */
+  function summariseProfile(data, profile) {
+    if (!profile) {
+      return "";
+    }
+    const copy = data.results.summary;
+    const distinctive = profile.domains
+      .map((domain) => ({ domain, distance: Math.abs(domain.score - 3) }))
+      .filter((entry) => entry.distance >= SUMMARY_DISTANCE)
+      .sort((left, right) => right.distance - left.distance)
+      .slice(0, 2);
+
+    const sentences = [];
+    if (!distinctive.length) {
+      sentences.push(copy.balanced);
+    } else {
+      const phrases = distinctive.map((entry) =>
+        (entry.domain.score > 3 ? copy.aboveTemplate : copy.belowTemplate).replace(
+          "{domain}",
+          entry.domain.name,
+        ),
+      );
+      const highlights =
+        phrases.length === 1 ? phrases[0] : `${phrases[0]} and ${phrases[1]}`;
+      sentences.push(copy.lead.replace("{highlights}", highlights));
+      sentences.push(copy.closing);
+    }
+
+    for (const domain of profile.domains) {
+      const scored = domain.facets.filter((facet) => Number.isFinite(facet.score));
+      if (scored.length < 2) {
+        continue;
+      }
+      const sorted = scored.slice().sort((left, right) => right.score - left.score);
+      const high = sorted[0];
+      const low = sorted[sorted.length - 1];
+      if (high.score - low.score >= FACET_CONTRAST) {
+        sentences.push(
+          copy.facetTemplate
+            .replace("{domain}", domain.name)
+            .replace("{high}", high.name)
+            .replace("{low}", low.name),
+        );
+        break;
+      }
+    }
+
+    return sentences.join(" ");
   }
 
   const api = {
-    RESPONSES_KEY,
     JOURNEY_KEY,
     PREFERENCES_KEY,
-    TEXT_SPEEDS,
+    SCHEMA_VERSION,
+    ACT_COUNT,
     ITEMS_PER_ACT,
     ITEM_COUNT,
+    ITEMS_PER_DOMAIN,
+    ITEMS_PER_FACET,
     MIN_RESPONSE,
     MAX_RESPONSE,
-    actIndexForAnswerCount,
-    analyseProfile,
-    answerAt,
-    answerCurrent,
-    branchForRaw,
-    branchKeyForRaw,
+    MAX_NAME_LENGTH,
+    TEXT_SPEEDS,
+    DOMAIN_ORDER,
+    answeredCount,
+    bandForScore,
     buildNodes,
-    buildPlainStory,
-    canStepBack,
-    clearJourneyState,
-    correctedScore,
-    currentStep,
+    canGoBack,
+    clearJourney,
+    currentItem,
     defaultPreferences,
-    emptyJourney,
-    emptyResponses,
-    // Retained for callers that still speak the older single-state vocabulary.
-    emptyState: emptyResponses,
+    domainDefinitions,
+    emptyState,
     flattenItems,
-    loadJourney,
+    getKeyedScore,
+    getNarrativeBand,
+    goBack,
+    isComplete,
+    itemIdForNumber,
     loadPreferences,
-    loadResponses,
+    loadState,
+    narrativeForRaw,
+    normalise,
     normalisePlayerName,
-    normalisePosition,
     pendingQuestion,
-    recommendRole,
+    previousResponse,
+    recordResponse,
     responseLabels,
     revealDelay,
-    saveJourney,
-    savePreferences,
-    saveResponses,
-    scoreBand,
-    sanitiseJourney,
     sanitisePreferences,
     sanitiseState,
-    scoreAssessment,
-    selectedReserve,
-    setPlayerIdentity,
+    savePreferences,
+    saveState,
+    scoreProfile,
+    setPlayerName,
     splitParagraphs,
-    stepBack,
+    summariseProfile,
+    validateContent,
   };
 
   globalScope.AuroraCore = api;

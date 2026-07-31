@@ -101,7 +101,7 @@
     context.stroke();
   }
 
-  function drawExportPageBase(context, pageNumber, playerName, accent) {
+  function drawExportPageBase(context, pageNumber, playerName, accent, pageCount) {
     context.fillStyle = "#f1f0e9";
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, EXPORT_PAGE_HEIGHT);
 
@@ -131,7 +131,7 @@
     );
     drawExportText(
       context,
-      `PAGE ${pageNumber} OF 8`,
+      `PAGE ${pageNumber} OF ${pageCount || 8}`,
       EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
       105,
       360,
@@ -191,393 +191,237 @@
     });
   }
 
-  function drawExportSpectrum(context, result, x, y, width, compact) {
-    const height = compact ? 230 : 280;
-    const labelY = y + 44;
-    drawExportText(context, `${result.element.toUpperCase()} · ${result.trait}`, x, labelY, width - 260, {
-      size: compact ? 34 : 39,
-      weight: 600,
-      colour: "#172d35",
-      lineHeight: 44,
-      maxLines: 1,
-    });
-    drawExportText(context, `${result.score.toFixed(1)} / ${result.scaleMax}`, x + width, labelY, 250, {
-      size: compact ? 30 : 34,
-      family: "mono",
-      weight: 600,
-      colour: result.colour,
-      align: "right",
-      lineHeight: 40,
-    });
-
-    const axisY = y + (compact ? 118 : 138);
-    const axisX1 = x;
-    const axisX2 = x + width;
-    const balancedX1 = axisX1 + width * 0.45;
-    const balancedX2 = axisX1 + width * 0.55;
-    context.fillStyle = "rgba(82,108,114,0.08)";
-    context.fillRect(balancedX1, axisY - 18, balancedX2 - balancedX1, 36);
-    context.strokeStyle = "#b7c3c0";
-    context.lineWidth = 3;
+  function drawScoreTrack(context, x, y, width, normalised, colour) {
+    context.fillStyle = "#e3e6e0";
     context.beginPath();
-    context.moveTo(axisX1, axisY);
-    context.lineTo(axisX2, axisY);
-    context.stroke();
-    context.strokeStyle = result.colour;
-    context.lineWidth = 4;
-    context.beginPath();
-    context.moveTo(axisX1, axisY);
-    context.lineTo(axisX1 + width * result.position, axisY);
-    context.stroke();
-    context.fillStyle = result.colour;
-    context.beginPath();
-    context.arc(axisX1 + width * result.position, axisY, 12, 0, Math.PI * 2);
+    context.roundRect(x, y, width, 26, 13);
     context.fill();
-
-    drawExportText(context, result.spectrum.lower, axisX1, axisY + 54, width * 0.46, {
-      size: compact ? 22 : 25,
-      family: "mono",
-      colour: "#6a777b",
-      lineHeight: 30,
-      maxLines: 1,
-    });
-    drawExportText(context, result.spectrum.higher, axisX2, axisY + 54, width * 0.46, {
-      size: compact ? 22 : 25,
-      family: "mono",
-      colour: "#6a777b",
-      align: "right",
-      lineHeight: 30,
-      maxLines: 1,
-    });
-    drawExportText(context, result.expression.toUpperCase(), x, axisY + 103, width, {
-      size: compact ? 21 : 24,
-      family: "mono",
-      weight: 600,
-      colour: result.colour,
-      lineHeight: 30,
-      maxLines: 1,
-    });
-    return y + height;
+    context.fillStyle = colour;
+    context.beginPath();
+    context.roundRect(x, y, Math.max(26, width * normalised), 26, 13);
+    context.fill();
   }
 
-  function drawExportRolePage(context, profile) {
-    const role = profile.role;
-    drawExportPageBase(context, 1, profile.playerName, role.colour);
+  /* Page 1: the watchkeeper, the date and the five domains at a glance. */
+  function drawProfileOverviewPage(context, data, profile, dateLabel, pageCount) {
+    drawExportPageBase(context, 1, profile.playerName, "#2f4a54", pageCount);
     let y = drawExportHeading(
       context,
-      "01 · Recommended Aurora Role",
-      role.title,
-      `${role.element} · ${role.trait}`,
-      role.colour,
+      "Watchkeeper Profile",
+      profile.playerName || "Watchkeeper",
+      `Watch completed - ${dateLabel}`,
+      "#2f4a54",
     );
 
-    context.strokeStyle = `${role.colour}99`;
-    context.lineWidth = 3;
-    context.strokeRect(EXPORT_MARGIN, y, EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2, 1880);
-    context.fillStyle = `${role.colour}0c`;
-    context.fillRect(EXPORT_MARGIN, y, EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2, 1880);
-
-    drawExportText(context, role.fit.toUpperCase(), EXPORT_PAGE_WIDTH - EXPORT_MARGIN - 36, y + 68, 460, {
-      size: 25,
-      family: "mono",
-      weight: 600,
-      colour: role.colour,
-      align: "right",
-      lineHeight: 32,
-    });
-    let cardY = y + 108;
-    cardY = drawExportText(context, role.definition, EXPORT_MARGIN + 58, cardY, 1910, {
-      size: 38,
-      colour: "#41565c",
-      lineHeight: 54,
-      maxLines: 4,
-    });
-    cardY += 36;
-    drawExportRule(context, cardY, `${role.colour}55`, 2);
-    cardY += 62;
-
-    const columns = [EXPORT_MARGIN + 58, EXPORT_MARGIN + 1090];
-    const blockWidth = 900;
-    const blocks = [
-      ["Mission function", role.function],
-      ["What you bring", role.whatYouBring],
-      ["Watch for", role.watchFor],
-      ["Mission action", `${role.actionTitle} — ${role.action}`],
-    ];
-    blocks.forEach(([label, copy], index) => {
-      const bx = columns[index % 2];
-      const by = cardY + Math.floor(index / 2) * 420;
-      drawExportLabel(context, label, bx, by, role.colour);
-      drawExportText(context, copy, bx, by + 58, blockWidth, {
-        size: 34,
-        colour: "#2f464d",
-        lineHeight: 49,
-        maxLines: 6,
-      });
-    });
-
-    const whyY = cardY + 860;
-    drawExportLabel(context, "Why this role", EXPORT_MARGIN + 58, whyY, role.colour);
-    let next = drawExportText(context, role.why, EXPORT_MARGIN + 58, whyY + 58, 1960, {
-      size: 34,
-      colour: "#324950",
-      lineHeight: 49,
-      maxLines: 5,
-    });
-    next += 18;
-    drawExportText(context, role.basis, EXPORT_MARGIN + 58, next, 1960, {
-      size: 24,
-      family: "mono",
-      colour: "#718084",
-      lineHeight: 35,
-      maxLines: 5,
-    });
-  }
-
-  function drawExportSpectrumPage(context, profile) {
-    drawExportPageBase(context, 2, profile.playerName, "#6f98a8");
-    let y = drawExportHeading(
+    y += 20;
+    y = drawExportText(
       context,
-      "02 · Five-Element Profile",
-      "How the five currents showed up",
-      "Each current is a bipolar range. Neither end is automatically better, and the shaded centre marks the balanced or context-sensitive range.",
-      "#416c75",
-    );
-    profile.elements.forEach((result) => {
-      y = drawExportSpectrum(
-        context,
-        result,
-        EXPORT_MARGIN,
-        y,
-        EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2,
-        true,
-      );
-      drawExportText(context, result.description, EXPORT_MARGIN, y + 52, EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2, {
-        size: 26,
-        colour: "#42575d",
-        lineHeight: 37,
-        maxLines: 2,
-      });
-      y += 164;
-      drawExportRule(context, y - 24, "#d1d6d2", 2);
-    });
-    drawExportText(
-      context,
-      "These are raw scores within Aurora Station. They are not percentages, population percentiles or rankings between people.",
-      EXPORT_MARGIN,
-      Math.min(y + 10, EXPORT_PAGE_HEIGHT - 250),
-      EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2,
-      { size: 24, family: "mono", colour: "#6a7378", lineHeight: 34, maxLines: 3 },
-    );
-  }
-
-  function drawExportMovementPage(context, profile) {
-    drawExportPageBase(context, 3, profile.playerName, "#6f98a8");
-    let y = drawExportHeading(
-      context,
-      "03 · Context Movement",
-      "How the pattern moved",
-      profile.context.note,
-      "#416c75",
-    );
-    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
-    const lineX1 = EXPORT_MARGIN + 380;
-    const lineX2 = EXPORT_PAGE_WIDTH - EXPORT_MARGIN - 360;
-    profile.elements.forEach((result) => {
-      const rowTop = y;
-      drawExportText(context, result.element, EXPORT_MARGIN, rowTop + 74, 320, {
-        size: 34,
-        weight: 600,
-        colour: result.colour,
-        lineHeight: 42,
-      });
-      const points = result.context.stages.map((stage, index) => {
-        const px = lineX1 + ((lineX2 - lineX1) * index) / 2;
-        const py = rowTop + 112 - (stage.score - 1) / 4 * 84;
-        return { x: px, y: py, score: stage.score };
-      });
-      context.strokeStyle = result.colour;
-      context.lineWidth = 4;
-      context.beginPath();
-      points.forEach((point, index) => {
-        if (index === 0) context.moveTo(point.x, point.y);
-        else context.lineTo(point.x, point.y);
-      });
-      context.stroke();
-      points.forEach((point, index) => {
-        context.fillStyle = result.colour;
-        context.beginPath();
-        context.arc(point.x, point.y, 11, 0, Math.PI * 2);
-        context.fill();
-        drawExportText(context, point.score.toFixed(1), point.x, rowTop + 162, 180, {
-          size: 24,
-          family: "mono",
-          colour: "#52666c",
-          align: "center",
-          lineHeight: 30,
-        });
-        if (result === profile.elements[0]) {
-          drawExportText(context, profile.context.stages[index].label.toUpperCase(), point.x, rowTop - 10, 320, {
-            size: 20,
-            family: "mono",
-            weight: 600,
-            colour: "#718084",
-            align: "center",
-            lineHeight: 27,
-          });
-        }
-      });
-      drawExportText(
-        context,
-        `${result.context.delta > 0 ? "+" : ""}${result.context.delta.toFixed(1)}`,
-        EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
-        rowTop + 72,
-        260,
-        { size: 31, family: "mono", weight: 600, colour: result.colour, align: "right", lineHeight: 39 },
-      );
-      drawExportText(context, result.context.label, EXPORT_PAGE_WIDTH - EXPORT_MARGIN, rowTop + 119, 330, {
-        size: 23,
-        colour: "#64757a",
-        align: "right",
-        lineHeight: 31,
-        maxLines: 2,
-      });
-      y += 335;
-      drawExportRule(context, y - 36, "#d1d6d2", 2);
-    });
-
-    const observationY = y + 6;
-    context.fillStyle = "rgba(255,255,255,0.3)";
-    context.fillRect(EXPORT_MARGIN, observationY, width, 450);
-    context.fillStyle = "#6f98a8";
-    context.fillRect(EXPORT_MARGIN, observationY, 8, 450);
-    drawExportLabel(context, "Context observations", EXPORT_MARGIN + 48, observationY + 68, "#416c75");
-    const observations = profile.context.highlights.length
-      ? profile.context.highlights.slice(0, 3)
-      : [profile.context.summary];
-    let oy = observationY + 130;
-    observations.forEach((text) => {
-      oy = drawExportText(context, `• ${text}`, EXPORT_MARGIN + 48, oy, width - 100, {
-        size: 30,
-        colour: "#42575d",
-        lineHeight: 43,
-        maxLines: 3,
-      });
-      oy += 18;
-    });
-  }
-
-  function drawExportDetailPage(context, profile, result, pageNumber, isLast) {
-    drawExportPageBase(context, pageNumber, profile.playerName, result.colour);
-    let y = drawExportHeading(
-      context,
-      `${String(pageNumber).padStart(2, "0")} · Current Detail`,
-      `${result.element} · ${result.trait}`,
-      result.plainMeaning,
-      result.colour,
-    );
-
-    y = drawExportSpectrum(
-      context,
-      result,
+      data.instrument.status,
       EXPORT_MARGIN,
       y,
       EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2,
-      false,
+      { size: 30, family: "mono", weight: 600, colour: "#41626d", lineHeight: 42 },
     );
-    y += 28;
+    y += 40;
 
-    const facetWidth = 1000;
-    result.facets.forEach((facet, index) => {
-      const x = EXPORT_MARGIN + index * 1060;
-      context.fillStyle = "rgba(255,255,255,0.28)";
-      context.fillRect(x, y, facetWidth, 360);
-      context.fillStyle = result.colour;
-      context.fillRect(x, y, 7, 360);
-      drawExportLabel(context, facet.name, x + 46, y + 70, result.colour);
-      drawExportText(context, `${facet.score.toFixed(1)} / ${result.scaleMax}`, x + 46, y + 137, 320, {
-        size: 53,
-        family: "mono",
+    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    profile.domains.forEach((domain) => {
+      drawExportText(context, domain.name, EXPORT_MARGIN, y + 44, width - 520, {
+        size: 44,
         weight: 600,
         colour: "#172d35",
-        lineHeight: 60,
+        lineHeight: 54,
+        maxLines: 1,
       });
       drawExportText(
         context,
-        result.facetDefinitions[facet.name] || "",
-        x + 46,
-        y + 215,
-        facetWidth - 90,
-        { size: 27, colour: "#52656a", lineHeight: 39, maxLines: 4 },
+        `${domain.score.toFixed(1)} / ${profile.scaleMax}`,
+        EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
+        y + 44,
+        480,
+        {
+          size: 44,
+          family: "mono",
+          weight: 600,
+          colour: domain.colour,
+          align: "right",
+          lineHeight: 54,
+        },
       );
-    });
-    y += 420;
-
-    drawExportLabel(context, "Facet pattern", EXPORT_MARGIN, y, result.colour);
-    y = drawExportText(context, result.facetPattern, EXPORT_MARGIN, y + 58, EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2, {
-      size: 31,
-      colour: "#41565c",
-      lineHeight: 46,
-      maxLines: 5,
-    });
-    y += 32;
-
-    const blocks = [
-      ["Potential advantage", result.potentialAdvantage],
-      ["Possible overextension", result.overextension],
-      ["Reflection", result.reflection],
-    ];
-    blocks.forEach(([label, copy]) => {
-      drawExportLabel(context, label, EXPORT_MARGIN, y, result.colour);
-      y = drawExportText(context, copy, EXPORT_MARGIN, y + 56, EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2, {
-        size: 32,
-        colour: "#324950",
-        lineHeight: 47,
-        maxLines: 5,
+      drawScoreTrack(context, EXPORT_MARGIN, y + 78, width, domain.normalised, domain.colour);
+      drawExportText(context, domain.bandLabel, EXPORT_MARGIN, y + 152, width, {
+        size: 27,
+        family: "mono",
+        colour: "#607277",
+        lineHeight: 36,
+        maxLines: 1,
       });
-      y += 38;
+      y += 214;
     });
 
-    if (isLast) {
-      const panelY = Math.min(Math.max(y + 20, 2540), EXPORT_PAGE_HEIGHT - 780);
-      context.fillStyle = "rgba(255,255,255,0.3)";
-      context.fillRect(EXPORT_MARGIN, panelY, EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2, 570);
-      drawExportLabel(context, "Final operational outcome", EXPORT_MARGIN + 44, panelY + 62, result.colour);
-      drawExportText(context, profile.finalChoice?.title || "Not recorded", EXPORT_MARGIN + 44, panelY + 128, 900, {
+    y += 30;
+    drawExportRule(context, y, "#cbd2cf", 2);
+    y += 54;
+    drawExportText(
+      context,
+      "Scores are shown on the five-point response scale. There is no overall score, and no domain or facet is better than another.",
+      EXPORT_MARGIN,
+      y,
+      width,
+      { size: 30, colour: "#56696f", lineHeight: 44, maxLines: 4 },
+    );
+  }
+
+  /* One page per domain: interpretation, then its three facets. */
+  function drawProfileDomainPage(context, profile, domain, pageNumber, pageCount) {
+    drawExportPageBase(context, pageNumber, profile.playerName, domain.colour, pageCount);
+    let y = drawExportHeading(
+      context,
+      `${String(pageNumber - 1).padStart(2, "0")} - Domain`,
+      domain.name,
+      domain.focus,
+      domain.colour,
+    );
+
+    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    drawExportText(
+      context,
+      `${domain.score.toFixed(1)} / ${profile.scaleMax}`,
+      EXPORT_MARGIN,
+      y + 56,
+      700,
+      { size: 74, family: "mono", weight: 600, colour: domain.colour, lineHeight: 84 },
+    );
+    drawExportText(
+      context,
+      domain.bandLabel.toUpperCase(),
+      EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
+      y + 56,
+      1100,
+      {
+        size: 28,
+        family: "mono",
+        weight: 600,
+        colour: "#607277",
+        align: "right",
+        lineHeight: 38,
+      },
+    );
+    y += 130;
+    drawScoreTrack(context, EXPORT_MARGIN, y, width, domain.normalised, domain.colour);
+    y += 96;
+
+    y = drawExportText(context, domain.interpretation, EXPORT_MARGIN, y, width, {
+      size: 34,
+      colour: "#263a42",
+      lineHeight: 50,
+      maxLines: 6,
+    });
+    y += 60;
+    drawExportRule(context, y, "#cbd2cf", 2);
+    y += 80;
+
+    drawExportLabel(context, "Facets", EXPORT_MARGIN, y, domain.colour);
+    y += 70;
+
+    domain.facets.forEach((facet) => {
+      drawExportText(context, facet.name, EXPORT_MARGIN, y + 40, width - 520, {
         size: 38,
         weight: 600,
         colour: "#172d35",
         lineHeight: 48,
-      });
-      drawExportText(context, profile.finalChoice?.note || "", EXPORT_MARGIN + 44, panelY + 188, 930, {
-        size: 25,
-        family: "mono",
-        colour: "#697b80",
-        lineHeight: 35,
-        maxLines: 4,
-      });
-      drawExportLabel(context, "Response quality", EXPORT_MARGIN + 1130, panelY + 62, result.colour);
-      drawExportText(context, profile.quality.status, EXPORT_MARGIN + 1130, panelY + 128, 820, {
-        size: 36,
-        weight: 600,
-        colour: "#172d35",
-        lineHeight: 46,
-      });
-      drawExportText(context, profile.quality.summary, EXPORT_MARGIN + 1130, panelY + 188, 900, {
-        size: 25,
-        colour: "#607277",
-        lineHeight: 36,
-        maxLines: 6,
+        maxLines: 1,
       });
       drawExportText(
         context,
-        "Aurora Station is a self-reflection experience inspired by the Big Five framework. It is not a diagnosis, fixed personality type, validated recruitment assessment or basis for high-impact decisions. Intended for personal reflection, learning and non-commercial team discussion.",
-        EXPORT_MARGIN + 44,
-        panelY + 455,
-        EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2 - 88,
-        { size: 23, family: "mono", colour: "#6a7378", lineHeight: 33, maxLines: 4 },
+        `${facet.score.toFixed(1)} / ${profile.scaleMax}`,
+        EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
+        y + 40,
+        480,
+        {
+          size: 38,
+          family: "mono",
+          weight: 600,
+          colour: domain.colour,
+          align: "right",
+          lineHeight: 48,
+        },
       );
-    }
+      drawScoreTrack(context, EXPORT_MARGIN, y + 72, width, facet.normalised, domain.colour);
+      drawExportText(context, facet.meaning, EXPORT_MARGIN, y + 148, width, {
+        size: 27,
+        colour: "#607277",
+        lineHeight: 38,
+        maxLines: 2,
+      });
+      y += 232;
+    });
+  }
+
+  /* Final page: how to read the profile, and the BFI-2 attribution. */
+  function drawProfileGuidancePage(context, data, profile, pageNumber, pageCount) {
+    drawExportPageBase(context, pageNumber, profile.playerName, "#2f4a54", pageCount);
+    let y = drawExportHeading(
+      context,
+      "How to read this profile",
+      "Reading guidance",
+      null,
+      "#2f4a54",
+    );
+
+    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    y += 20;
+    data.results.guidance.forEach((line) => {
+      y = drawExportText(context, line, EXPORT_MARGIN, y, width, {
+        size: 32,
+        colour: "#263a42",
+        lineHeight: 48,
+      });
+      y += 40;
+    });
+
+    y += 20;
+    drawExportRule(context, y, "#cbd2cf", 2);
+    y += 76;
+
+    drawExportLabel(context, "Measurement status", EXPORT_MARGIN, y, "#2f4a54");
+    y += 62;
+    y = drawExportText(
+      context,
+      `${data.instrument.status}. ${data.instrument.statusNote}`,
+      EXPORT_MARGIN,
+      y,
+      width,
+      { size: 29, colour: "#263a42", lineHeight: 43 },
+    );
+    y += 60;
+
+    drawExportLabel(context, "Attribution", EXPORT_MARGIN, y, "#2f4a54");
+    y += 62;
+    y = drawExportText(context, data.instrument.attribution, EXPORT_MARGIN, y, width, {
+      size: 27,
+      colour: "#56696f",
+      lineHeight: 40,
+    });
+    y += 30;
+    y = drawExportText(context, data.instrument.permission, EXPORT_MARGIN, y, width, {
+      size: 27,
+      colour: "#56696f",
+      lineHeight: 40,
+    });
+    y += 30;
+    y = drawExportText(context, data.assessment.bandNote, EXPORT_MARGIN, y, width, {
+      size: 27,
+      colour: "#56696f",
+      lineHeight: 40,
+    });
+    y += 30;
+    drawExportText(context, data.instrument.reference, EXPORT_MARGIN, y, width, {
+      size: 25,
+      family: "mono",
+      colour: "#6a7378",
+      lineHeight: 38,
+    });
   }
 
 
@@ -620,9 +464,9 @@
           });
           break;
         case "question":
-        case "results":
+        case "completion":
           break;
-        case "chosen":
+        case "selected":
           blocks.push({ type: "chosen", text: cleanText(node.text) });
           break;
         case "closing":
@@ -902,7 +746,7 @@
   async function downloadStoryPdf(data, state, core, filename, options) {
     const settings = options || {};
     const safeState = core.sanitiseState(data, state);
-    if (safeState.answers.length < core.flattenItems(data).length) {
+    if (!core.isComplete(safeState)) {
       throw new Error("Complete the journey before exporting the story.");
     }
     if (globalScope.document?.fonts?.ready) {
@@ -915,7 +759,7 @@
     const images = [];
 
     context.clearRect(0, 0, EXPORT_PAGE_WIDTH, EXPORT_PAGE_HEIGHT);
-    drawStoryCover(context, data, safeState.playerName, totalPages);
+    drawStoryCover(context, data, safeState.participant.name, totalPages);
     images.push(await canvasToJpegBytes(canvas));
     if (typeof settings.onProgress === "function") {
       settings.onProgress(1, totalPages, `Rendering story page 1 of ${totalPages}`);
@@ -927,7 +771,7 @@
         context,
         index + 2,
         totalPages,
-        safeState.playerName,
+        safeState.participant.name,
       );
       drawStoryCommands(context, storyPages[index]);
       images.push(await canvasToJpegBytes(canvas));
@@ -1049,33 +893,46 @@
 
   async function downloadProfile(data, state, core, filename, options) {
     const settings = options || {};
-    const profile = core.analyseProfile(data, state);
-    if (!profile.complete) {
+    const profile = core.scoreProfile(data, state);
+    if (!profile) {
       throw new Error("Complete the journey before exporting the profile.");
     }
     if (globalScope.document?.fonts?.ready) {
       await globalScope.document.fonts.ready;
     }
-    const { canvas, context } = exportCanvas();
-    const images = [];
-    const renderers = [
-      () => drawExportRolePage(context, profile),
-      () => drawExportSpectrumPage(context, profile),
-      () => drawExportMovementPage(context, profile),
-      ...profile.elements.map((result, index) => () =>
-        drawExportDetailPage(context, profile, result, index + 4, index === profile.elements.length - 1),
-      ),
-    ];
 
-    for (let index = 0; index < renderers.length; index += 1) {
+    const safeState = core.sanitiseState(data, state);
+    const stamp = Number(safeState.completedAt);
+    const dateLabel = new Date(
+      Number.isFinite(stamp) && stamp > 0 ? stamp : Date.now(),
+    ).toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
+
+    const { canvas, context } = exportCanvas();
+    const pageCount = profile.domains.length + 2;
+    const images = [];
+
+    const capture = async (pageNumber, draw) => {
       context.clearRect(0, 0, EXPORT_PAGE_WIDTH, EXPORT_PAGE_HEIGHT);
-      renderers[index]();
+      draw();
       images.push(await canvasToJpegBytes(canvas));
       if (typeof settings.onProgress === "function") {
-        settings.onProgress(index + 1, renderers.length, `Rendering page ${index + 1} of ${renderers.length}`);
+        settings.onProgress(pageNumber, pageCount, `Rendering page ${pageNumber} of ${pageCount}`);
       }
       await new Promise((resolve) => globalScope.setTimeout(resolve, 0));
+    };
+
+    await capture(1, () =>
+      drawProfileOverviewPage(context, data, profile, dateLabel, pageCount),
+    );
+    for (let index = 0; index < profile.domains.length; index += 1) {
+      const pageNumber = index + 2;
+      await capture(pageNumber, () =>
+        drawProfileDomainPage(context, profile, profile.domains[index], pageNumber, pageCount),
+      );
     }
+    await capture(pageCount, () =>
+      drawProfileGuidancePage(context, data, profile, pageCount, pageCount),
+    );
 
     if (typeof settings.onAssembling === "function") {
       settings.onAssembling();

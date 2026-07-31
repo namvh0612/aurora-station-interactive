@@ -23,5 +23,6 @@ jobs:
           node --check pdf-export.js
           node --check audio.js
           node --check app.js
+          node --check results.js
       - name: Run the Aurora Station checks
         run: node tests.mjs

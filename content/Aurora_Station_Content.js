@@ -1,7 +1,7 @@
 /* Edit this data file to update the story; no rebuild is required. */
 window.AURORA_STATION_DATA = {
   "schemaVersion": "1.0.0",
-  "contentVersion": "5.0.0-cumulative-five-point",
+  "contentVersion": "6.0.0-bfi2-aligned",
   "id": "aurora-station",
   "title": "Aurora Station",
   "subtitle": "The Final Watch",
@@ -21,12 +21,12 @@ window.AURORA_STATION_DATA = {
     "export": "Direct personalised story PDF and multi-page profile PDF downloads"
   },
   "assessment": {
-    "model": "Big Five OCEAN",
+    "model": "BFI-2-aligned five domains and fifteen facets",
     "scoredItemCount": 60,
     "actCount": 12,
     "itemsPerAct": 5,
     "spectrum": {
-      "id": "agreement-5",
+      "id": "bfi2-agreement-5",
       "min": 1,
       "max": 5,
       "positions": [
@@ -36,15 +36,14 @@ window.AURORA_STATION_DATA = {
         4,
         5
       ],
-      "leftAnchor": "Strongly disagree",
-      "rightAnchor": "Strongly agree",
-      "showIntermediateLabels": false,
+      "leftAnchor": "Disagree strongly",
+      "rightAnchor": "Agree strongly",
       "responseLabels": [
-        "Strongly disagree",
+        "Disagree strongly",
         "Disagree a little",
-        "Neither agree nor disagree",
+        "Neutral; no opinion",
         "Agree a little",
-        "Strongly agree"
+        "Agree strongly"
       ],
       "bands": {
         "low": [
@@ -61,250 +60,194 @@ window.AURORA_STATION_DATA = {
       }
     },
     "scoring": {
-      "positiveKey": "corrected = raw",
-      "reverseKey": "corrected = 6 - raw",
-      "facetScore": "mean of six corrected items assigned to the facet",
-      "traitScore": "mean of the two equally weighted facet scores",
-      "waterRule": "Score Emotional Stability directly. Reverse at the raw-score level only if an OCEAN Neuroticism score is required.",
-      "normingRule": "Do not calculate percentiles or a dominant Element without an appropriate validated reference group.",
-      "narrativeKey": "Narrative branches always use the raw response, including reverse-keyed items: 1-2 selects the low branch, 3 the midpoint branch and 4-5 the high branch. Reverse scoring is applied separately and only to the score.",
-      "normalisation": "chartPosition = (score - 1) / 4"
+      "keyedScore": "keyed = reverse ? 6 - raw : raw",
+      "facetScore": "mean of the four keyed items assigned to the facet",
+      "domainScore": "mean of the twelve keyed items assigned to the domain",
+      "narrativeKey": "Narrative branches always use the raw response: 1-2 low, 3 mid, 4-5 high. Reverse keying never affects narrative selection.",
+      "normalisation": "chartPosition = (score - 1) / 4",
+      "noTotalScore": "There is no overall personality score and no domain or facet weighting.",
+      "negativeEmotionalityRule": "Score Negative Emotionality directly. Do not silently invert it. If Emotional Stability is displayed it must be labelled as 6 - Negative Emotionality."
     },
-    "elements": {
-      "WO": {
-        "code": "WO",
-        "element": "Wood",
-        "trait": "Openness",
-        "facets": [
-          "Ideas",
-          "Aesthetics"
-        ],
-        "colour": "#3D8B5C",
-        "interpretation": {
-          "lens": "Exploration and possibility",
-          "higher": "keeps multiple explanations visible, notices patterns and makes room for what is not yet understood",
-          "lower": "narrows toward evidence that can be acted on and protects attention from speculative paths",
-          "facets": {
-            "Ideas": "How readily you explore alternatives, patterns and unfamiliar explanations.",
-            "Aesthetics": "How strongly colour, rhythm, atmosphere and sensory detail enter your attention."
-          },
-          "guide": {
-            "action": "open the frame before choosing an explanation",
-            "plainMeaning": "Wood describes how much room you give unfamiliar possibilities, patterns and sensory detail before closing on an explanation.",
-            "notSameAs": "It is not a measure of intelligence, artistic talent or how imaginative you ought to be.",
-            "adaptiveRange": "More Wood widens the frame; less Wood protects focus. Either can be useful depending on whether the situation needs discovery or closure.",
-            "higherUse": "You tend to keep alternatives visible and let patterns or atmosphere inform the picture before you commit.",
-            "lowerUse": "You tend to filter possibilities quickly and concentrate on evidence that can support a decision now.",
-            "higherTradeOff": "Exploration can delay closure or give weak signals more attention than they deserve.",
-            "lowerTradeOff": "Fast filtering can make an unfamiliar but useful possibility disappear too early.",
-            "higherBalance": "Set a stopping rule: decide what evidence would be enough to move from exploration to commitment.",
-            "lowerBalance": "Before closing, name one plausible explanation or sensory cue that has not yet been considered.",
-            "facetFocus": {
-              "Ideas": "exploring alternatives and unfamiliar explanations",
-              "Aesthetics": "letting atmosphere and sensory detail shape attention"
-            }
-          }
-        }
+    "methodNote": "Narrative self-reflection aligned to the BFI-2 structure: five domains, fifteen facets, four items per facet and balanced keying, answered on a five-point agreement scale. The statements are Aurora Station scenarios rather than the official BFI-2 items, so this adaptation is not a validated instrument.",
+    "itemsPerDomain": 12,
+    "itemsPerFacet": 4,
+    "interpretationBands": [
+      {
+        "id": "lower",
+        "max": 2.49,
+        "label": "Lower self-reported expression"
       },
-      "FI": {
-        "code": "FI",
-        "element": "Fire",
-        "trait": "Extraversion",
-        "facets": [
-          "Assertiveness",
-          "Enthusiasm"
-        ],
+      {
+        "id": "balanced",
+        "max": 3.49,
+        "label": "Context-dependent or balanced expression"
+      },
+      {
+        "id": "higher",
+        "max": 5.0,
+        "label": "Higher self-reported expression"
+      }
+    ],
+    "bandNote": "These display bands are interface rules, not official BFI-2 norms.",
+    "domains": {
+      "extraversion": {
+        "code": "extraversion",
+        "name": "Extraversion",
         "colour": "#C9485B",
+        "focus": "Social engagement, influence and active energy",
+        "facets": [
+          "Sociability",
+          "Assertiveness",
+          "Energy Level"
+        ],
         "interpretation": {
-          "lens": "Visible energy and direction",
-          "higher": "brings direction, expression and social momentum into the room",
-          "lower": "uses quieter influence, contained energy and carefully timed intervention",
-          "facets": {
-            "Assertiveness": "How readily you state direction, challenge assumptions and take visible control.",
-            "Enthusiasm": "How readily you create energy, expression and connection around a shared task."
-          },
-          "guide": {
-            "action": "make energy and direction visible",
-            "plainMeaning": "Fire describes how readily you put energy into the room through visible direction, expression and social momentum.",
-            "notSameAs": "It is not a measure of popularity, leadership ability or how loud a person is.",
-            "adaptiveRange": "More Fire mobilises people quickly; less Fire uses quieter influence and timing. Both can move a group forward.",
-            "higherUse": "You tend to state direction, create momentum and make your engagement visible to other people.",
-            "lowerUse": "You tend to influence more quietly, conserve social energy and choose carefully when to step forward.",
-            "higherTradeOff": "Visible momentum can occupy space that others needed in order to think or contribute.",
-            "lowerTradeOff": "Waiting for the right moment can leave your view unheard until the decision has nearly closed.",
-            "higherBalance": "After setting direction, create a deliberate pause in which someone else can change or refine it.",
-            "lowerBalance": "State your position once, clearly and early, before deciding whether quieter influence is enough.",
-            "facetFocus": {
-              "Assertiveness": "stating direction and challenging assumptions",
-              "Enthusiasm": "creating shared energy and expressive connection"
-            }
-          }
+          "higher": "Your responses suggest a generally higher tendency toward social engagement, expression and active energy.",
+          "balanced": "Your responses suggest that social engagement, expression and energy varied with the situation rather than holding at one level.",
+          "lower": "Your responses suggest a generally lower tendency toward social engagement, with influence expressed more quietly and energy held in reserve."
         }
       },
-      "EA": {
-        "code": "EA",
-        "element": "Earth",
-        "trait": "Agreeableness",
+      "agreeableness": {
+        "code": "agreeableness",
+        "name": "Agreeableness",
+        "colour": "#3D8B5C",
+        "focus": "Compassion, respectful interaction and interpersonal trust",
         "facets": [
-          "Empathy",
-          "Cooperation"
+          "Compassion",
+          "Respectfulness",
+          "Trust"
         ],
-        "colour": "#C78A28",
         "interpretation": {
-          "lens": "Human connection and cooperation",
-          "higher": "reads the human stakes, invites shared input and protects connection while acting",
-          "lower": "keeps the task boundary firm and avoids letting interpersonal needs overtake the decision",
-          "facets": {
-            "Empathy": "How readily you notice and respond to another person’s emotional experience.",
-            "Cooperation": "How readily you coordinate, accommodate and build a shared way forward."
-          },
-          "guide": {
-            "action": "bring the human stakes into the decision",
-            "plainMeaning": "Earth describes how strongly another person's experience, cooperation and relationship continuity enter your decisions.",
-            "notSameAs": "It is not a score for kindness, morality or whether you avoid disagreement.",
-            "adaptiveRange": "More Earth protects connection; less Earth protects task boundaries and candour. Sound decisions often need both.",
-            "higherUse": "You tend to notice the human impact, invite input and preserve cooperation while action is still possible.",
-            "lowerUse": "You tend to keep the task boundary firm and resist allowing interpersonal pressure to overtake the decision.",
-            "higherTradeOff": "Protecting harmony can soften a necessary disagreement or delay a difficult boundary.",
-            "lowerTradeOff": "Task clarity can come at the cost of information that people reveal only when they feel heard.",
-            "higherBalance": "Separate care from agreement: name the human impact and the boundary that still has to hold.",
-            "lowerBalance": "Before finalising, ask whose experience contains information the task view may have missed.",
-            "facetFocus": {
-              "Empathy": "noticing and responding to emotional experience",
-              "Cooperation": "coordinating and building a shared way forward"
-            }
-          }
+          "higher": "Your responses suggest a generally higher tendency toward compassion, respectful interaction and trust in others' intentions.",
+          "balanced": "Your responses suggest that compassion, respectfulness and trust were extended selectively rather than uniformly.",
+          "lower": "Your responses suggest a generally lower tendency toward accommodation, with more scepticism and more willingness to hold a position against others."
         }
       },
-      "ME": {
-        "code": "ME",
-        "element": "Metal",
-        "trait": "Conscientiousness",
+      "conscientiousness": {
+        "code": "conscientiousness",
+        "name": "Conscientiousness",
+        "colour": "#B07A2E",
+        "focus": "Structure, productive persistence and dependability",
         "facets": [
-          "Orderliness",
-          "Industriousness"
+          "Organization",
+          "Productiveness",
+          "Responsibility"
         ],
-        "colour": "#67727E",
         "interpretation": {
-          "lens": "Structure and sustained action",
-          "higher": "creates sequence, boundaries and follow-through when the situation is uncertain",
-          "lower": "adapts structure to the moment and stops effort when its cost outweighs its likely value",
-          "facets": {
-            "Orderliness": "How readily you create clear sequence, criteria, limits and records.",
-            "Industriousness": "How readily you sustain effort, complete checks and continue purposeful action."
-          },
-          "guide": {
-            "action": "turn intent into sequence and follow-through",
-            "plainMeaning": "Metal describes how readily you create structure, standards and sustained action when conditions are uncertain.",
-            "notSameAs": "It is not a measure of intelligence, obedience or personal worth, and it does not require rigidity.",
-            "adaptiveRange": "More Metal protects reliability; less Metal protects adaptability and effort. The useful level depends on the cost of error and the cost of procedure.",
-            "higherUse": "You tend to create sequence, checks and clear ownership, then keep effort moving toward completion.",
-            "lowerUse": "You tend to adapt structure to the moment and stop routines when their cost exceeds their likely value.",
-            "higherTradeOff": "A reliable process can continue after it has stopped serving the purpose it was designed for.",
-            "lowerTradeOff": "Useful flexibility can leave critical checks, records or finishing work without a clear owner.",
-            "higherBalance": "Ask whether the procedure still serves the goal, and identify the one step that can safely be removed.",
-            "lowerBalance": "Name one non-negotiable check and one explicit finish point before improvising the rest.",
-            "facetFocus": {
-              "Orderliness": "creating sequence, criteria, limits and records",
-              "Industriousness": "sustaining effort and completing purposeful action"
-            }
-          }
+          "higher": "Your responses suggest a generally higher tendency toward structure, sustained effort and dependability.",
+          "balanced": "Your responses suggest that structure and persistence were applied where they mattered and relaxed elsewhere.",
+          "lower": "Your responses suggest a generally lower tendency toward formal structure, with more flexibility and less attachment to sequence."
         }
       },
-      "WA": {
-        "code": "WA",
-        "element": "Water",
-        "trait": "Emotional Stability",
+      "negativeEmotionality": {
+        "code": "negativeEmotionality",
+        "name": "Negative Emotionality",
+        "colour": "#5A6BB0",
+        "focus": "Frequency and intensity of worry, low mood and emotional reactivity",
         "facets": [
-          "Calmness",
-          "Resilience"
+          "Anxiety",
+          "Depression",
+          "Emotional Volatility"
         ],
-        "colour": "#287EAF",
         "interpretation": {
-          "lens": "Regulation under pressure",
-          "higher": "holds attention steady and returns to useful action after stress or uncertainty",
-          "lower": "registers threat and emotional release more strongly before attention settles again",
-          "facets": {
-            "Calmness": "How steadily you regulate immediate tension, alarm and uncertainty.",
-            "Resilience": "How readily you recover focus and re-enter a useful rhythm after strain."
-          },
-          "guide": {
-            "action": "steady attention before returning to action",
-            "plainMeaning": "Water describes how steadily attention remains usable during stress and how readily it returns after strain.",
-            "notSameAs": "It is not emotional depth, courage or the absence of feeling. A calm response can still contain strong concern.",
-            "adaptiveRange": "More Water supports steadiness and recovery; less Water registers threat and emotional intensity earlier. Both carry useful information.",
-            "higherUse": "You tend to keep attention steady in the first wave of pressure and re-enter a useful rhythm after strain.",
-            "lowerUse": "You tend to register threat and emotional intensity strongly before attention settles and action becomes easier again.",
-            "higherTradeOff": "Composure can make strain less visible to others or postpone recognising your own need for recovery.",
-            "lowerTradeOff": "A strong alarm response can narrow working attention before the signal has been interpreted.",
-            "higherBalance": "Make strain explicit even when you look calm, and schedule recovery before capacity quietly runs out.",
-            "lowerBalance": "Create a brief physical or procedural pause so that alarm can become information before it becomes the decision.",
-            "facetFocus": {
-              "Calmness": "regulating immediate tension, alarm and uncertainty",
-              "Resilience": "recovering focus and rhythm after sustained strain"
-            }
-          }
+          "higher": "Your responses suggest more frequent or more intense worry, low mood and emotional reactivity during the watch.",
+          "balanced": "Your responses suggest that worry, low mood and reactivity arrived in some situations and not others.",
+          "lower": "Your responses suggest less frequent or less intense worry, low mood and emotional reactivity during the watch."
+        }
+      },
+      "openMindedness": {
+        "code": "openMindedness",
+        "name": "Open-Mindedness",
+        "colour": "#6C4F9E",
+        "focus": "Intellectual, aesthetic and imaginative engagement",
+        "facets": [
+          "Intellectual Curiosity",
+          "Aesthetic Sensitivity",
+          "Creative Imagination"
+        ],
+        "interpretation": {
+          "higher": "Your responses suggest a generally higher tendency toward intellectual, aesthetic and imaginative engagement.",
+          "balanced": "Your responses suggest that curiosity, aesthetic attention and invention appeared in some moments and were set aside in others.",
+          "lower": "Your responses suggest a generally lower tendency to pursue abstraction, aesthetic detail or invention when a direct route was available."
         }
       }
     },
-    "verifiedDistribution": {
-      "WO": {
-        "items": 12,
-        "facets": {
-          "Ideas": 6,
-          "Aesthetics": 6
-        },
-        "keys": {
-          "positive": 8,
-          "reverse": 4
-        }
+    "facets": {
+      "Sociability": {
+        "name": "Sociability",
+        "domain": "extraversion",
+        "meaning": "Preference for approaching and engaging with others"
       },
-      "FI": {
-        "items": 12,
-        "facets": {
-          "Assertiveness": 6,
-          "Enthusiasm": 6
-        },
-        "keys": {
-          "positive": 8,
-          "reverse": 4
-        }
+      "Assertiveness": {
+        "name": "Assertiveness",
+        "domain": "extraversion",
+        "meaning": "Willingness to express views, influence others and take the lead"
       },
-      "EA": {
-        "items": 12,
-        "facets": {
-          "Empathy": 6,
-          "Cooperation": 6
-        },
-        "keys": {
-          "positive": 8,
-          "reverse": 4
-        }
+      "Energy Level": {
+        "name": "Energy Level",
+        "domain": "extraversion",
+        "meaning": "Enthusiasm, activity and positively activated energy"
       },
-      "ME": {
-        "items": 12,
-        "facets": {
-          "Orderliness": 6,
-          "Industriousness": 6
-        },
-        "keys": {
-          "positive": 8,
-          "reverse": 4
-        }
+      "Compassion": {
+        "name": "Compassion",
+        "domain": "agreeableness",
+        "meaning": "Emotional concern for other people's welfare"
       },
-      "WA": {
-        "items": 12,
-        "facets": {
-          "Calmness": 6,
-          "Resilience": 6
-        },
-        "keys": {
-          "positive": 8,
-          "reverse": 4
-        }
+      "Respectfulness": {
+        "name": "Respectfulness",
+        "domain": "agreeableness",
+        "meaning": "Regard for others' rights and restraint of antagonistic behaviour"
+      },
+      "Trust": {
+        "name": "Trust",
+        "domain": "agreeableness",
+        "meaning": "General expectation that other people have positive intentions"
+      },
+      "Organization": {
+        "name": "Organization",
+        "domain": "conscientiousness",
+        "meaning": "Preference for order, structure and neatness"
+      },
+      "Productiveness": {
+        "name": "Productiveness",
+        "domain": "conscientiousness",
+        "meaning": "Persistence, efficiency and work toward goals"
+      },
+      "Responsibility": {
+        "name": "Responsibility",
+        "domain": "conscientiousness",
+        "meaning": "Reliability and commitment to duties and obligations"
+      },
+      "Anxiety": {
+        "name": "Anxiety",
+        "domain": "negativeEmotionality",
+        "meaning": "Tendency toward worry, tension and fear"
+      },
+      "Depression": {
+        "name": "Depression",
+        "domain": "negativeEmotionality",
+        "meaning": "Tendency toward sadness, discouragement and low mood; not a clinical diagnosis"
+      },
+      "Emotional Volatility": {
+        "name": "Emotional Volatility",
+        "domain": "negativeEmotionality",
+        "meaning": "Mood instability, irritability and emotional reactivity"
+      },
+      "Intellectual Curiosity": {
+        "name": "Intellectual Curiosity",
+        "domain": "openMindedness",
+        "meaning": "Interest in ideas, abstraction and complex thinking"
+      },
+      "Aesthetic Sensitivity": {
+        "name": "Aesthetic Sensitivity",
+        "domain": "openMindedness",
+        "meaning": "Engagement with art, beauty, music and literature"
+      },
+      "Creative Imagination": {
+        "name": "Creative Imagination",
+        "domain": "openMindedness",
+        "meaning": "Originality, imagination and inventive thinking"
       }
-    },
-    "methodNote": "Narrative-adapted Big Five OCEAN self-report using one behavioural statement per item and a five-point Likert agreement scale. This adaptation requires empirical validation before normative or diagnostic claims."
+    }
   },
   "story": {
     "prologue": {
@@ -322,243 +265,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q01",
+            "bfiItem": 1,
             "number": 1,
-            "title": "Six Words",
-            "context": "Mira's note lists three Sector C spikes. Her completed checks sit across the alarm history and a handwritten page.",
-            "statement": "I would want the completed checks and open questions organised clearly before taking over.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Orderliness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Orderliness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You close the folder and mark the line for review. Mira leaves; the alarm history carries the missing detail."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You add the last timestamps and one unresolved check. Mira answers, then leaves."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You ask Mira to list the checks, the causes she ruled out and the questions still open. Her rest begins a few minutes later."
-              }
-            },
-            "convergence": "The record now shows three brief spikes. Each cleared by itself, and none reached the trip limit."
+            "act": 1,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Sociability",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would want to keep talking with the others rather than let the room fall quiet.",
+            "context": "Mira zips her coat. Ilan has not left the window. The handover folder sits closed beneath the lamp and no one has spoken for a while.",
+            "convergence": "At 22:02 the outer door seals. Two people remain awake in a station built for twenty.",
+            "narrative": {
+              "low": "You let the quiet hold. Mira signs, nods once and goes. The room keeps its own company until the outer door seals.",
+              "mid": "You say enough to close the handover cleanly, then let the silence come back. Ilan stays at the window.",
+              "high": "You keep the three of you talking until the last minute—the storm, the ridge, the winter list. Mira leaves mid-sentence, almost smiling."
+            }
           },
           {
             "id": "q02",
+            "bfiItem": 2,
             "number": 2,
-            "title": "At the Door",
-            "context": "The written procedure gives one safe return trigger. Mira's own threshold is slightly more cautious.",
-            "statement": "I would use the written boundary without asking Mira to restate her judgement.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Assertiveness",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Assertiveness",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You stop her at the door and ask. She gives you the boundary before leaving."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You let her step into the corridor, then confirm the boundary over the radio."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You close the door and find the rule in the manual. It gives the trigger, but not Mira's reasoning."
-              }
-            },
-            "convergence": "A heat spike can be watched. A matching current change means Mira must return."
+            "act": 1,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Compassion",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would find myself caring about how tired the person handing over looked.",
+            "context": "Mira has spent four seasons repairing what the cold loosens. Tonight her hands are slower than her voice, and the last line of her handover is six unfinished words.",
+            "convergence": "The six words stay on the page either way. SECTOR C INTERMITTENT — MONITOR.",
+            "narrative": {
+              "low": "You take the folder and go straight to the line. Whatever the season cost her is hers to carry south.",
+              "mid": "You register how thin she looks, note it, and return to the page. The unresolved check matters more right now.",
+              "high": "You ask how she is, and mean it. She answers briefly, but something in her shoulders drops before she lifts her bag."
+            }
           },
           {
             "id": "q03",
+            "bfiItem": 3,
             "number": 3,
-            "title": "The Window",
-            "context": "Ilan watches the storm while the old Sector C records remain open beside him. His recorder check is unfinished.",
-            "statement": "I would notice how the shutdown was affecting Ilan and invite him to speak.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Empathy",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Empathy",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You hand him a recorder check. The task steadies his hands, and he begins to talk while working."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You ask whether he can continue the watch. He says the shutdown feels like a closing door."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You wait beside him and ask what this night means to him. The first console check waits with you."
-              }
-            },
-            "convergence": "Ilan opens two years of archived traces beside the live display."
+            "act": 1,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Organization",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would take over the watch without first putting the open items into any clear order.",
+            "context": "The handover is a stack: alarm history, a printed check sheet, a handwritten page and one unresolved line. Nothing is numbered.",
+            "convergence": "The console holds at nominal. Outside, the wind changes pitch against the west wall.",
+            "narrative": {
+              "low": "You lay the pages out and number what is still open before anything else. Three items. The Sector C line is item one.",
+              "mid": "You skim the stack, keep the shape of it in your head, and move on. It will hold for now.",
+              "high": "You leave the stack as it is. The night will sort itself, and the pages can wait until something asks for them."
+            }
           },
           {
             "id": "q04",
+            "bfiItem": 4,
             "number": 4,
-            "title": "Two Explanations",
-            "context": "Sensor noise explains most of the trace. One feature still matches Ilan's older anomaly.",
-            "statement": "I would keep another plausible explanation in mind while testing the familiar one.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Ideas",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Ideas",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You close the archive and work only from sensor noise, with a clear test for abandoning it."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You lead with sensor noise and add the magnetic channel to the screen."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You keep both explanations in the log and write what would separate them."
-              }
-            },
-            "convergence": "The next event will be captured across temperature, current and magnetics."
+            "act": 1,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Anxiety",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "Even with an unresolved warning on the console, I would stay fairly relaxed.",
+            "context": "SECTOR C INTERMITTENT — MONITOR. No trigger value. No next check. No record of what has already been ruled out.",
+            "convergence": "Somewhere inside the wall, metal answers the wind with a small click.",
+            "narrative": {
+              "low": "The unfinished line sits behind everything you do. You return to the panel twice more than the schedule asks.",
+              "mid": "It stays with you, but at a distance—a thing to watch rather than a thing to carry.",
+              "high": "You file it as one open item among several and let your attention settle back into the ordinary shape of the watch."
+            }
           },
           {
             "id": "q05",
+            "bfiItem": 5,
             "number": 5,
-            "title": "The Quiet Minute",
-            "context": "Sector C remains unresolved. The rest of Aurora continues through its normal watch cycle.",
-            "statement": "I would return my attention to the wider watch without dwelling on Sector C.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Calmness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Calmness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep Sector C at the front of every scan. The rest of the station receives less of your attention."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You make one extra check, then return to the normal cycle."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You hold to the planned interval and let the rest of the station back into view."
-              }
-            },
-            "convergence": "At 22:06, the console sounds once. The alert is from Sector C."
+            "act": 1,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Aesthetic Sensitivity",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "The cold light, the wind and the emptiness of the station would leave little impression on me.",
+            "context": "The lamp throws the control room into one warm circle. Beyond it the corridor runs grey, and the window has gone the colour of old paper.",
+            "convergence": "The lamp holds its circle. Nothing on the panel has moved.",
+            "narrative": {
+              "low": "You notice all of it—the paper-coloured glass, the way the lamp gives out at the doorway. None of it goes in the log, and all of it stays with you.",
+              "mid": "The room registers as a room. Once, briefly, the light across the glass catches you.",
+              "high": "The room is a room. You check what needs checking and let the rest of it stay furniture."
+            }
           }
         ],
         "closing": "At 22:06, the console gives one soft tone. The temperature line jumps twice. This time the current line moves with it."
@@ -572,243 +370,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q06",
+            "bfiItem": 6,
             "number": 6,
-            "title": "The Shape",
-            "context": "All readings remain below their limits. The traces repeat the same order and spacing.",
-            "statement": "I would focus on the defined limits rather than the pattern formed by the traces.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Aesthetics",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Aesthetics",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You enlarge the traces and compare their spacing. A faint magnetic lead appears."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You check the limits, then save a short replay that preserves the sequence."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You keep the response tied to individual readings. Ilan later notices the repeated rhythm."
-              }
-            },
-            "convergence": "The order is repeatable. It does not explain the fault, but it is not random noise."
+            "act": 2,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Assertiveness",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would be the one to say plainly what we should do first.",
+            "context": "The tone repeats. Ilan looks up from the magnetic record and waits. Nothing in the handover says which check comes first.",
+            "convergence": "The history opens on three brief spikes, each one cleared without reaching the trip limit.",
+            "narrative": {
+              "low": "You wait to see what he suggests. He offers the magnetic channel, and you follow it.",
+              "mid": "You name two options and let him choose between them. He takes the second.",
+              "high": "You state the order aloud—alarm history first, then the channel—and the room organises itself around it."
+            }
           },
           {
             "id": "q07",
+            "bfiItem": 7,
             "number": 7,
-            "title": "Before It Fades",
-            "context": "The event has cleared. Its cleanest data is still available before the next shutdown task begins.",
-            "statement": "I would begin the cross-check while the evidence was still fresh.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Industriousness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Industriousness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You save the event and continue the shutdown list until another change confirms it."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You run one calibration check and make deeper work depend on a second event."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You open the alarm history, calibration record and backup channels at once."
-              }
-            },
-            "convergence": "A second sensor moves the same way, and an independent estimate confirms a real load change."
+            "act": 2,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Respectfulness",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would keep my tone even with the other person even if they pushed back on my reading.",
+            "context": "Ilan disagrees. He thinks the spikes are an artefact of the sensor, and he says so twice, the second time more sharply.",
+            "convergence": "Both readings go into the record. Neither of you can rule the other out yet.",
+            "narrative": {
+              "low": "You cut across him. The sharpness in your voice ends the discussion faster than the argument does.",
+              "mid": "You hold your position without heat, though you do not invite him to expand on his.",
+              "high": "You let him finish, restate his objection back to him, then set your reading beside it. The room stays workable."
+            }
           },
           {
             "id": "q08",
+            "bfiItem": 8,
             "number": 8,
-            "title": "Three Views",
-            "context": "Mira knows the hardware, Ilan knows the archive and you hold the live readings.",
-            "statement": "I would form my own view before combining it with theirs.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Cooperation",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Cooperation",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You ask for all three readings before choosing a cause. The discussion starts wide."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You state a provisional view and ask each person for one fact that could overturn it."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You finish your own interpretation before inviting either person to challenge it."
-              }
-            },
-            "convergence": "The first working cause is unstable measurement, with an upstream fault still possible."
+            "act": 2,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Productiveness",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would be inclined to leave the deeper cross-check until later in the night.",
+            "context": "A full cross-check against the magnetic record takes about forty minutes. Nothing requires it before the midnight call.",
+            "convergence": "22:14. The temperature line is flat. The current line is not.",
+            "narrative": {
+              "low": "You start it now, while the evidence is fresh, and let the rest of the watch move around it.",
+              "mid": "You begin the first half and mark where to resume. The remainder can wait for a quieter hour.",
+              "high": "You note it as a task for later. There will be time before dawn, and nothing is trending."
+            }
           },
           {
             "id": "q09",
+            "bfiItem": 9,
             "number": 9,
-            "title": "Move",
-            "context": "The inspection window is closing. Mira and Ilan are ready, but neither has started moving.",
-            "statement": "I would make my energy and urgency visible enough to start the group moving.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Enthusiasm",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Enthusiasm",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You assign the first tasks in a quiet voice. The room moves without a change in tone."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You name the next three actions and send each person to one."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You stand, call the inspection and make the start impossible to miss."
-              }
-            },
-            "convergence": "Mira takes the generator panel. Ilan takes the trace. You take the corridor."
+            "act": 2,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Depression",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "If the first check found nothing, I would stay optimistic about finding the cause.",
+            "context": "The first pass returns clean. Whatever moved the current line has left no signature the standard tools can see.",
+            "convergence": "The second pass is queued. Outside, the storm loses its rhythm for a moment, then finds it again.",
+            "narrative": {
+              "low": "Something in you closes a little. If the obvious check finds nothing, the night is probably going to stay unreadable.",
+              "mid": "You accept the null result without much feeling either way and set up the second pass.",
+              "high": "A clean first pass narrows the field. You start the second with the sense that the answer is still in reach."
+            }
           },
           {
             "id": "q10",
+            "bfiItem": 10,
             "number": 10,
-            "title": "After the Alarm",
-            "context": "A second spike drives the alarm red for less than a second. The tone stops.",
-            "statement": "I would return my attention to the evidence quickly after the alarm.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Resilience",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Resilience",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "The sound stays with you. You slow the inspection start and check the room once more."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You take one breath, confirm the alarm cleared and begin."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You return to the trace almost at once and call the first measurement."
-              }
-            },
-            "convergence": "The inspection begins before the whiteout closes the corridor route."
+            "act": 2,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Intellectual Curiosity",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would want to understand why the two lines moved together, not only whether the alarm cleared.",
+            "context": "The alarm has cleared. The question of why a temperature spike and a current spike arrived in the same second has not been asked by anyone but you.",
+            "convergence": "At 22:18 the panel reports a temperature rise behind the Sector C wall. This one does not clear.",
+            "narrative": {
+              "low": "It cleared. You close the entry and move to the next item on the sheet.",
+              "mid": "You note the coincidence in the log without following it, and leave the question where anyone could pick it up.",
+              "high": "You go looking for the mechanism—what could couple heat and current in the same instant—and the search opens more than it closes."
+            }
           }
         ],
         "closing": "The corridor tightens around the beam of your lamp. Frost coats the pipes. The air grows warmer with every step towards Sector C."
@@ -822,243 +475,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q11",
+            "bfiItem": 11,
             "number": 11,
-            "title": "The Green Light",
-            "context": "The cabinet is hot while its local indicator remains green. A direct measurement is ready.",
-            "statement": "I would stay with the most familiar explanation until direct evidence challenged it.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Ideas",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Ideas",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You widen the fault model before opening the panel and include the upstream supply."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You test the sensor first while keeping the common supply on the watch list."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You stay with the sensor explanation and begin the direct check at its likely failure point."
-              }
-            },
-            "convergence": "The surface temperature is real. Something inside the cabinet is heating under a normal indication."
+            "act": 3,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Energy Level",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "Finding the source behind the panel would rarely leave me feeling eager or energised.",
+            "context": "The wall panel is warm. Behind it, somewhere, is the first physical thing the night has offered instead of a number.",
+            "convergence": "The panel comes away. Warm air, the smell of hot insulation, and no flame.",
+            "narrative": {
+              "low": "Something in you lifts. Whatever is behind the panel is real, and you want to be the one to reach it.",
+              "mid": "You feel the pull of it briefly, then set it aside and fetch the tools.",
+              "high": "It is another task. You collect what is needed and open the panel without any particular quickening."
+            }
           },
           {
             "id": "q12",
+            "bfiItem": 12,
             "number": 12,
-            "title": "Behind the Cover",
-            "context": "The likely hot point is behind the front cover. The checklist begins with several wider checks.",
-            "statement": "I would move towards the suspected point before completing the full sequence.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Orderliness",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Orderliness",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You finish the remaining confirmations, then open the cover with the full sequence complete."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You complete only the checks that could still change the safety boundary, then move inward."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You move to the hot section while Mira tracks the deferred confirmations over the radio."
-              }
-            },
-            "convergence": "A portable meter shows leakage on the Sector C branch and a smaller pulse upstream."
+            "act": 3,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Trust",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would assume the earlier checks had missed something rather than take them at face value.",
+            "context": "Mira's sheet says this run was inspected six weeks ago and passed. The insulation in front of you has been hot for long enough to discolour.",
+            "convergence": "Either way the run has to be traced by hand. You start at the junction and work outward.",
+            "narrative": {
+              "low": "You take the inspection as sound and look for what has changed since. Six weeks is time enough for a new fault.",
+              "mid": "You keep the earlier check in mind without leaning on it, and verify the section yourself.",
+              "high": "You assume the inspection was cursory. Whatever passed six weeks ago probably should not have."
+            }
           },
           {
             "id": "q13",
+            "bfiItem": 13,
             "number": 13,
-            "title": "One Authority",
-            "context": "Mira watches the generator, Ilan watches the trace and you hold the isolation switch.",
-            "statement": "I would state clearly who controlled each role and the final switch.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Assertiveness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Assertiveness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You let expertise organise the work. The first exchange reveals who is waiting for whom."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You name the stop condition and critical roles, then leave the sequence to Mira."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You name every role, callout and the single switching authority."
-              }
-            },
-            "convergence": "Mira covers generator readiness, Ilan the trace, and you the switch."
+            "act": 3,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Responsibility",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would hold to the agreed sequence even when a shortcut looked faster.",
+            "context": "The isolation procedure has eleven steps. Steps four through seven are slow, and the fault is almost certainly past them.",
+            "convergence": "The section comes down cleanly. Ilan holds the light steady while the run cools.",
+            "narrative": {
+              "low": "You jump to step eight. The time saved is real, and so is the step you did not verify.",
+              "mid": "You compress the middle steps rather than skip them, and note which ones were shortened.",
+              "high": "You work the sequence as written, all eleven steps, and the slow ones take exactly as long as they always do."
+            }
           },
           {
             "id": "q14",
+            "bfiItem": 14,
             "number": 14,
-            "title": "Radio Picture",
-            "context": "Mira and Ilan cannot see the corridor. They can only hear your breathing and short radio calls.",
-            "statement": "I would notice when their uncertainty needed a brief reassuring update.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Empathy",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Empathy",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep the radio to measurements and commands. Their questions wait for a pause."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You report what is visible at each decision point and leave the smaller uncertainties unspoken."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You give position, visible risk, uncertainty and next action before every change."
-              }
-            },
-            "convergence": "The branch can be isolated, but the upstream pulse keeps the main supply suspect."
+            "act": 3,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Emotional Volatility",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "My mood would swing noticeably as the readings rose and fell.",
+            "context": "The temperature behind the wall climbs, holds, drops, climbs again. Each movement takes about ninety seconds.",
+            "convergence": "At 22:39 the readings settle. The run is isolated and the wall begins, slowly, to give back its heat.",
+            "narrative": {
+              "low": "Your state stays level through all of it. The numbers move; you do not.",
+              "mid": "The rises tighten something in you and the falls release it, but not by much.",
+              "high": "Each climb pulls you up with it and each fall drops you. By the fourth cycle you can hear it in your own voice."
+            }
           },
           {
             "id": "q15",
+            "bfiItem": 15,
             "number": 15,
-            "title": "The Smell of Fire",
-            "context": "The burnt smell grows stronger. The next isolation step is ready and no flame is visible.",
-            "statement": "I would keep most of my attention on the next confirmed step.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Calmness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Calmness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You scan the corridor, generator and exit before returning to the cabinet."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You name the wider risks once, then return to the isolation point."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You stay with the meter, switch and cabinet boundary while remote alarms watch the rest."
-              }
-            },
-            "convergence": "The Sector C branch is isolated. One final leakage pulse appears on the common supply."
+            "act": 3,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Creative Imagination",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would improvise a way to isolate the circuit with whatever was already in the room.",
+            "context": "The correct clamp is in the external store, and the external store is on the far side of the storm.",
+            "convergence": "The circuit is isolated. Whatever caused the heat is now behind a break in the line.",
+            "narrative": {
+              "low": "You go for the store. The walk costs eleven minutes and the storm takes most of the warmth you had.",
+              "mid": "You make do with a partial arrangement and accept that it will need redoing properly in daylight.",
+              "high": "You build something out of a spare bracket and two lengths of strap. It is not in any manual, and it holds."
+            }
           }
         ],
         "closing": "The Sector C branch begins to cool. Then a dull impact travels through the floor. The main generator trips, and the station returns in emergency red."
@@ -1072,243 +580,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q16",
+            "bfiItem": 16,
             "number": 16,
-            "title": "Ninety Seconds",
-            "context": "The backup catches unevenly. Mira is still reading the values that will shape the first cut.",
-            "statement": "I would feel pressure to act before the critical readings were complete.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Calmness",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Calmness",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You let the pressure pass through the room without becoming the order. Mira calls for a precise forty-percent cut."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You ask only for the values that can still change the first action."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "The falling number drives an immediate cut; you narrow it as Mira's readings arrive."
-              }
-            },
-            "convergence": "The same critical loads survive. The bus settles before the countdown reaches zero."
+            "act": 4,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Sociability",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "Through the worst of it I would tend to stay quiet.",
+            "context": "Ninety seconds. Three things need doing and there are two of you. The room fills with the sound of the plant and very little else.",
+            "convergence": "At the end of it all three tasks are done. Neither of you could say precisely in what order.",
+            "narrative": {
+              "low": "You talk the whole way through it—positions, timings, what you are seeing—and the talk is what keeps you both aligned.",
+              "mid": "You speak when something needs saying and not otherwise.",
+              "high": "You work in silence. Ilan learns where you are from the sound of your movements rather than your voice."
+            }
           },
           {
             "id": "q17",
+            "bfiItem": 17,
             "number": 17,
-            "title": "Keep Going",
-            "context": "Emergency power is stable. Several useful diagnostic checks remain, and the team has not rested.",
-            "statement": "I would continue purposeful checks before taking a break.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Industriousness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Industriousness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You protect the stable state and call a short recovery break before deeper work."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You complete the single check most likely to change the plan, then pause."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You finish the decision-relevant checks while the evidence is fresh, then release the team to rest."
-              }
-            },
-            "convergence": "The main generator cannot be restarted safely while the station is occupied."
+            "act": 4,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Compassion",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would feel little sympathy for whoever's oversight had brought us to this point.",
+            "context": "The escalation should have gone to Hobart at the first spike. It did not, and the person who did not send it is four hours south by now.",
+            "convergence": "The record will show the gap regardless. You log the time and move on.",
+            "narrative": {
+              "low": "You think about how the end of a long season narrows what a person can see, and the anger does not really arrive.",
+              "mid": "You set the question of fault aside. It can be answered later, by someone else.",
+              "high": "Someone made this harder than it needed to be. That sits with you while you work."
+            }
           },
           {
             "id": "q18",
+            "bfiItem": 18,
             "number": 18,
-            "title": "One Plan",
-            "context": "Mira tests the generator, Ilan follows the traces and you manage the live loads.",
-            "statement": "I would coordinate the three workstreams through one shared plan.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Cooperation",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Cooperation",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You let each stream run alone and connect them only when one changes another."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You set shared checkpoints and leave each person independent between them."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You place all three streams on one sequence where every dependency is visible."
-              }
-            },
-            "convergence": "At current load, backup power lasts under two hours; at survival load, a little over five."
+            "act": 4,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Organization",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would keep the three workstreams in a strict order rather than let them run together.",
+            "context": "Isolation, ventilation and the log all need attention inside the same ninety seconds.",
+            "convergence": "Ninety seconds later the air moves again and the panel reads within limits.",
+            "narrative": {
+              "low": "You move between all three as each one calls, and afterwards the log has a gap you cannot reconstruct.",
+              "mid": "You keep isolation and ventilation separated and let the log take whatever is left.",
+              "high": "You fix the order before you start—isolation, ventilation, log—and hold it even when the middle one wants to jump the queue."
+            }
           },
           {
             "id": "q19",
+            "bfiItem": 19,
             "number": 19,
-            "title": "The Red Room",
-            "context": "The restart attempt ends. Mira and Ilan become quiet while the generator note fills the room.",
-            "statement": "I would let the room recover without trying to lift its mood.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Enthusiasm",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Enthusiasm",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You name what the team has already secured and give the next task a clear beginning."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You keep the tone low but mark each completed step aloud."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You return to your own work without making the room's progress visible."
-              }
-            },
-            "convergence": "The room finds a working pace again, without any promise that the main generator will return."
+            "act": 4,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Anxiety",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would be noticeably tense until it was over.",
+            "context": "There is a point in the sequence where the ventilation is open and the isolation is not yet complete. It lasts about twenty seconds.",
+            "convergence": "22:55. The Sector C wall is cool enough to touch. Nothing has caught fire.",
+            "narrative": {
+              "low": "You pass through it the way you pass through any other step, and only notice afterwards that it was the dangerous one.",
+              "mid": "You feel it while it lasts and let it go when the step closes.",
+              "high": "Those twenty seconds arrive in your hands and your breathing, and they do not leave when the step does."
+            }
           },
           {
             "id": "q20",
+            "bfiItem": 20,
             "number": 20,
-            "title": "The Generator's Note",
-            "context": "Before each correction, the generator changes pitch and a vibration reaches the console.",
-            "statement": "I would include the changing sound and vibration in the diagnosis.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Aesthetics",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Aesthetics",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep the record to instrument values until Mira mentions the vibration."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You use the sound only to choose which part of the trace to inspect."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You mark each change in pitch and vibration against the electrical corrections."
-              }
-            },
-            "convergence": "The pattern shows the backup unit is stable only at reduced load."
+            "act": 4,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Aesthetic Sensitivity",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "The changing sound of the plant would hold my attention as something worth listening to.",
+            "context": "As the load shifts, the machinery under the floor moves through a series of tones—low, then higher, then a long sustained note.",
+            "convergence": "The sustained note thins and stops. In the quiet after it, the radio does not answer Hobart.",
+            "narrative": {
+              "low": "You use the sound as a signal and nothing more. When it changes, you check the panel.",
+              "mid": "You catch yourself listening once, then return to the readings.",
+              "high": "You listen to the whole sequence. Later you will not be able to explain why it mattered, only that you would know it again."
+            }
           }
         ],
         "closing": "At 22:55, the red lights hold steady. The long-range radio rack remains dark. Aurora can no longer reach Hobart."
@@ -1322,243 +685,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q21",
+            "bfiItem": 21,
             "number": 21,
-            "title": "Other Routes",
-            "context": "The long-range route is dead. Several low-power communication paths remain technically possible.",
-            "statement": "I would explore less conventional ways to make contact before accepting the isolation.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Ideas",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Ideas",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You protect the budget for one conventional call path and stop when it fails."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You test the two routes with the strongest evidence, then stop."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You use the fixed budget across several distinct, plausible routes and rule each one in or out."
-              }
-            },
-            "convergence": "No route reaches outside. Aurora must plan as if no answer is coming."
+            "act": 5,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Assertiveness",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "With base unreachable, I would take the lead without waiting to be asked.",
+            "context": "The midnight call cannot be made. Two people remain, and nothing in the handover says which of them is in charge once the radio goes.",
+            "convergence": "The retry schedule is set for every twenty minutes. The first attempt returns nothing but the carrier.",
+            "narrative": {
+              "low": "You wait for the shape of it to settle. Ilan begins allocating tasks, and the night acquires a lead by default.",
+              "mid": "You take the parts that are clearly yours and leave the rest open.",
+              "high": "You say that you are running the watch until Hobart is back, and set the first three tasks before anyone can disagree."
+            }
           },
           {
             "id": "q22",
+            "bfiItem": 22,
             "number": 22,
-            "title": "Calls in the Static",
-            "context": "The static changes from minute to minute. A fixed call schedule sits beside the radio.",
-            "statement": "I would retry when conditions seemed favourable rather than follow the fixed schedule.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Orderliness",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Orderliness",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You log the channels and set timed calls around the midnight status."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You keep short call windows and allow them to move with the storm."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You transmit whenever the static thins. Ilan keeps a minimal note of each attempt."
-              }
-            },
-            "convergence": "If midnight is missed, Hobart should contact Ridge. Aurora cannot know whether that chain begins."
+            "act": 5,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Respectfulness",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would argue the point rather than let a weak plan pass.",
+            "context": "Ilan proposes climbing to the mast in the storm to check the feed. The wind is running at a speed that has already closed the road.",
+            "convergence": "The mast stays unchecked. The retry schedule runs on.",
+            "narrative": {
+              "low": "You set out the wind figures and let him reach the conclusion himself. He withdraws the idea without either of you naming it a bad one.",
+              "mid": "You say it will not work and give one reason. He accepts the reason.",
+              "high": "You take the plan apart in front of him, point by point, until there is nothing left of it. He does not raise another idea for some time."
+            }
           },
           {
             "id": "q23",
+            "bfiItem": 23,
             "number": 23,
-            "title": "Say It Plainly",
-            "context": "Mira expects contact to return soon. Ilan speaks as though rescue is already moving.",
-            "statement": "I would state the present situation and the next priority plainly.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Assertiveness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Assertiveness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You call contact temporarily unavailable and turn to the heat budget."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You state the present limit and pair it with the next action."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You name the isolation, the missed-call safeguard and the heat calculation that comes next."
-              }
-            },
-            "convergence": "All three now plan without an assumed rescue time."
+            "act": 5,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Productiveness",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would find it hard to get started on the retry schedule while so much else was unresolved.",
+            "context": "The schedule is dull work: twenty minutes of waiting, ninety seconds of calling, a line in the log. It will run all night.",
+            "convergence": "Every attempt returns the same silence. The Ridge team, wherever they are, is not answering either.",
+            "narrative": {
+              "low": "You start it immediately and keep it exactly. The log fills with identical entries.",
+              "mid": "You start it, miss one slot while working elsewhere, and pick it up again.",
+              "high": "You keep finding something more pressing. The first two slots pass before the schedule really begins."
+            }
           },
           {
             "id": "q24",
+            "bfiItem": 24,
             "number": 24,
-            "title": "After the News",
-            "context": "Mira becomes still. Ilan turns to the window. The heating screen is waiting.",
-            "statement": "I would keep the update task-focused and check on them at the next pause.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Empathy",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Empathy",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You stop for a brief fitness check before opening the heat model."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You let the news settle, then ask whether the next task feels manageable."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You move directly to heating. Their reactions remain private for now."
-              }
-            },
-            "convergence": "Both can continue. Mira asks for exact limits; Ilan asks for a clear role."
+            "act": 5,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Depression",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "Cut off from base, I would still feel secure in my own judgement.",
+            "context": "There is no one left to confirm a decision against. Whatever is decided tonight is decided here.",
+            "convergence": "23:11. The storm is at its heaviest and the station is entirely alone.",
+            "narrative": {
+              "low": "Without someone to check against, your own reasoning starts to sound thinner than it did an hour ago.",
+              "mid": "You proceed, with a quiet reservation you do not voice.",
+              "high": "You find the ground is still under you. The absence of Hobart removes a confirmation, not a capability."
+            }
           },
           {
             "id": "q25",
+            "bfiItem": 25,
             "number": 25,
-            "title": "What Is Left",
-            "context": "The radio cannot be repaired here. Heat, shelter and local monitoring can still be managed.",
-            "statement": "I would return most of my attention to what remained under local control.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Resilience",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Resilience",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "The failed call stays at the front of your attention until the thermal alarm sounds."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You name what cannot be changed and list what still can."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You place contact outside the immediate problem and return to local systems."
-              }
-            },
-            "convergence": "The thermal model finishes. Aurora will cool before any rescue time can be assumed."
+            "act": 5,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Intellectual Curiosity",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would steer away from speculation about what the record might mean.",
+            "context": "Ilan starts talking about the magnetic record—old readings, a pattern he has been chasing for two seasons, why tonight might matter to it.",
+            "convergence": "At 23:15 the outer temperature drops four degrees in under a minute. Neither of you is looking at the panel when it happens.",
+            "narrative": {
+              "low": "You follow him into it. For twenty minutes the storm is somewhere else, and the argument is genuinely interesting.",
+              "mid": "You listen without joining in, and bring it back to the panel when the slot comes round.",
+              "high": "You steer it back to the schedule. Whatever the record means, it does not change what has to be done in the next hour."
+            }
           }
         ],
         "closing": "The heating screen shows three zones and enough power for one loop. Outside that loop, the station will begin to freeze."
@@ -1572,243 +790,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q26",
+            "bfiItem": 26,
             "number": 26,
-            "title": "One Warm Room",
-            "context": "Mira marks the control room, Ilan marks the refuge and you hold a third workable plan.",
-            "statement": "I would bring the different views into one discussion before fixing the heat allocation.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Cooperation",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Cooperation",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You choose the loop with the lowest heat loss and explain it during setup."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You hear each priority and test only the assumptions that could change the choice."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You place all three plans against the same loss rates, occupancy and access limits."
-              }
-            },
-            "convergence": "The compact control-room refuge is the only loop that can shelter all three and keep the safety panel live."
+            "act": 6,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Energy Level",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "Through the long rationing work I would be the less active one.",
+            "context": "Every non-essential load has to be found, listed and switched down by hand. It takes hours and covers most of the station.",
+            "convergence": "By 23:30 the draw is down by a third. It is not enough to change the arithmetic.",
+            "narrative": {
+              "low": "You take the longer half of the building and are still moving when Ilan sits down.",
+              "mid": "You divide it evenly and keep pace with him through most of it.",
+              "high": "You settle into the slower share. Ilan covers more ground, and neither of you remarks on it."
+            }
           },
           {
             "id": "q27",
+            "bfiItem": 27,
             "number": 27,
-            "title": "Small Loads",
-            "context": "The major loads are off. Several small lights, chargers and heat leaks remain.",
-            "statement": "I would keep looking for useful small savings after the main work was complete.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Industriousness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Industriousness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You stop after the major savings and begin the rest cycle."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You test only the small changes with the clearest return."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You continue until the remaining checks no longer offer a credible saving. Several extra minutes appear in the estimate."
-              }
-            },
-            "convergence": "The survival setup may last until 04:10, if no new fault appears."
+            "act": 6,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Trust",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would let go of the missed escalation rather than hold it against anyone.",
+            "context": "The gap in the record is now four hours old and has shaped every decision since. It will be in the report.",
+            "convergence": "The handover folder goes back under the lamp, closed.",
+            "narrative": {
+              "low": "It stays with you. Something in how you read the rest of the handover has changed.",
+              "mid": "You set it down for tonight and leave the question open for daylight.",
+              "high": "You let it go. It was the end of a long season, and the report can be written without a name attached to the failure."
+            }
           },
           {
             "id": "q28",
+            "bfiItem": 28,
             "number": 28,
-            "title": "When the Fans Stop",
-            "context": "The final fan stops. In the quiet, a faint grouped sound enters through the floor.",
-            "statement": "I would stay with the instruments rather than turn towards the unfamiliar sound.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Aesthetics",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Aesthetics",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You step away from the display and listen beside the wall."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You finish the current check, then listen through the pause."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You stay with the instruments until Ilan asks everyone to be still."
-              }
-            },
-            "convergence": "All three hear the rhythm. A faint magnetic movement appears beneath Sector C."
+            "act": 6,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Responsibility",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would be somewhat careless with the smaller savings once the main work was done.",
+            "context": "The large loads are down. What remains is a long tail of small ones—corridor lighting, standby heaters, instruments nobody is reading.",
+            "convergence": "Frost begins to show on the inner face of the corridor wall.",
+            "narrative": {
+              "low": "You work the tail to the end, item by item, including the ones that save almost nothing.",
+              "mid": "You take the worthwhile ones and leave the rest.",
+              "high": "You stop when the returns get small. Several standby loads keep drawing quietly for the rest of the night."
+            }
           },
           {
             "id": "q29",
+            "bfiItem": 29,
             "number": 29,
-            "title": "The Cold Routine",
-            "context": "Checks and radio calls repeat. Between them, the room becomes quiet and inward.",
-            "statement": "I would let each person manage their own social energy during the routine.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Enthusiasm",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Enthusiasm",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep a low current of conversation moving between checks."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You make brief contact at each handover and allow silence between them."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You leave the quiet intact and speak only when the task requires it."
-              }
-            },
-            "convergence": "The group stays functional. Ilan finds the same interval in the old anomaly file."
+            "act": 6,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Emotional Volatility",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "Watching frost form on the inside of the wall would not easily upset me.",
+            "context": "It is a thin white line where the wall meets the floor, and it was not there an hour ago.",
+            "convergence": "The frost line does not retreat. By 23:40 it has widened by the breadth of a finger.",
+            "narrative": {
+              "low": "The sight of it goes through you. For a while afterwards your attention keeps returning to that line.",
+              "mid": "You register what it means, feel it briefly, and go back to the list.",
+              "high": "You note it as data—rate, location, implication—and it does not follow you out of the corridor."
+            }
           },
           {
             "id": "q30",
+            "bfiItem": 30,
             "number": 30,
-            "title": "Frost at the Door",
-            "context": "Frost reaches the door seal. The refuge remains within its limits, but the sight unsettles the room.",
-            "statement": "I would regain focus after noticing the frost and continue with the agreed checks.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Resilience",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Resilience",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "The image of the frost stays with you. You reopen the calculation and begin checking assumptions again."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You compare the trend with the trigger points, then take another check to settle your attention."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You register the concern, confirm the limits and return fully to the working rhythm."
-              }
-            },
-            "convergence": "The refuge remains in range. Beneath the floor, the pulse repeats clearly enough for the recorder."
+            "act": 6,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Creative Imagination",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would have little to add beyond the savings already on the list.",
+            "context": "The standard rationing list was written for a station with a working generator. Tonight it is being applied to something else.",
+            "convergence": "The reserve figure is recalculated. However it is read, it is smaller than the night is long.",
+            "narrative": {
+              "low": "You find three things the list never anticipated, including one that buys nearly an hour.",
+              "mid": "You add a couple of obvious items and leave the structure of the list intact.",
+              "high": "You work the list as written. It was drawn up by people with more time than you have tonight."
+            }
           }
         ],
         "closing": "The last fans wind down. In the new silence, three slow knocks pass through the floor, followed by a long pause."
@@ -1822,243 +895,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q31",
+            "bfiItem": 31,
             "number": 31,
-            "title": "The Whole Pulse",
-            "context": "Mira wants the safety values. Ilan wants the full shape, spacing and sound of the pulse.",
-            "statement": "I would preserve the signal's rhythm and sensory detail in the record.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Aesthetics",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Aesthetics",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep the compact safety record and allow one short waveform."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You preserve one complete group beside the summary."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You reserve enough capacity for the full shape, spacing, sound and room conditions around several groups."
-              }
-            },
-            "convergence": "The record confirms a repeatable delay from magnetic movement to sound."
+            "act": 7,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Sociability",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would hold back from the discussion even when I had something to say.",
+            "context": "Ilan has the signal on the speaker. It repeats with a period of about eleven seconds, and he wants to talk about every part of it.",
+            "convergence": "The period is stable to within a tenth of a second. Nothing in the station makes that noise.",
+            "narrative": {
+              "low": "You are in it with him from the first minute, thinking out loud, finishing each other's sentences over the sound of it.",
+              "mid": "You contribute when you are certain and stay quiet otherwise.",
+              "high": "You keep your observations to yourself. Some of them turn out to have been the useful ones."
+            }
           },
           {
             "id": "q32",
+            "bfiItem": 32,
             "number": 32,
-            "title": "Before Record",
-            "context": "The pulse may return at any time. Mira asks for a duration, power limit and stop conditions.",
-            "statement": "I would agree the limits before switching the recorder on.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Orderliness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Orderliness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You start the recorder while the limits are still being discussed."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You agree the power ceiling and stop conditions, then finish the timing while it runs."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You set the duration, load and stop rules before Mira closes the switch."
-              }
-            },
-            "convergence": "The recorder receives forty minutes and three immediate stop conditions."
+            "act": 7,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Compassion",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would set aside my own task to help the other person get the recording right.",
+            "context": "Ilan has been waiting two seasons for something like this and his hands are not steady enough to set the gain.",
+            "convergence": "The recorder runs clean. Whatever this is, there will be a record of it.",
+            "narrative": {
+              "low": "You leave him to it and continue with the reserve calculation. The first minute of the recording is unusable.",
+              "mid": "You set the gain for him and return to your own work.",
+              "high": "You stay with it until the levels are right, then stay a little longer, and the calculation waits."
+            }
           },
           {
             "id": "q33",
+            "bfiItem": 33,
             "number": 33,
-            "title": "Two Years",
-            "context": "Ilan keeps both hands on the recorder case. He has spent two years returning to these traces.",
-            "statement": "I would acknowledge what the opportunity meant to Ilan before setting the limit.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Empathy",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Empathy",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep the exchange to watts and minutes and let the authorised run speak for itself."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You recognise the time behind his request, then return to the limit."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You name what stopping may cost him before setting the boundary."
-              }
-            },
-            "convergence": "Ilan accepts the limit. Mira watches the power while he takes the recorder."
+            "act": 7,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Organization",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would keep the recording log neat enough that anyone could read it later.",
+            "context": "Times, gain settings, ambient conditions, every change made and when. None of it is required by any procedure.",
+            "convergence": "00:40. The pulse continues. The reserve figure has not improved.",
+            "narrative": {
+              "low": "You keep it in your head and write down the times that seem important. Some of them are not the right ones.",
+              "mid": "You log the changes and let the conditions go unrecorded.",
+              "high": "You keep it properly—every setting, every adjustment, ruled and timed—because whoever reads this will not be able to ask you."
+            }
           },
           {
             "id": "q34",
+            "bfiItem": 34,
             "number": 34,
-            "title": "Twenty or Forty",
-            "context": "Mira asks for twenty minutes. Ilan asks for forty. Neither adds new information.",
-            "statement": "I would set the operating limit myself when the discussion stopped moving.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Assertiveness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Assertiveness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You allow one more round and wait for a shared number."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You set the non-negotiable stops and let them work inside those limits."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You set the ceiling, end time and stop authority."
-              }
-            },
-            "convergence": "Forty minutes enters the log. Ilan starts recording while Mira watches fuel and refuge heat."
+            "act": 7,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Anxiety",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would worry about what the signal meant long after the recorder was running.",
+            "context": "There is no procedure for an unidentified periodic source beneath a station in a storm.",
+            "convergence": "01:10. Ilan goes to check the east corridor and does not come back for some time.",
+            "narrative": {
+              "low": "Once the recorder is running the question becomes an interesting one rather than a worrying one.",
+              "mid": "It surfaces now and then between tasks and goes again.",
+              "high": "It stays underneath everything—the eleven seconds, the ice, the absence of any explanation—for the rest of the night."
+            }
           },
           {
             "id": "q35",
+            "bfiItem": 35,
             "number": 35,
-            "title": "Under the Floor",
-            "context": "With the fans silent, the pulse seems to rise through your boots rather than the speakers.",
-            "statement": "I would experience the unknown source as personally threatening.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Calmness",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Calmness",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You treat the pulse as strange, not personal, and keep your eyes on the instruments."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "Unease rises with the next group; you return to the measured interval."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "The sound begins to feel close and intentional, competing with the instrument task."
-              }
-            },
-            "convergence": "Three groups are captured. The source remains unknown, and midnight has passed without contact."
+            "act": 7,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Aesthetic Sensitivity",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "The rhythm of the pulse would strike me as something worth preserving for its own sake.",
+            "context": "Under the speaker noise there is a shape to it—a rise, a hold, a fall—that repeats without ever being quite identical.",
+            "convergence": "The recording continues. Eleven seconds, and eleven again, under the floor.",
+            "narrative": {
+              "low": "It is a periodic signal. You record its parameters and leave the rest alone.",
+              "mid": "You notice the shape and mention it once, then return to measuring it.",
+              "high": "You keep a clean channel of it running longer than the analysis needs, because some of what is in it will not survive being reduced to numbers."
+            }
           }
         ],
         "closing": "The recorder falls back to low power. Under the red lights, the next knock seems closer than the last, though the measured level has not changed."
@@ -2072,243 +1000,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q36",
+            "bfiItem": 36,
             "number": 36,
-            "title": "Someone Outside",
-            "context": "Ilan points into the whiteout. Your first reply comes out sharper than you intended.",
-            "statement": "I would need time before my voice settled during the verification.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Resilience",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Resilience",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "Your first reply sharpens, then settles. You ask for place, movement and duration."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You pause long enough to turn the tension into a factual question."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "The tension remains in your voice and keeps pulling the check back towards the fear in the room."
-              }
-            },
-            "convergence": "He identifies one point beyond the left window frame, but cannot separate movement from reflection."
+            "act": 8,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Assertiveness",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would find it hard to bring the other person round to a calmer reading of what they saw.",
+            "context": "Ilan says there was a figure in the whiteout, upright, about thirty metres out, and that it did not move like drifting snow.",
+            "convergence": "The camera covering that approach recorded snow and nothing else.",
+            "narrative": {
+              "low": "You get him seated, get the account written down in order, and by the end of it he is describing rather than insisting.",
+              "mid": "You calm him partly. He agrees to the checks without agreeing to the reading.",
+              "high": "Nothing you say lands. He holds his account exactly as first given, and the verification proceeds around him."
+            }
           },
           {
             "id": "q37",
+            "bfiItem": 37,
             "number": 37,
-            "title": "Fear First",
-            "context": "Ilan is cold and frightened. He keeps looking at the same point in the glass.",
-            "statement": "I would acknowledge his fear before deciding what he had seen.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Empathy",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Empathy",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You move straight to verification and let the work carry the response."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You say the sight was frightening, then separate that from its cause."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You name his fear before beginning the check."
-              }
-            },
-            "convergence": "Ilan remains oriented, but his hands are cold. Mira wraps him in thermal blankets."
+            "act": 8,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Respectfulness",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I might be short with the other person while the checks were running.",
+            "context": "It is 01:40, the sector sweep has found nothing twice, and Ilan asks you to run it a third time.",
+            "convergence": "The third sweep is clean. So is the fourth, which nobody asked for.",
+            "narrative": {
+              "low": "You run it again without comment. Whatever it costs you does not reach him.",
+              "mid": "You agree, and something in how you agree tells him what it is costing.",
+              "high": "You tell him what you think of a third sweep. He runs it himself, alone, and does not ask again."
+            }
           },
           {
             "id": "q38",
+            "bfiItem": 38,
             "number": 38,
-            "title": "What It Could Be",
-            "context": "Reflection, ice, camera error, exhaustion and a real figure remain possible.",
-            "statement": "I would keep more than one explanation in mind while the checks ran.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Ideas",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Ideas",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You test the most likely cause first. The room light removes most of the shape."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You compare reflection and camera error before widening the search."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You keep several causes open and choose checks that separate them."
-              }
-            },
-            "convergence": "Most of the shape disappears. One movement remains hidden by snow on the camera."
+            "act": 8,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Productiveness",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would keep searching until the sector was fully cleared.",
+            "context": "Full clearance means every external approach, every camera arc and both storm doors. In this wind it takes over an hour.",
+            "convergence": "Whatever Ilan saw, no instrument on the station saw it with him.",
+            "narrative": {
+              "low": "You clear what can be reached from inside and let the rest stand as unverified.",
+              "mid": "You cover most of it and leave the furthest arc for daylight.",
+              "high": "You take it to the end, every arc and both doors, and finish at 03:20 with nothing found and nothing left unchecked."
+            }
           },
           {
             "id": "q39",
+            "bfiItem": 39,
             "number": 39,
-            "title": "Nine More Checks",
-            "context": "The first camera and door checks show no entry. Nine additional checks remain.",
-            "statement": "I would be ready to stop after the first checks showed nothing.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Industriousness",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Industriousness",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You continue until the remaining checks can no longer change the safety plan."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You complete only the checks that could alter the refuge plan."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You close the review after the first camera and door checks."
-              }
-            },
-            "convergence": "No system confirms an intruder. The sighting remains an unverified observation."
+            "act": 8,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Depression",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "The long hours in the whiteout would leave me feeling low.",
+            "context": "Two hours of searching in a wind that removes sound, in a light that removes distance, for something that was probably never there.",
+            "convergence": "At 03:50 the storm breaks apart, and the sky above Aurora Station opens.",
+            "narrative": {
+              "low": "You come in cold and hungry and otherwise unchanged.",
+              "mid": "Something of it comes inside with you and thins out over the next half hour.",
+              "high": "It settles into you—the grey, the noise, the pointlessness of it—and it is still there when the wind drops."
+            }
           },
           {
             "id": "q40",
+            "bfiItem": 40,
             "number": 40,
-            "title": "Back Together",
-            "context": "Mira returns to fuel. Ilan folds around the recorder. The room separates into three silences.",
-            "statement": "I would create a shared rhythm that brought the group back into contact.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Enthusiasm",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Enthusiasm",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You let the quiet hold until the next formal handover."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You call a short reset for water, warmth and the next two tasks."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You bring everyone into a brief shared check-in, then restart the watch as one group."
-              }
-            },
-            "convergence": "A twenty-minute rotation begins. No second figure appears."
+            "act": 8,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Intellectual Curiosity",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would keep several explanations for the figure in play at once.",
+            "context": "Exhaustion, drifting snow, a shadow thrown by the mast light, a person who cannot be there. None of them can be ruled out from inside.",
+            "convergence": "The account goes into the log as reported and unverified. It stays that way.",
+            "narrative": {
+              "low": "You settle on exhaustion and stop there. It is the explanation that requires the least of you.",
+              "mid": "You hold two possibilities and let the rest go.",
+              "high": "You keep all four alive, weight them differently as the evidence comes in, and refuse to close on any of them."
+            }
           }
         ],
         "closing": "At 03:50, the wind drops below its peak. Green light spills across the snow, and every surviving instrument begins to drift."
@@ -2322,243 +1105,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q41",
+            "bfiItem": 41,
             "number": 41,
-            "title": "The Sky Enters",
-            "context": "Green and violet light moves across the ceiling while the alarm band stays red.",
-            "statement": "I would take a few seconds to absorb the aurora's colour and scale.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Aesthetics",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Aesthetics",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep your eyes on the instruments and let the sky remain outside the record."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You look once, then return to the panel and save a short image."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You let the colour and movement enter your attention before returning to the emergency."
-              }
-            },
-            "convergence": "The magnetic rise matches the aurora, and the pulse beneath the floor grows clearer."
+            "act": 9,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Energy Level",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "Even at this hour I would still have energy for the next task.",
+            "context": "03:52. You have been awake for twenty-two hours and the aurora has just come over the ridge.",
+            "convergence": "Green, and then a band of red above it, moving across the whole northern sky.",
+            "narrative": {
+              "low": "You are running on the last of it. What gets done in the next hour gets done slowly.",
+              "mid": "There is enough left for what is needed and not much beyond it.",
+              "high": "Something about the light returns a measure of it. You go back to the panel moving faster than you have for an hour."
+            }
           },
           {
             "id": "q42",
+            "bfiItem": 42,
             "number": 42,
-            "title": "Drifting Baselines",
-            "context": "Several instrument baselines begin to drift. The fixed observation list remains beside the screen.",
-            "statement": "I would keep the same observation order while the instruments drifted.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Orderliness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Orderliness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You abandon the list and follow whichever channel changes next."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You preserve the core order but break it for short-lived changes."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You continue through the fixed sequence, marking every deviation in the same place."
-              }
-            },
-            "convergence": "The record remains comparable while short changes are captured in side notes."
+            "act": 9,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Trust",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would be wary of why the other person wanted the instruments left running.",
+            "context": "Ilan asks for the magnetometer to stay powered through the display. It is not a large load, but nothing tonight is free.",
+            "convergence": "The magnetometer stays powered. Its trace begins to move with the light overhead.",
+            "narrative": {
+              "low": "You take the request at face value—it is the reason he came south—and approve it.",
+              "mid": "You approve it and note the draw.",
+              "high": "You wonder how much of this is the station's night and how much of it is his career, and you say yes with the question still open."
+            }
           },
           {
             "id": "q43",
+            "bfiItem": 43,
             "number": 43,
-            "title": "Two Emergencies",
-            "context": "Mira watches survival systems. Ilan watches the signal. Their tasks no longer overlap naturally.",
-            "statement": "I would let them remain separate and coordinate mainly at planned handovers.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Cooperation",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Cooperation",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You bring both streams together whenever one changes the other's limit."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You set short handovers and leave them separate between those points."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You let each specialist remain deep in one task until the next planned handover."
-              }
-            },
-            "convergence": "The fuel limit and recorder state finally meet on one shared screen."
+            "act": 9,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Responsibility",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would keep the observation schedule exactly, aurora or not.",
+            "context": "A reading is due every fifteen minutes. Outside the window, the sky is doing something that most people who winter here never see.",
+            "convergence": "The instrument drift is small but it is there, and it starts when the display does.",
+            "narrative": {
+              "low": "Two readings are missed. Neither of them, in the end, mattered.",
+              "mid": "You take them late but you take them all.",
+              "high": "Every reading goes in on time, including the one at the height of it, which you take with your back to the window."
+            }
           },
           {
             "id": "q44",
+            "bfiItem": 44,
             "number": 44,
-            "title": "Reconnect the Room",
-            "context": "Mira and Ilan speak only to their own instruments. Neither hears the other's latest number.",
-            "statement": "I would make my engagement visible enough to reconnect the room.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Enthusiasm",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Enthusiasm",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You allow the separate focus to continue until the next deadline forces contact."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You call one shared update, then return both people to their work."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You step between the stations, restate the common problem with visible energy and make each person answer the other."
-              }
-            },
-            "convergence": "The room returns to one operating picture as the fuel estimate drops again."
+            "act": 9,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Emotional Volatility",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would keep whatever I felt about the sky under control.",
+            "context": "Twenty-two hours awake, a station running on its reserve, and the most extraordinary thing either of you will see this year is happening overhead.",
+            "convergence": "The band of red thins and the green comes down to the ridge line.",
+            "narrative": {
+              "low": "It gets through. For a minute or two you are not much use to anyone, and Ilan does not mention it afterwards.",
+              "mid": "You feel it move in you and hold most of it.",
+              "high": "You take it in and stay level. The reading is due in four minutes and you are there for it."
+            }
           },
           {
             "id": "q45",
+            "bfiItem": 45,
             "number": 45,
-            "title": "A Deliberate Sound",
-            "context": "The pulse repeats like a call. The resemblance raises unease, though the measurements remain stable.",
-            "statement": "I would steady my attention and continue treating the pulse as measured data.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Calmness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Calmness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "The resemblance takes over the room. You check the walls and window before returning to the trace."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You name the feeling, then bring your attention back to timing and amplitude."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You hold the unease beside the data and continue the measured check without narrowing your attention."
-              }
-            },
-            "convergence": "The pattern remains repeatable. Its source and meaning remain unknown."
+            "act": 9,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Creative Imagination",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would find it hard to picture what could produce both the light and the pulse.",
+            "context": "A magnetic disturbance overhead. An acoustic period beneath the ice. Between them, a delay that stays roughly constant.",
+            "convergence": "The delay is measured at just under four seconds. It does not vary.",
+            "narrative": {
+              "low": "You sketch three mechanisms in the margin of the log, two of which are almost certainly wrong and one of which is not.",
+              "mid": "You can see the shape of a connection without being able to fill it in.",
+              "high": "Nothing comes. Two facts stay two facts, and the space between them stays empty."
+            }
           }
         ],
         "closing": "The reserve is now measured in minutes. Mira asks for heat. Ilan asks for one uninterrupted recording."
@@ -2572,243 +1210,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q46",
+            "bfiItem": 46,
             "number": 46,
-            "title": "One More Calculation",
-            "context": "The fuel estimate is falling faster than before. Some assumptions may still be wrong.",
-            "statement": "I would recheck the parts of the calculation most likely to change the decision.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Industriousness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Industriousness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You accept the latest estimate and move directly to the choice."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You verify the single assumption most likely to move the result."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You check every assumption that could still change the choice and leave the rest untouched."
-              }
-            },
-            "convergence": "The revised result changes little: one major load, about fifteen minutes."
+            "act": 10,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Sociability",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would talk the calculation through aloud rather than work it silently.",
+            "context": "How much reserve is left, what it will carry and for how long. The arithmetic is not difficult and the result is not good.",
+            "convergence": "Four hours of heat, or eleven minutes of recording, or something in between. Not all three.",
+            "narrative": {
+              "low": "You work it alone on paper and put the figure in front of him when it is finished.",
+              "mid": "You check the inputs with him and do the rest yourself.",
+              "high": "You run the whole thing out loud, every assumption spoken, and he catches an error in the third line that you would not have found."
+            }
           },
           {
             "id": "q47",
+            "bfiItem": 47,
             "number": 47,
-            "title": "A Third Plan",
-            "context": "Mira's heat plan and Ilan's recording plan are complete. A third approach remains possible.",
-            "statement": "I would compare the two complete plans before developing another option.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Ideas",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Ideas",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You use the blank line to build a timed split and calculate the switching loss."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You compare the two plans, then sketch a split only where their minimums overlap."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You keep the decision between the two complete plans."
-              }
-            },
-            "convergence": "The split remains possible, but it gives less heat and less data than either pure plan."
+            "act": 10,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Compassion",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would set aside what this costs the others and work the numbers coldly.",
+            "context": "One of the options ends the recording. Ilan has not said anything about it, which is itself a kind of statement.",
+            "convergence": "The figure comes out the same either way. It is the choosing that is hard.",
+            "narrative": {
+              "low": "You cannot separate them. What this means for him is in the room whether or not it belongs in the arithmetic.",
+              "mid": "You keep the two apart while calculating and let them meet afterwards.",
+              "high": "You work the reserve as a reserve. What it costs anyone is a separate question, and you do not open it here."
+            }
           },
           {
             "id": "q48",
+            "bfiItem": 48,
             "number": 48,
-            "title": "Cross-Examination",
-            "context": "Mira and Ilan hold different assumptions. Both are ready to answer one direct question from the other.",
-            "statement": "I would invite them to test each other's assumptions openly.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Cooperation",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Cooperation",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You question each plan separately and carry the answers between them."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You ask one direct question from each person to the other."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You make them test each other's figures and state what would disqualify their own plan."
-              }
-            },
-            "convergence": "The hidden costs become clear: slower rescue response under cold, and incomplete proof under short recording."
+            "act": 10,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Organization",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would leave my workings scattered and move on once the number was found.",
+            "context": "Three sheets, two of them with corrections, and a set of assumptions that exist only in the order they were written down.",
+            "convergence": "04:04. The figure is on the board where both of you can see it.",
+            "narrative": {
+              "low": "You copy the whole thing out clean, assumptions first, so that the number can be checked by someone who was not here.",
+              "mid": "You tidy the final page and leave the working sheets as they are.",
+              "high": "You have the number. The sheets stay where they fell, and by morning nobody could reconstruct how it was reached."
+            }
           },
           {
             "id": "q49",
+            "bfiItem": 49,
             "number": 49,
-            "title": "The Circle",
-            "context": "The same figures return louder each time. The switch sequence is waiting.",
-            "statement": "I would interrupt the repetition and take control of the final exchange.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Assertiveness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Assertiveness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You allow one more round and wait for either person to move."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You stop the repeated points and ask for one final new fact from each."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You end the circle, set the speaking order and call the decision point."
-              }
-            },
-            "convergence": "No new fact removes the trade-off. The reserve continues to fall."
+            "act": 10,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Anxiety",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "With the reserve this low I would rarely feel afraid.",
+            "context": "Below a certain figure the station stops being a building and becomes a container of air that is getting colder.",
+            "convergence": "Neither of you says the word emergency. The word is not required for the situation to be one.",
+            "narrative": {
+              "low": "The fear is there and it is specific: the frost line, the hours, the distance to the Ridge camp.",
+              "mid": "It is present without being loud.",
+              "high": "You look at the number and it stays a number. What has to happen next is clear enough to work with."
+            }
           },
           {
             "id": "q50",
+            "bfiItem": 50,
             "number": 50,
-            "title": "Two Urgencies",
-            "context": "Mira names the danger of cold. Ilan names the loss of the signal. The pressure rises.",
-            "statement": "I would remain pulled towards whichever loss felt most immediate.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Resilience",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Resilience",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You let the urgency register, then return to the criteria without carrying either voice into the comparison."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "The urgency pulls at you, but a deliberate pause returns your attention to the written limits."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "The pressure keeps displacing the criteria, and the nearer loss begins to dominate the choice."
-              }
-            },
-            "convergence": "The plans remain unchanged. Only the emotional weight in the room has moved."
+            "act": 10,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Aesthetic Sensitivity",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "The look and sound of the station at its lowest power would be a distraction rather than something worth attention.",
+            "context": "With the main loads down, the building has a different acoustic. Longer silences, and a low note under everything that was never audible before.",
+            "convergence": "04:06. The reserve will support one major load. There are two that matter and a third that is neither.",
+            "narrative": {
+              "low": "You find yourself listening to it, and it enters the record of the night as clearly as any reading.",
+              "mid": "You notice it and put it aside.",
+              "high": "It is background. There is a decision to make and it does not need a soundtrack."
+            }
           }
         ],
         "closing": "No calculation removes the loss. The only question left is what Aurora will protect."
@@ -2822,243 +1315,98 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q51",
+            "bfiItem": 51,
             "number": 51,
-            "title": "Behind the Numbers",
-            "context": "Mira's page carries three names under HEAT. Ilan's carries two years of dates under RECORD.",
-            "statement": "I would keep the personal meaning separate from the measurable comparison.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Empathy",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Empathy",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You name what each plan means to the person defending it before returning to the figures."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You acknowledge the stakes briefly and keep them beside, not inside, the calculation."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You remove the personal history from the comparison and work only from measured outcomes."
-              }
-            },
-            "convergence": "Both people understand what the choice can and cannot account for."
+            "act": 11,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Assertiveness",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would rather the other person made the final call.",
+            "context": "Protect the crew, capture the signal, or split the reserve between them. Three paths, and the watch is yours.",
+            "convergence": "Both of you know which way the other is leaning. Neither has said it.",
+            "narrative": {
+              "low": "You take it. Whatever follows, it will have been your decision and you say so aloud before making it.",
+              "mid": "You decide, but only after he has said what he would do.",
+              "high": "You would hand it to him if you could. The handover is signed in your name, and that settles it whether you want it settled or not."
+            }
           },
           {
             "id": "q52",
+            "bfiItem": 52,
             "number": 52,
-            "title": "One Grid",
-            "context": "The three plans use different units and assumptions. A blank grid waits on the console.",
-            "statement": "I would place all three plans into the same structure before choosing.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Orderliness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Orderliness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You compare the plans in their existing forms and preserve their differences."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You standardise the critical values only."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You rewrite all three plans into one set of columns and thresholds."
-              }
-            },
-            "convergence": "The plans can now be compared line by line, though some nuance has been flattened."
+            "act": 11,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Respectfulness",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would put the decision to the others courteously, whatever the pressure.",
+            "context": "There are six minutes before the load has to be committed, and one of the three options ends two seasons of Ilan's work.",
+            "convergence": "He says he understands. It is not clear whether that is agreement.",
+            "narrative": {
+              "low": "It comes out flat and fast. He hears the decision and not much of the reasoning.",
+              "mid": "You state it plainly and answer the questions he asks.",
+              "high": "You put it to him properly—what you are choosing, why, and what it costs—and you do it in a voice that has room in it for his answer."
+            }
           },
           {
             "id": "q53",
+            "bfiItem": 53,
             "number": 53,
-            "title": "The Unmeasured Cost",
-            "context": "The immediate figures are close. Several consequences remain uncertain and may appear only later.",
-            "statement": "I would consider less-visible consequences before closing the decision.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Ideas",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Ideas",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep the decision to outcomes that can be measured now."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You name one uncertain consequence but give it less weight than the current figures."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You test several plausible hidden consequences and ask whether any could reverse the ranking."
-              }
-            },
-            "convergence": "No hidden consequence can be quantified, but none can be dismissed."
+            "act": 11,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Productiveness",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would move the decision to a close efficiently.",
+            "context": "Every minute spent deciding is a minute of reserve spent on lighting the room in which the decision is being made.",
+            "convergence": "04:12. The switch is thrown. The station commits.",
+            "narrative": {
+              "low": "The discussion runs past its usefulness. When the decision comes, some of what it was meant to protect has already gone.",
+              "mid": "You close it in reasonable time, with one circuit more than it needed.",
+              "high": "You take it to a decision inside four minutes, and the two minutes saved go into the load."
+            }
           },
           {
             "id": "q54",
+            "bfiItem": 54,
             "number": 54,
-            "title": "Without Certainty",
-            "context": "No plan removes every risk. The final comparison is complete and the switch window is closing.",
-            "statement": "I would steady myself enough to commit while uncertainty remained.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Calmness",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Calmness",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "The remaining uncertainty keeps the choice open while you look for one more disqualifying fact."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You state what remains unknown, steady the room and choose."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You hold the uncertainty without letting it become the decision, then call the plan."
-              }
-            },
-            "convergence": "A decision is reached. Mira confirms the switch sequence, but execution has not yet begun."
+            "act": 11,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Depression",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "The weight of what would be lost either way would settle on me.",
+            "context": "Whichever path is taken, something that mattered to someone in this room stops tonight and does not resume.",
+            "convergence": "The unchosen paths close quietly. Nothing marks the moment except the log entry.",
+            "narrative": {
+              "low": "You make the choice and the loss stays a fact rather than a weight.",
+              "mid": "It sits on you for a while after the switch and then eases.",
+              "high": "It comes down and stays. For the rest of the night there is a flatness underneath everything you do."
+            }
           },
           {
             "id": "q55",
+            "bfiItem": 55,
             "number": 55,
-            "title": "The Duty Lead",
-            "context": "The choice is made. Mira and Ilan understand it, but one final challenge is still possible.",
-            "statement": "I would present the direction as provisional until they had one last chance to challenge it.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Assertiveness",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Assertiveness",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You state the final direction and move directly to execution."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You state the decision, allow one question about execution and close the discussion."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You present the direction as provisional and invite one final challenge before the switch moves."
-              }
-            },
-            "convergence": "The switching sequence begins under the chosen allocation."
+            "act": 11,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Intellectual Curiosity",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would have little patience for what the choice meant beyond tonight.",
+            "context": "Ilan starts to say something about what it means that a station chooses between keeping people warm and keeping a record. He does not finish it.",
+            "convergence": "04:28. The generator stops. What is left is the refuge, the dark, and the wait.",
+            "narrative": {
+              "low": "You pick the thread up and follow it with him for a while. It is the most interesting conversation of the night.",
+              "mid": "You let him finish and do not take it further.",
+              "high": "You bring it back to the schedule. Whatever it means can be worked out somewhere warmer."
+            }
           }
         ],
         "closing": "At 04:12, the wind drops below the travel limit. Thirty kilometres south, Ridge starts its vehicles. No voice reaches Aurora."
@@ -3072,301 +1420,103 @@ window.AURORA_STATION_DATA = {
         "items": [
           {
             "id": "q56",
+            "bfiItem": 56,
             "number": 56,
-            "title": "Three Sleeping Bags",
-            "context": "The smallest warm room can hold all three. The sleeping positions and watch roles still need agreement.",
-            "statement": "I would work with the others to arrange one shared refuge plan.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "EA",
-              "facet": "Cooperation",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Cooperation",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep everyone warm but let each person manage a separate routine and resting position."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You share one warm zone and coordinate only at fixed checks."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You build one rotation that coordinates rest, radio watch, symptom checks and the limited space."
-              }
-            },
-            "convergence": "No one remains in an unheated part of the station, and every watch interval has an owner."
+            "act": 12,
+            "positionInAct": 1,
+            "domain": "extraversion",
+            "facet": "Energy Level",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would keep visible enthusiasm going through the wait.",
+            "context": "Four hours in a cooling room with nothing to do but stay awake and stay warm.",
+            "convergence": "05:02. The refuge is at four degrees. Neither of you has slept.",
+            "narrative": {
+              "low": "You conserve everything, including your voice. The hours pass in a kind of grey economy.",
+              "mid": "You keep things moving when they slow and let them slow again.",
+              "high": "You keep something alive in the room—talk, a plan for the morning, an argument about nothing—and the temperature does not drop any slower for it, but the hours do pass."
+            }
           },
           {
             "id": "q57",
+            "bfiItem": 57,
             "number": 57,
-            "title": "What Still Works",
-            "context": "No powered system can be changed. Radio listening and survival checks still remain.",
-            "statement": "I would stop the regular routine and conserve energy until conditions changed.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "ME",
-              "facet": "Industriousness",
-              "key": "R",
-              "correctedScoreFormula": "6 - raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Industriousness",
-                "keyDirection": "R",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep a minimal watch of radio, symptoms, battery and entry point."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You lengthen the intervals and keep only survival checks."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You suspend the regular cycle until the group agrees on a smaller one."
-              }
-            },
-            "convergence": "A low-energy watch remains, matched to the team's declining capacity."
+            "act": 12,
+            "positionInAct": 2,
+            "domain": "agreeableness",
+            "facet": "Trust",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would assume the others out there would come as soon as they could.",
+            "context": "The Ridge team is south of here, beyond radio range, on a road that closes in whiteout. They may or may not know anything is wrong.",
+            "convergence": "The road opened at some point in the last hour. Neither of you knows this yet.",
+            "narrative": {
+              "low": "You plan for nobody coming. It is the assumption that keeps the refuge plan honest.",
+              "mid": "You hope for it and prepare as though it will not happen.",
+              "high": "You take it as given that they will come the moment the road opens, and something in the room is easier for it."
+            }
           },
           {
             "id": "q58",
+            "bfiItem": 58,
             "number": 58,
-            "title": "Keep Time Moving",
-            "context": "Between radio checks, the chemical light barely moves. Silence hides how alert each person remains.",
-            "statement": "I would keep a quiet conversation moving through the wait.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "FI",
-              "facet": "Enthusiasm",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Enthusiasm",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You choose silence and use names only at scheduled checks."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You ask brief questions at each interval and allow silence between them."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You keep a low current of practical conversation moving."
-              }
-            },
-            "convergence": "At 04:46, a voice breaks through the VHF static: Ridge Survey, fourteen kilometres south."
+            "act": 12,
+            "positionInAct": 3,
+            "domain": "conscientiousness",
+            "facet": "Responsibility",
+            "reverse": true,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "In the powerless wait I would let the routine slip.",
+            "context": "There is still a log to keep, a temperature to record every half hour, and a radio to try. None of it changes anything.",
+            "convergence": "05:14. Something that is not the wind comes through on the handheld.",
+            "narrative": {
+              "low": "Every entry goes in on the half hour, in a hand that gets worse and never stops.",
+              "mid": "Most of them go in. Two half hours pass unrecorded.",
+              "high": "The log thins out and then stops. The last two hours of Aurora Station are not written down by anyone."
+            }
           },
           {
             "id": "q59",
+            "bfiItem": 59,
             "number": 59,
-            "title": "Thirty-Four Minutes",
-            "context": "Ridge is thirty-four minutes away. Relief enters the room before the rescue team does.",
-            "statement": "I would settle back into the next routine quickly after hearing Ridge's voice.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WA",
-              "facet": "Resilience",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Resilience",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "Relief breaks the routine for several minutes before the next check begins."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You let the relief register, then restate the final interval."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You return at once to radio, warmth and safe-entry preparation."
-              }
-            },
-            "convergence": "Ridge receives the hazard and entry point. The last auroral colour fades from the sky."
+            "act": 12,
+            "positionInAct": 4,
+            "domain": "negativeEmotionality",
+            "facet": "Emotional Volatility",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "Hearing the signal come through, I would react strongly one way or the other.",
+            "context": "A voice, badly broken, giving a callsign that is almost certainly Ridge.",
+            "convergence": "Ridge acknowledges. Two hours out, with a portable generator and a tracked vehicle.",
+            "narrative": {
+              "low": "You acknowledge, give position and status, and your voice does not change at all.",
+              "mid": "Something goes through you and you keep it out of the transmission.",
+              "high": "It takes you completely for a moment—relief, or something less simple than relief—and Ilan has to take the handset."
+            }
           },
           {
             "id": "q60",
+            "bfiItem": 60,
             "number": 60,
-            "title": "What the Log Misses",
-            "context": "The fault log holds times, loads and alarms, but not the light or the knocks.",
-            "statement": "I would record the night's colours, sounds and unanswered details beside the technical report.",
-            "spectrumId": "agreement-5",
-            "assessment": {
-              "visibility": "internal",
-              "elementCode": "WO",
-              "facet": "Aesthetics",
-              "key": "+",
-              "correctedScoreFormula": "raw",
-              "constructContract": {
-                "format": "single-statement Likert 1-5",
-                "targetFacet": "Aesthetics",
-                "keyDirection": "+",
-                "contextRule": "Neutral narrative context; no preferred response stated",
-                "responseRule": "Rate how strongly the player agrees that the statement describes how they generally tend to be"
-              }
-            },
-            "responseBranches": {
-              "low": {
-                "responses": [
-                  1,
-                  2
-                ],
-                "narrativeMeaning": "Disagreement with the statement",
-                "transition": "You keep the final entry factual and leave interpretation for later."
-              },
-              "mid": {
-                "responses": [
-                  3
-                ],
-                "narrativeMeaning": "Neither agreement nor disagreement with the statement",
-                "transition": "You complete the fault log and add a separate observation note."
-              },
-              "high": {
-                "responses": [
-                  4,
-                  5
-                ],
-                "narrativeMeaning": "Agreement with the statement",
-                "transition": "You place colour, sound and uncertainty beside the technical record."
-              }
-            },
-            "convergence": "At 05:20, tracked lights appear through the thinning snow. Ridge has reached Aurora."
+            "act": 12,
+            "positionInAct": 5,
+            "domain": "openMindedness",
+            "facet": "Creative Imagination",
+            "reverse": false,
+            "spectrumId": "bfi2-agreement-5",
+            "statement": "I would want to record the night in a way no standard log would capture.",
+            "context": "The official record will have times, readings and decisions. It will not have the eleven seconds, the figure, or the colour of the sky at 03:50.",
+            "convergence": "The last entry is timed 05:20. The watch is over.",
+            "narrative": {
+              "low": "You complete the standard log. It is accurate, and it is all that is required.",
+              "mid": "You add a short note at the end for whoever reads it next.",
+              "high": "You write a second account beside the first—the sound, the light, the things that were seen and not verified—because the standard form has nowhere to put them."
+            }
           }
         ],
         "closing": "The outer door opens into white headlamps, engine noise and blue Ridge jackets. For the first time that night, responsibility begins to leave your hands."
       }
     ]
-  },
-  "finalReserve": {
-    "id": "final-reserve",
-    "scored": false,
-    "insertAfterQuestionId": "q55",
-    "insertAfterActId": "act-11",
-    "branchInsertBeforeActId": "act-12",
-    "title": "The Final Reserve",
-    "note": "Unscored. This outcome follows from your recorded responses and changes the night, not your Five-Element scores.",
-    "prompt": "One major load can remain. What does Aurora protect?",
-    "options": [
-      {
-        "id": "safety",
-        "title": "Protect the crew",
-        "text": "Keep refuge heat and safety monitoring alive.",
-        "immediate": "The recorder falls silent. Heat and the safety panel remain until the reserve is gone.",
-        "act12Opening": "The refuge keeps useful warmth after the generator stops. Everyone is cold, but the room loses heat slowly.",
-        "endingConsequence": {
-          "rescueState": "All three show cold exposure and require evacuation, but they remain responsive when Ridge arrives.",
-          "dataLegacy": "The signal record contains separated fragments. It proves that an anomaly occurred but cannot establish a complete repeating cycle."
-        }
-      },
-      {
-        "id": "discovery",
-        "title": "Capture the signal",
-        "text": "Give the reserve to one uninterrupted recording.",
-        "immediate": "The heater dies. The recorder runs for eleven continuous minutes before the generator stops.",
-        "act12Opening": "The refuge cools quickly. The crew enters the powerless wait with the clearest record and the least warmth.",
-        "endingConsequence": {
-          "rescueState": "All three are conscious but show more advanced cold exposure; Ridge begins active rewarming before evacuation.",
-          "dataLegacy": "The eleven-minute record shows a repeatable structure and a consistent magnetic-to-acoustic delay, but it still cannot identify the source."
-        }
-      },
-      {
-        "id": "bounded",
-        "title": "Make a bounded split",
-        "text": "Record for four minutes, then return the remaining reserve to heat.",
-        "immediate": "One partial sequence is captured. The switch costs time, but the refuge receives one final burst of heat.",
-        "act12Opening": "The refuge holds less warmth than the safety plan and more than the recording plan. The data ends before a full cycle.",
-        "endingConsequence": {
-          "rescueState": "All three require rewarming and evacuation. Their cold exposure falls between the other two outcomes.",
-          "dataLegacy": "The four-minute record confirms the magnetic-to-acoustic sequence but ends before the repeating structure can be demonstrated."
-        }
-      }
-    ],
-    "selection": "derived",
-    "derivation": "The station's last major load is not a separate question. It follows from the responses already given: Wood pulls the reserve towards the recording, Earth and Water pull it towards the crew, and a close balance produces the narrow third path.",
-    "derivationMap": {
-      "discovery": "Wood clearly ahead of the crew currents",
-      "safety": "Earth and Water clearly ahead of Wood",
-      "bounded": "Wood and the crew currents within a narrow margin"
-    },
-    "margin": 0.4
   },
   "ending": {
     "rescue": "Ridge technicians isolate the damaged bus before connecting their portable generator to the safe service inlet. Heat returns first, then radio light, then the low ordinary hum of a working room.\n\nThe pulse beneath the ice disappears into that noise.",
@@ -3389,57 +1539,95 @@ window.AURORA_STATION_DATA = {
       "scoring",
       "branch balance"
     ],
-    "revision": "Senior editorial integrity pass: continuity, construct clarity, response neutrality and restrained hard-SF delivery.",
+    "revision": "Rewritten against the BFI-2 structure: every statement targets one facet with an explicit keying direction, and the Act scenes are unchanged.",
     "reveal": "Revealed by sentence, short paragraph or narrative beat into one cumulative document. Nothing already revealed is replaced or removed."
   },
   "prelude": {
-    "kicker": "AURORA STATION · PRELUDE",
     "steps": [
       {
         "id": "identity",
-        "indicator": "PRELUDE 01 / 03",
-        "title": "Before the watch begins",
-        "summary": "The station log needs a watchkeeper name. It will appear on the final record and on your reflective profile.",
+        "label": "PRELUDE / 01",
+        "heading": "IDENTIFY THE WATCHKEEPER",
+        "intro": "Aurora Station is placed into unattended mode at dawn. Before the handover is signed, the log needs the name of whoever holds the final overnight watch.",
         "fieldLabel": "WATCHKEEPER NAME",
         "placeholder": "Enter your name",
-        "note": "Stored only in this browser and used for your final record and report.",
+        "note": "Stored in this browser only. It appears in your story, your profile and both downloads.",
         "error": "Please enter your name to continue.",
-        "primary": "Continue to response guide"
-      },
-      {
-        "id": "calibration",
-        "indicator": "PRELUDE 02 / 03",
-        "title": "How to answer the watch",
-        "summary": "Each statement describes how you generally tend to be. Choose how strongly you agree or disagree, from 1 for strongly disagree to 5 for strongly agree.",
-        "prompt": "Try the scale once before the first decision. This practice response is not recorded and is not scored.",
-        "statement": "I like to know what is expected of me before I begin something new.",
-        "back": "← Edit name",
         "primary": "Continue"
       },
       {
+        "id": "calibration",
+        "label": "PRELUDE / 02",
+        "heading": "CALIBRATE YOUR RESPONSE",
+        "intro": "Each statement describes how you generally tend to think, feel or behave. Choose how strongly you agree or disagree. Try the scale once here.",
+        "statement": "I like to know what is expected of me before I begin something new.",
+        "note": "This practice response is not recorded, not scored and not part of the sixty.",
+        "primary": "Continue",
+        "back": "Back"
+      },
+      {
         "id": "orientation",
-        "indicator": "PRELUDE 03 / 03",
-        "title": "The path changes with you",
-        "summary": "There is no answer key. This is a subjective reflection of how you see yourself, and the story records the route your responses take.",
-        "lead": "Every response changes the route the story records. Across the watch, your choices shape your profile, and later decisions shape the ending you reach.",
+        "label": "PRELUDE / 03",
+        "heading": "BEFORE THE WATCH BEGINS",
+        "intro": "Twelve Acts. Five reflections in each. The story continues from whatever you choose.",
         "guidance": [
-          {
-            "label": "No right or wrong",
-            "copy": "Higher is not better. Each point only shows how strongly you agree that the statement describes you."
-          },
-          {
-            "label": "Answer as you are",
-            "copy": "Choose what is generally true of you—not what sounds ideal, capable or expected of a duty lead."
-          },
-          {
-            "label": "Use the full scale",
-            "copy": "Choose 1 when you strongly disagree and 5 when you strongly agree. Use 3 only when you genuinely sit between the two."
-          }
+          "There are no right or wrong responses.",
+          "A higher response is not automatically better.",
+          "Answer according to how you generally tend to think, feel or behave.",
+          "Do not answer as an ideal watchkeeper would.",
+          "The midpoint is a valid answer, not a way of avoiding one."
         ],
-        "disclaimer": "This is a subjective self-report, not a diagnosis or an objective measure of ability. Honest answers produce the most recognisable reflection.",
-        "back": "← Review the scale",
-        "primary": "Begin the final watch"
+        "disclaimer": "This is a subjective self-report. It is not a diagnosis, a clinical test, an intelligence test or an ability assessment, and it must not be used for employment selection or performance decisions.",
+        "primary": "Begin the Watch",
+        "back": "Back"
       }
     ]
+  },
+  "instrument": {
+    "basis": "BFI-2",
+    "status": "BFI-2-aligned narrative self-reflection",
+    "statusNote": "The statements are rewritten into Aurora Station scenarios. Scenario adaptation changes the validated instrument, so this is not an official or clinically validated BFI-2 assessment.",
+    "attribution": "Based on the structure of the Big Five Inventory-2 (BFI-2) by Christopher J. Soto and Oliver P. John. BFI-2 items are copyright Oliver P. John and Christopher J. Soto.",
+    "reference": "https://www.colby.edu/academics/departments-and-programs/psychology/research-opportunities/personality-lab/the-bfi-2/",
+    "paper": "https://escholarship.org/content/qt16x6n05t/qt16x6n05t.pdf",
+    "permission": "The official resource grants personal and research use. Confirm separate permission before any commercial use."
+  },
+  "completion": {
+    "heading": "THE WATCH IS COMPLETE",
+    "lines": [
+      "All sixty reflections have been recorded.",
+      "Your story remains available above."
+    ],
+    "profileAction": "View Watchkeeper Profile",
+    "storyAction": "Download Story"
+  },
+  "results": {
+    "eyebrow": "AURORA STATION",
+    "heading": "WATCHKEEPER PROFILE",
+    "heroHeading": "YOUR WATCHKEEPER PROFILE",
+    "descriptiveNote": "This profile describes patterns in your own responses. It is descriptive, not diagnostic.",
+    "overviewHeading": "The five domains",
+    "detailHeading": "Domains and facets",
+    "guidanceHeading": "HOW TO READ THIS PROFILE",
+    "guidance": [
+      "This profile describes patterns in your self-reported responses. It does not measure ability, competence, mental health or suitability for a role.",
+      "Scores may vary with context, experience and interpretation. No domain or facet is inherently better than another."
+    ],
+    "privacy": "Your name and responses stay in this browser. Aurora Station has no backend and sends nothing anywhere.",
+    "actions": {
+      "profilePdf": "Download Profile PDF",
+      "storyPdf": "Download Story PDF",
+      "returnToStory": "Return to Story",
+      "restart": "Restart Journey"
+    },
+    "restartConfirm": "Restart Aurora Station?\n\nThis will remove your name, responses, story progress and results. Sound and reading-speed preferences will be retained.",
+    "summary": {
+      "balanced": "Across the five domains your responses stayed close to the midpoint. That describes a profile that shifted with the situation rather than holding one setting throughout.",
+      "aboveTemplate": "a higher self-reported expression of {domain}",
+      "belowTemplate": "a lower self-reported expression of {domain}",
+      "lead": "Your responses across the watch were most distinctive in {highlights}.",
+      "facetTemplate": "Within {domain}, {high} stood noticeably higher than {low}.",
+      "closing": "Everything else sat closer to the middle of the scale."
+    }
   }
 };

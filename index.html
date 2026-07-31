@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Aurora Station — an interactive story and Big Five reflection." />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="description" content="Aurora Station — an interactive story with a BFI-2-aligned narrative self-reflection." />
+    <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#06131d" />
-    <title>Aurora Station — Your Journey</title>
+    <title>Aurora Station — The Final Watch</title>
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./content/Aurora_Station_Content.js"></script>
     <script defer src="./core.js"></script>
@@ -26,7 +26,7 @@
         <div
           class="reader-progress"
           role="progressbar"
-          aria-label="Journey progress"
+          aria-label="Reflections recorded"
           aria-valuemin="0"
           aria-valuemax="60"
           aria-valuenow="0"
@@ -60,23 +60,10 @@
           <span class="sound-meter" aria-hidden="true"><span></span><span></span><span></span></span>
           <span class="tool-label sound-label">Sound on</span>
         </button>
-        <button
-          id="restart-watch"
-          class="tool-button restart-watch"
-          type="button"
-          aria-label="Restart the watch and clear saved progress"
-          title="Restart the watch"
-          hidden
-        >
-          <span class="restart-icon" aria-hidden="true">↺</span>
-          <span class="tool-label restart-label">Restart</span>
-        </button>
       </div>
     </header>
-    <main id="main-content" class="story-content">
-      <article id="story" class="story" tabindex="-1">
-        <p class="loading-copy">Receiving the final watch…</p>
-      </article>
+    <main id="story" class="story" tabindex="-1">
+      <p class="loading-copy">Receiving the final watch…</p>
     </main>
     <button id="new-passage" class="new-passage-button" type="button" hidden>
       New passage below <span aria-hidden="true">↓</span>
@@ -84,7 +71,7 @@
     <div id="screen-reader-status" class="sr-only" role="status" aria-live="polite"></div>
     <noscript>
       <p class="noscript-message">
-        Aurora Station needs JavaScript enabled to remember choices and build the story.
+        Aurora Station needs JavaScript enabled to remember your responses and build the story.
       </p>
     </noscript>
   </body>
