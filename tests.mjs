@@ -1126,7 +1126,9 @@ check("the type scale is the art-directed hierarchy", () => {
 });
 
 check("the layout is editorial rather than a grid of cards", () => {
-  assert.match(stylesSource, /--measure: \d+rem/);
+  // The measure grows with the page instead of sitting at one fixed width.
+  assert.match(stylesSource, /--measure: clamp\(/);
+  assert.match(stylesSource, /--measure-wide: clamp\(/);
   assert.match(stylesSource, /--tap: 3rem/);
   assert.match(stylesSource, /:focus-visible/);
   assert.match(stylesSource, /@media \(prefers-reduced-motion: reduce\)/);
@@ -1263,6 +1265,77 @@ check("the watch can be restarted without clearing storage by hand", () => {
   // Restarting asks first, and keeps the reading preferences.
   assert.match(appSource, /window\.confirm\(data\.results\.restartConfirm\)/);
   assert.ok(data.results.restartConfirm);
+});
+
+check("the reading centres on a wide page instead of hugging one edge", () => {
+  // Both surfaces cap their width from the measure and centre what is left.
+  [".watch {", ".report-shell {"].forEach((selector) => {
+    const block = stylesSource.slice(
+      stylesSource.indexOf(selector),
+      stylesSource.indexOf("}", stylesSource.indexOf(selector)),
+    );
+    assert.match(block, /max-width: calc\(var\(--measure(-wide)?\) \+ var\(--gutter\) \* 2\)/, selector);
+    assert.match(block, /margin-inline: auto/, selector);
+  });
+  // The column itself is centred, not pushed against one gutter.
+  [".passage {", ".observation {", ".completion {"].forEach((selector) => {
+    const block = stylesSource.slice(
+      stylesSource.indexOf(selector),
+      stylesSource.indexOf("}", stylesSource.indexOf(selector)),
+    );
+    assert.match(block, /margin: [^;]*auto/, selector);
+    assert.doesNotMatch(block, /margin-left: var\(--gutter\)/, selector);
+  });
+  // The pressure phase still tightens, as a share of the measure.
+  assert.match(stylesSource, /max-width: calc\(var\(--measure\) \* 0\.86\)/);
+  // The report no longer opens on a share of the viewport.
+  assert.doesNotMatch(stylesSource, /min-height: 82svh/);
+});
+
+check("a chapter index is a numeral, not a padded number", () => {
+  data.results.chapters.forEach((chapter) => {
+    assert.match(chapter.index, /^[IVX]+$/, `${chapter.id} index`);
+  });
+  // Zero-padding a Roman numeral produced "0I" and "0V".
+  assert.doesNotMatch(resultsSource, /copy\.index\)\.padStart/);
+});
+
+check("the follow brings the open question into view, not the passage above it", () => {
+  const block = appSource.slice(
+    appSource.indexOf("function follow("),
+    appSource.indexOf("function settle("),
+  );
+  assert.match(block, /\.observation:not\(\.is-closed\)/);
+  assert.match(block, /anchor\.offsetTop \+ anchor\.offsetHeight/);
+  // Still a follow, never a jump to the end of the document.
+  assert.match(block, /if \(target <= window\.scrollY\)/);
+});
+
+check("a closed act collapses to its record", () => {
+  const block = stylesSource.slice(
+    stylesSource.indexOf(".observation.is-closed {"),
+    stylesSource.indexOf(".completion {"),
+  );
+  // Nothing hidden may keep holding height.
+  assert.match(block, /\.observation-readout,\s*\.observation\.is-closed \.observation-foot \{\s*display: none;/);
+  assert.match(block, /\.observation-head \{\s*margin-bottom: 0;/);
+});
+
+check("the prelude statement is set like every other statement", () => {
+  const block = stylesSource.slice(
+    stylesSource.indexOf(".entry-statement {"),
+    stylesSource.indexOf(".entry-frame .scale-anchors"),
+  );
+  assert.match(block, /font-family: var\(--type-display\)/);
+  // It has to clear the scale beneath it.
+  assert.match(block, /margin: 2rem 0 1\.75rem/);
+  // Every display heading is sentence case.
+  [...data.prelude.steps, data.completion, data.results].forEach((step) => {
+    if (!step.heading) {
+      return;
+    }
+    assert.notEqual(step.heading, step.heading.toUpperCase(), `${step.heading} is shouted`);
+  });
 });
 
 check("hiding an element actually hides it", () => {

@@ -65,9 +65,16 @@
   --trace-architect: #ff8a3d;
   --trace-sentinel: #9b51e0;
 
-  /* ---- measure and rhythm ---- */
-  --measure: 34rem;
-  --measure-wide: 46rem;
+  /*
+   * ---- measure and rhythm ----
+   *
+   * The measure grows with the page instead of staying at one width. On a
+   * phone it is the column; on a laptop it opens out, so the reading does not
+   * sit in a narrow strip with the rest of the display empty. The upper bound
+   * is still a line length that can be read.
+   */
+  --measure: clamp(20rem, 34vw + 8rem, 44rem);
+  --measure-wide: clamp(20rem, 44vw + 8rem, 58rem);
   --gutter: clamp(1.25rem, 5vw, 5rem);
   --rule: 1px;
   --tap: 3rem;
@@ -452,15 +459,14 @@ body[data-aurora="present"] .env-aurora {
   color: var(--signal-live);
 }
 
-/* Available, but never competing with the reading controls. */
+/*
+ * Secondary, not unavailable. A transparent border beside seven outlined
+ * controls read as disabled, so it keeps a border and only steps its ink back
+ * one level.
+ */
 .control-quiet {
-  border-color: transparent;
-  color: var(--mineral-faint);
-}
-
-.control-quiet:hover,
-.control-quiet:focus-visible {
-  border-color: var(--edge);
+  border-color: var(--rime);
+  color: var(--mineral-dim);
 }
 
 /* --------------------------------------------------------------- utility */
@@ -518,14 +524,15 @@ body[data-aurora="present"] .env-aurora {
 /* ----------------------------------------------------------------- story */
 
 /*
- * The reading column is offset rather than centred, but only within a page of
- * a readable width. Past that the whole document centres, so a wide display
- * gets a wide margin instead of two thirds of empty ground on one side.
+ * The reading column is offset within a page of a readable width, and the page
+ * itself centres. The width is set from the measure rather than a round number
+ * so the offset stays proportional to the text instead of drifting away from
+ * it as the display grows.
  */
 .watch {
   position: relative;
   z-index: 1;
-  max-width: 96rem;
+  max-width: calc(var(--measure) + var(--gutter) * 2);
   margin-inline: auto;
   padding: 0 0 14rem;
 }
@@ -604,11 +611,13 @@ body[data-aurora="present"] .env-aurora {
   font-size: var(--step-chapter);
 }
 
-/* Narrative sits in a reading column, offset rather than centred. */
+/*
+ * Narrative sits in a centred reading column. It was offset to one side, which
+ * read as a narrow strip against an empty page once the display was wide.
+ */
 .passage {
   max-width: var(--measure);
-  margin: 0 0 1.5em;
-  margin-left: var(--gutter);
+  margin: 0 auto 1.5em;
   animation: passage-arrive var(--pace) ease both;
 }
 
@@ -653,10 +662,13 @@ body[data-aurora="present"] .env-aurora {
   }
 }
 
-/* As the watch degrades the column tightens and the margin closes in. */
+/*
+ * As the watch degrades the column tightens and the margin closes in. The
+ * tightening is a proportion of the current measure rather than a fixed width,
+ * so it still reads as pressure once the page is wide enough to centre.
+ */
 .watch[data-phase="pressure"] .passage {
-  max-width: 30rem;
-  margin-left: calc(var(--gutter) * 1.6);
+  max-width: calc(var(--measure) * 0.86);
 }
 
 .watch[data-phase="recovery"] .passage {
@@ -682,8 +694,8 @@ body[data-aurora="present"] .env-aurora {
  */
 .observation {
   position: relative;
-  max-width: var(--measure-wide);
-  margin: 4rem 0 5rem var(--gutter);
+  max-width: var(--measure);
+  margin: 4rem auto 5rem;
   padding: 2rem 0 0;
   border-top: var(--rule) solid var(--edge);
 }
@@ -769,8 +781,24 @@ body[data-aurora="present"] .env-aurora {
   margin-top: 1.5rem;
 }
 
+/*
+ * A closed act is a record, not a gap. Once its five observations are in, the
+ * panel collapses to the single line that says so — otherwise it holds the
+ * height of a live question and leaves a hole in the middle of the document.
+ */
 .observation.is-closed {
+  margin-bottom: 2rem;
+  padding-top: 1.25rem;
   opacity: 0.4;
+}
+
+.observation.is-closed .observation-head {
+  margin-bottom: 0;
+}
+
+.observation.is-closed .observation-readout,
+.observation.is-closed .observation-foot {
+  display: none;
 }
 
 .observation.is-closed .responses {
@@ -780,8 +808,8 @@ body[data-aurora="present"] .env-aurora {
 /* ------------------------------------------------------------- completion */
 
 .completion {
-  max-width: var(--measure-wide);
-  margin: 10rem var(--gutter) 0;
+  max-width: var(--measure);
+  margin: 10rem auto 0;
   padding-top: 3rem;
   border-top: var(--rule) solid var(--edge);
 }
@@ -938,15 +966,27 @@ body[data-aurora="present"] .env-aurora {
   margin-top: 2.5rem;
 }
 
+/*
+ * The practice statement is a statement, so it is set the way every other
+ * statement in the watch is set. It also has to clear the scale beneath it:
+ * without the bottom margin the anchors sit directly on its last line.
+ */
 .entry-statement {
   max-width: var(--measure);
-  margin-top: 2rem;
+  margin: 2rem 0 1.75rem;
   padding-left: 1.25rem;
   border-left: var(--rule) solid var(--edge);
-  color: var(--mineral-dim);
-  font-family: var(--type-operational);
-  font-size: var(--step-note);
-  line-height: 1.6;
+  color: var(--mineral);
+  font-family: var(--type-display);
+  font-size: var(--step-lead);
+  line-height: 1.55;
+}
+
+/* Inside the prelude the scale is indented to sit under its statement. */
+.entry-frame .scale-anchors,
+.entry-frame .responses {
+  max-width: var(--measure);
+  margin-left: 1.25rem;
 }
 
 /* ============================================================ dawn report */
@@ -995,19 +1035,35 @@ body.report .art-grain {
 .report-shell {
   position: relative;
   z-index: 1;
+  max-width: calc(var(--measure-wide) + var(--gutter) * 2);
+  margin-inline: auto;
   padding: 0 0 8rem;
+}
+
+/*
+ * The act plate is the one full-bleed moment, so it reaches past the reading
+ * column to the edges of the display.
+ */
+.act-plate,
+.interlude {
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(var(--gutter), calc(50vw - 50% + var(--gutter)));
 }
 
 .report-shell:focus {
   outline: none;
 }
 
+/*
+ * The opening block is sized from its own content with a little air, not from
+ * a share of the viewport. At 82svh a laptop opened on half a screen of empty
+ * paper before the title appeared.
+ */
 .report-masthead {
   display: grid;
-  gap: 2rem;
+  gap: clamp(1.25rem, 3vh, 2rem);
   align-content: end;
-  min-height: 82svh;
-  padding: 6rem var(--gutter) 3rem;
+  padding: clamp(3rem, 9vh, 6rem) var(--gutter) clamp(2rem, 4vh, 3rem);
   border-bottom: 2px solid var(--ink);
 }
 
@@ -1044,7 +1100,6 @@ body.report .art-grain {
   z-index: 10;
   top: 0;
   display: flex;
-  flex-wrap: wrap;
   gap: 0;
   border-bottom: var(--rule) solid var(--paper-line);
   background: var(--paper);
@@ -1052,10 +1107,13 @@ body.report .art-grain {
 
 .pager-tab {
   display: grid;
-  flex: 1 1 9rem;
+  /* Five tabs share one row and shrink together rather than wrapping with the
+     last chapter stranded on a line of its own. */
+  flex: 1 1 0;
   gap: 0.35rem;
+  min-width: 0;
   min-height: var(--tap);
-  padding: 0.9rem 1rem;
+  padding: 0.9rem 0.75rem;
   border: 0;
   border-right: var(--rule) solid var(--paper-line);
   background: transparent;
@@ -1571,13 +1629,10 @@ body.report .action-quiet {
 
   .passage,
   .watch[data-phase="pressure"] .passage,
-  .watch[data-phase="recovery"] .passage {
+  .watch[data-phase="recovery"] .passage,
+  .observation,
+  .completion {
     max-width: none;
-    margin-left: 0;
-  }
-
-  .observation {
-    margin-left: 0;
   }
 
   .watch {
@@ -1598,24 +1653,31 @@ body.report .action-quiet {
 }
 
 /*
- * A phone holds one column and very little of it at a time. The station marks
- * take a line of their own, the controls become one scrollable rail instead of
- * four wrapped rows, and the long vertical rests are cut back so the reader
- * reaches the next passage without a journey.
+ * A phone holds one column and very little of it at a time. The bar is fixed,
+ * so every row it takes is a row taken from every screen: it collapses to a
+ * single line — the Act being read, then one scrollable rail carrying every
+ * control — and the long vertical rests are cut back so the reader reaches the
+ * next passage without a journey.
  */
 @media (max-width: 40rem) {
   .masthead {
-    gap: 0.4rem;
-    padding: 0.6rem var(--gutter) 1.1rem;
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.4rem var(--gutter) 0.9rem;
   }
 
   .masthead-identity {
-    flex: 1 1 100%;
-    justify-content: space-between;
+    flex: 0 0 auto;
+  }
+
+  /* The name is on the plate and in the report; the Act is what is needed here. */
+  #station-mark {
+    display: none;
   }
 
   .masthead-controls {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     flex-wrap: nowrap;
     justify-content: flex-start;
     overflow-x: auto;
@@ -1629,6 +1691,21 @@ body.report .action-quiet {
 
   .masthead-controls > * {
     flex: 0 0 auto;
+  }
+
+  /* The rail scrolls rather than shrinking, so a chapter keeps its name. */
+  .pager-rail {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .pager-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pager-tab {
+    flex: 0 0 auto;
+    min-width: 9.5rem;
   }
 
   .act-plate {

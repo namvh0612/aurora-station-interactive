@@ -708,8 +708,9 @@
       tab.id = `tab-${copy.id}`;
       tab.setAttribute("role", "tab");
       tab.setAttribute("aria-controls", chapter.id);
+      // The chapter index is a Roman numeral, so it is never zero-padded.
       tab.append(
-        el("span", "pager-tab-index", String(copy.index).padStart(2, "0")),
+        el("span", "pager-tab-index", String(copy.index)),
         el("span", "pager-tab-title", copy.title),
       );
       tab.addEventListener("click", () => show(index));

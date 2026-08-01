@@ -147,12 +147,21 @@
     }, QUIET_AFTER_SCROLL);
   }
 
-  /* A short, gentle follow. Never a jump to the bottom of the document. */
+  /*
+   * A short, gentle follow. Never a jump to the bottom of the document.
+   *
+   * When a question is open it is the thing the reader has been brought here
+   * to answer, so the follow resolves on the panel rather than on the passage
+   * that happens to have been revealed last. Otherwise the scroll settles in
+   * the context above and the scale stays below the fold.
+   */
   function follow(node) {
     if (!node || userScrolling) {
       return;
     }
-    const bottom = node.offsetTop + node.offsetHeight;
+    const open = watch.querySelector(".observation:not(.is-closed)");
+    const anchor = open && open.offsetTop >= node.offsetTop ? open : node;
+    const bottom = anchor.offsetTop + anchor.offsetHeight;
     const target = Math.max(
       0,
       Math.min(

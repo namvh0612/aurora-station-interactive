@@ -1903,7 +1903,7 @@ window.AURORA_STATION_DATA = {
       {
         "id": "identity",
         "label": "PRELUDE / 01",
-        "heading": "IDENTIFY THE WATCHKEEPER",
+        "heading": "Identify the watchkeeper",
         "intro": "Aurora Station is placed into unattended mode at dawn. Before the handover is signed, the log needs the name of whoever holds the final overnight watch.",
         "fieldLabel": "WATCHKEEPER NAME",
         "placeholder": "Enter your name",
@@ -1914,7 +1914,7 @@ window.AURORA_STATION_DATA = {
       {
         "id": "calibration",
         "label": "PRELUDE / 02",
-        "heading": "CALIBRATE YOUR RESPONSE",
+        "heading": "Calibrate your response",
         "intro": "Each statement describes how you generally tend to think, feel or behave. Choose how strongly you agree or disagree. Try the scale once here.",
         "statement": "I like to know what is expected of me before I begin something new.",
         "note": "This practice response is not recorded, not scored and not part of the sixty.",
@@ -1924,7 +1924,7 @@ window.AURORA_STATION_DATA = {
       {
         "id": "orientation",
         "label": "PRELUDE / 03",
-        "heading": "BEFORE THE WATCH BEGINS",
+        "heading": "Before the watch begins",
         "intro": "Twelve Acts. Five reflections in each. The story continues from whatever you choose.",
         "guidance": [
           "There are no right or wrong responses.",
@@ -1949,7 +1949,7 @@ window.AURORA_STATION_DATA = {
     "permission": "The official resource grants personal and research use. Confirm separate permission before any commercial use."
   },
   "completion": {
-    "heading": "THE WATCH IS COMPLETE",
+    "heading": "The watch is complete",
     "lines": [
       "All sixty reflections have been recorded.",
       "Your story remains available above."
@@ -1959,7 +1959,7 @@ window.AURORA_STATION_DATA = {
   },
   "results": {
     "eyebrow": "AURORA STATION",
-    "heading": "OBSERVATION REPORT",
+    "heading": "Observation report",
     "classification": "WATCHKEEPER RECORD · NOT A CLINICAL INSTRUMENT",
     "openingTitle": "The watch is complete",
     "openingBridge": "The last signal settles into silence. What remains is not a verdict, but a record of how you moved through uncertainty.",

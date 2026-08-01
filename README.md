@@ -153,6 +153,8 @@ The visual language is a **polar psychological observatory**: near-black polar n
 
 Two font families carry everything: an editorial display serif for narrative, act titles and the report, and a technical mono for labels, readings, timestamps and responses. There are no raster assets and no external font or script hosts; every figure is drawn in `artwork.js`.
 
+The reading column is centred and its measure grows with the page, so the same document reads as one column on a phone and as a centred page on a laptop rather than a narrow strip against empty ground. Act plates are the exception: they run full-bleed to the edges of the display. The measure still tightens through the degraded stretch, as a share of itself.
+
 The aurora is a narrative event, not a background. It is absent through onboarding and the whole early and middle watch, enters at Act 09 when the storm breaks, deepens through the remaining acts, and is gone by the time the report opens.
 
 ### Checks
