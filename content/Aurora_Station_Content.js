@@ -1,7 +1,7 @@
 /* Edit this data file to update the story; no rebuild is required. */
 window.AURORA_STATION_DATA = {
   "schemaVersion": "1.0.0",
-  "contentVersion": "7.0.0-aurora-roles",
+  "contentVersion": "8.0.0-aurora-roles-suitability",
   "id": "aurora-station",
   "title": "Aurora Station",
   "subtitle": "The Final Watch",
@@ -296,71 +296,81 @@ window.AURORA_STATION_DATA = {
       "recovery"
     ],
     "roles": {
-      "thread": {
-        "id": "thread",
-        "name": "Thread",
-        "domain": "agreeableness",
-        "inverse": false,
-        "colour": "#3dcd58",
-        "meaning": "Cooperation, trust, consideration, and maintaining connection",
-        "reading": "keeping people in contact with one another and protecting the working relationship",
-        "contribution": "holds a group together when the work starts to pull people apart"
-      },
-      "horizon": {
-        "id": "horizon",
-        "name": "Horizon",
+      "pathfinder": {
+        "id": "pathfinder",
+        "name": "The Pathfinder",
+        "shortName": "Pathfinder",
         "domain": "openMindedness",
+        "basis": "Open-Mindedness",
         "inverse": false,
         "colour": "#42b4e6",
-        "meaning": "Curiosity, imagination, and reframing possibilities",
-        "reading": "keeping more than one explanation alive and looking for the frame that has not been tried",
-        "contribution": "finds the option a group has not yet considered"
+        "contribution": "Explores possibilities and reframes uncertainty.",
+        "reading": "keeping more than one explanation alive and looking for the route that has not been tried",
+        "inGroup": "finds the option a group has not yet considered"
       },
-      "aegis": {
-        "id": "aegis",
-        "name": "Aegis",
-        "domain": "negativeEmotionality",
-        "inverse": true,
-        "colour": "#9b51e0",
-        "meaning": "Calmness, emotional steadiness, and resistance to destabilisation",
-        "reading": "staying level while the situation moves and keeping your own state out of the problem",
-        "contribution": "gives others something steady to work against when conditions are not steady"
-      },
-      "hearth": {
-        "id": "hearth",
-        "name": "Hearth",
+      "catalyst": {
+        "id": "catalyst",
+        "name": "The Catalyst",
+        "shortName": "Catalyst",
         "domain": "extraversion",
+        "basis": "Extraversion",
         "inverse": false,
         "colour": "#ef5b7a",
-        "meaning": "Social engagement, visible energy, and activating others",
+        "contribution": "Creates momentum and mobilises others.",
         "reading": "putting energy into the room and making your engagement visible to the people in it",
-        "contribution": "raises the level of a room when the work needs momentum"
+        "inGroup": "raises the level of a room when the work needs momentum"
       },
-      "forge": {
-        "id": "forge",
-        "name": "Forge",
+      "steward": {
+        "id": "steward",
+        "name": "The Steward",
+        "shortName": "Steward",
+        "domain": "agreeableness",
+        "basis": "Agreeableness",
+        "inverse": false,
+        "colour": "#3dcd58",
+        "contribution": "Maintains trust, cooperation and human connection.",
+        "reading": "keeping people in contact with one another and protecting the working relationship",
+        "inGroup": "holds a group together when the work starts to pull people apart"
+      },
+      "architect": {
+        "id": "architect",
+        "name": "The Architect",
+        "shortName": "Architect",
         "domain": "conscientiousness",
+        "basis": "Conscientiousness",
         "inverse": false,
         "colour": "#ff8a3d",
-        "meaning": "Structure, persistence, responsibility, and dependable execution",
+        "contribution": "Creates structure and dependable execution.",
         "reading": "holding sequence and finishing what the situation started",
-        "contribution": "turns an intention into something that actually gets carried through"
+        "inGroup": "turns an intention into something that actually gets carried through"
+      },
+      "sentinel": {
+        "id": "sentinel",
+        "name": "The Sentinel",
+        "shortName": "Sentinel",
+        "domain": "negativeEmotionality",
+        "basis": "Emotional Stability",
+        "inverse": true,
+        "colour": "#9b51e0",
+        "contribution": "Maintains calm, awareness and resilience under pressure.",
+        "reading": "staying level while the situation moves and keeping your own state out of the problem",
+        "inGroup": "gives others something steady to work against when conditions are not steady"
       }
     },
     "roleOrder": [
-      "thread",
-      "horizon",
-      "aegis",
-      "hearth",
-      "forge"
+      "pathfinder",
+      "catalyst",
+      "steward",
+      "architect",
+      "sentinel"
     ],
-    "roleNote": "The five roles are independent tendencies on the same one-to-five scale. They are not shares of a fixed personality, they do not total anything, and no role is better than another.",
+    "roleNote": "Aurora Roles are mission contributions derived from your BFI-2 profile. They are not fixed personality types. All five sit on the same one-to-five scale, they do not total anything, and no role is better than another.",
     "roleMapping": {
-      "Thread": "Agreeableness",
-      "Horizon": "Open-Mindedness",
-      "Aegis": "6 - Negative Emotionality",
-      "Hearth": "Extraversion",
-      "Forge": "Conscientiousness"
+      "The Pathfinder": "Open-Mindedness",
+      "The Catalyst": "Extraversion",
+      "The Steward": "Agreeableness",
+      "The Architect": "Conscientiousness",
+      "The Sentinel": "6 - Negative Emotionality"
     },
     "shiftThresholds": {
       "ignore": 0.25,
@@ -368,6 +378,19 @@ window.AURORA_STATION_DATA = {
       "notable": 0.5,
       "blend": 0.15,
       "secondary": 0.3
+    },
+    "suitability": {
+      "formula": "0.60 * overallRoleScore + 0.25 * pressureRoleScore + 0.15 * facetFloor",
+      "weights": {
+        "overall": 0.6,
+        "pressure": 0.25,
+        "facetFloor": 0.15
+      },
+      "facetFloorNote": "The lowest supporting facet score for that role, so a strong average cannot hide an unsupported component.",
+      "recommendedFormula": "Profile Suitability + Team Composition + Mission Requirement",
+      "recommendedNote": "Profile suitability describes the fit your own responses support. A recommended role also depends on what the team already has and what the mission needs, neither of which a solo journey can know.",
+      "tieTolerance": 0.15,
+      "stableChange": 0.25
     }
   },
   "story": {
@@ -1819,11 +1842,14 @@ window.AURORA_STATION_DATA = {
         "label": "Your Aurora Roles",
         "shortLabel": "Roles",
         "title": "Your Aurora Roles",
-        "intro": "Five independent tendencies, each on the same one-to-five scale. They are read together, not ranked against one another.",
-        "tableCaption": "Aurora Role scores from all sixty responses",
-        "overallLabel": "Most available across the watch",
+        "intro": "Five mission contributions drawn from your profile, each on the same one-to-five scale. They are read together, not ranked against one another.",
+        "tableCaption": "Aurora Role scores and profile suitability from all sixty responses",
+        "overallLabel": "Strongest profile fit",
         "secondaryLabel": "Close alongside it",
-        "blendNote": "These two sat within 0.15 of each other, so they are read as a blend rather than a single role."
+        "blendNote": "These two fall inside the tie tolerance, so they are shown as a blend rather than a single role.",
+        "suitabilityLabel": "Profile suitability",
+        "facetFloorLabel": "Facet floor",
+        "recommendedNote": "This is the role your own profile best supports. A recommended role would also weigh what the team already has and what the mission requires."
       },
       {
         "id": "pressure",
@@ -1888,6 +1914,37 @@ window.AURORA_STATION_DATA = {
       "recoveryRetained": "Once the pressure eased, the adjustment mostly stayed.",
       "recoveryNew": "Once the pressure eased, the pattern settled somewhere new.",
       "contribution": "In a group, a pattern like this tends to {contribution}. That is a contribution rather than a role you must occupy: it describes what other people are likely to be able to rely on from you, and it says nothing about what you are unable to do. The tendencies that sat lower here are not deficits, and they can be deliberately reached for when a situation calls for them."
+    },
+    "radar": {
+      "heading": "How your contributions shift with context",
+      "intro": "One chart, three moments. The axes never move; only the distance along each axis changes.",
+      "states": [
+        {
+          "id": "baseline",
+          "label": "Starting",
+          "phase": "baseline"
+        },
+        {
+          "id": "pressure",
+          "label": "Under Pressure",
+          "phase": "pressure"
+        },
+        {
+          "id": "recovery",
+          "label": "After Pressure",
+          "phase": "recovery"
+        }
+      ],
+      "ghostLabel": "Previous state",
+      "tableCaption": "Aurora Role scores and change from the previous state",
+      "stableLabel": "stable",
+      "columns": {
+        "role": "Role",
+        "score": "Score",
+        "change": "Change",
+        "previous": "Previous"
+      },
+      "note": "This shows how the contributions available to you shift with context. It does not show your personality changing into another type."
     }
   }
 };

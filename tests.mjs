@@ -333,36 +333,40 @@ check("no response is imputed and invalid values are rejected", () => {
 
 check("the five roles map onto the five domains as specified", () => {
   assert.deepEqual(data.assessment.roleOrder, [
-    "thread",
-    "horizon",
-    "aegis",
-    "hearth",
-    "forge",
+    "pathfinder",
+    "catalyst",
+    "steward",
+    "architect",
+    "sentinel",
   ]);
   assert.deepEqual(data.assessment.roleMapping, {
-    Thread: "Agreeableness",
-    Horizon: "Open-Mindedness",
-    Aegis: "6 - Negative Emotionality",
-    Hearth: "Extraversion",
-    Forge: "Conscientiousness",
+    "The Pathfinder": "Open-Mindedness",
+    "The Catalyst": "Extraversion",
+    "The Steward": "Agreeableness",
+    "The Architect": "Conscientiousness",
+    "The Sentinel": "6 - Negative Emotionality",
   });
 
   const expected = {
-    thread: { domain: "agreeableness", inverse: false, colour: "#3dcd58" },
-    horizon: { domain: "openMindedness", inverse: false, colour: "#42b4e6" },
-    aegis: { domain: "negativeEmotionality", inverse: true, colour: "#9b51e0" },
-    hearth: { domain: "extraversion", inverse: false, colour: "#ef5b7a" },
-    forge: { domain: "conscientiousness", inverse: false, colour: "#ff8a3d" },
+    pathfinder: { domain: "openMindedness", inverse: false, basis: "Open-Mindedness" },
+    catalyst: { domain: "extraversion", inverse: false, basis: "Extraversion" },
+    steward: { domain: "agreeableness", inverse: false, basis: "Agreeableness" },
+    architect: { domain: "conscientiousness", inverse: false, basis: "Conscientiousness" },
+    sentinel: { domain: "negativeEmotionality", inverse: true, basis: "Emotional Stability" },
   };
   Object.entries(expected).forEach(([id, definition]) => {
     const role = data.assessment.roles[id];
     assert.equal(role.domain, definition.domain, `${id} domain`);
     assert.equal(role.inverse, definition.inverse, `${id} inverse`);
-    assert.equal(role.colour, definition.colour, `${id} colour`);
+    assert.equal(role.basis, definition.basis, `${id} basis`);
+    assert.ok(role.contribution, `${id} contribution`);
+    assert.match(role.colour, /^#[0-9a-f]{6}$/i, `${id} colour`);
   });
+  // Roles are contributions, not types.
+  assert.match(data.assessment.roleNote, /not fixed personality types/i);
 });
 
-check("Aegis is the inverse of Negative Emotionality and others are direct", () => {
+check("Sentinel inverts Negative Emotionality and the others are direct", () => {
   const profile = core.scoreProfile(
     data,
     answerAll((index, item) =>
@@ -374,13 +378,125 @@ check("Aegis is the inverse of Negative Emotionality and others are direct", () 
     profile.domains.map((domain) => [domain.code, domain.score]),
   );
   assert.equal(domains.negativeEmotionality, 5);
-  assert.equal(byId.aegis, 1, "6 - 5");
-  assert.equal(byId.thread, domains.agreeableness);
-  assert.equal(byId.horizon, domains.openMindedness);
-  assert.equal(byId.hearth, domains.extraversion);
-  assert.equal(byId.forge, domains.conscientiousness);
+  assert.equal(byId.sentinel, 1, "6 - 5");
+  assert.equal(byId.steward, domains.agreeableness);
+  assert.equal(byId.pathfinder, domains.openMindedness);
+  assert.equal(byId.catalyst, domains.extraversion);
+  assert.equal(byId.architect, domains.conscientiousness);
   assert.equal(core.roleScoreFor({ inverse: true }, 2), 4);
   assert.equal(core.roleScoreFor({ inverse: false }, 2), 2);
+});
+
+check("the facet floor is the lowest supporting facet, inverted for Sentinel", () => {
+  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
+  const facets = Object.fromEntries(
+    profile.facets.map((facet) => [facet.name, facet.score]),
+  );
+
+  profile.roles.forEach((role) => {
+    const names = data.assessment.domains[role.domain].facets;
+    const supporting = names.map((name) =>
+      role.inverse ? 6 - facets[name] : facets[name],
+    );
+    assert.equal(role.facetFloor, Math.min(...supporting), `${role.shortName} floor`);
+    // The floor can never exceed the role's own score.
+    assert.ok(role.facetFloor <= role.score + 1e-9, `${role.shortName} floor above score`);
+  });
+
+  const sentinel = profile.roles.find((role) => role.id === "sentinel");
+  const neFacets = data.assessment.domains.negativeEmotionality.facets.map(
+    (name) => facets[name],
+  );
+  assert.equal(sentinel.facetFloor, 6 - Math.max(...neFacets));
+});
+
+check("profile suitability weights overall, pressure and the facet floor", () => {
+  const weights = data.assessment.suitability.weights;
+  assert.deepEqual(weights, { overall: 0.6, pressure: 0.25, facetFloor: 0.15 });
+  assert.match(
+    data.assessment.suitability.formula,
+    /0\.60 \* overallRoleScore \+ 0\.25 \* pressureRoleScore \+ 0\.15 \* facetFloor/,
+  );
+
+  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
+  profile.roles.forEach((role) => {
+    const expected =
+      weights.overall * role.score +
+      weights.pressure * role.pressureScore +
+      weights.facetFloor * role.facetFloor;
+    assert.ok(
+      Math.abs(role.profileSuitability - expected) < 1e-9,
+      `${role.shortName} ${role.profileSuitability} vs ${expected}`,
+    );
+    assert.ok(role.profileSuitability >= 1 && role.profileSuitability <= 5);
+  });
+});
+
+check("a low facet floor pulls suitability below the domain average", () => {
+  // One facet of Conscientiousness answered low, the rest high.
+  const state = answerAll((index, item) => {
+    if (item.domain !== "conscientiousness") {
+      return 3;
+    }
+    const low = item.facet === "Organization";
+    return low ? (item.reverse ? 5 : 1) : item.reverse ? 1 : 5;
+  });
+  const profile = core.scoreProfile(data, state);
+  const architect = profile.roles.find((role) => role.id === "architect");
+  assert.ok(architect.facetFloor < architect.score, "floor should be the weak facet");
+  assert.ok(
+    architect.profileSuitability < architect.score,
+    "an unsupported component must reduce suitability",
+  );
+});
+
+check("the recommendation combines suitability, team and mission", () => {
+  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
+  const solo = core.recommendRole(data, profile.roles);
+  assert.deepEqual(solo.inputs, {
+    profileSuitability: true,
+    teamComposition: false,
+    missionRequirement: false,
+  });
+  assert.equal(solo.complete, false, "a solo journey cannot know team or mission");
+  assert.ok(solo.leading.primary);
+
+  // Team and mission demand can move the recommendation off the best fit.
+  const demand = Object.fromEntries(
+    data.assessment.roleOrder.map((id) => [id, id === "pathfinder" ? 5 : 1]),
+  );
+  const group = core.recommendRole(data, profile.roles, {
+    teamComposition: demand,
+    missionRequirement: demand,
+  });
+  assert.equal(group.complete, true);
+  assert.equal(group.leading.primary.id, "pathfinder");
+  assert.match(
+    data.assessment.suitability.recommendedFormula,
+    /Profile Suitability \+ Team Composition \+ Mission Requirement/,
+  );
+});
+
+check("ties are never broken by array order", () => {
+  const tied = data.assessment.roleOrder.map((id, index) => ({
+    id,
+    name: data.assessment.roles[id].name,
+    shortName: data.assessment.roles[id].shortName,
+    profileSuitability: 4,
+    facetFloor: index === 3 ? 5 : 2,
+  }));
+
+  const lead = core.leadingRoles(data, tied, "profileSuitability");
+  // Architect sits fourth in the array but has the only supported floor.
+  assert.equal(lead.ranked[0].id, "architect");
+
+  // Reversing the input must not change the outcome.
+  const reversed = core.leadingRoles(data, tied.slice().reverse(), "profileSuitability");
+  assert.equal(reversed.ranked[0].id, "architect");
+  assert.deepEqual(
+    lead.ranked.map((role) => role.id),
+    reversed.ranked.map((role) => role.id),
+  );
 });
 
 check("role scores stay on the 1-5 scale and never total", () => {
@@ -395,17 +511,19 @@ check("role scores stay on the 1-5 scale and never total", () => {
   });
 });
 
-check("a near tie produces a blend of exactly two roles", () => {
+check("a tie inside the configured tolerance produces a blend of two", () => {
+  const tolerance = data.assessment.suitability.tieTolerance;
+  assert.equal(tolerance, 0.15);
   const roles = [
-    { id: "a", name: "Thread", score: 4.1, normalised: 0.775 },
-    { id: "b", name: "Forge", score: 4.0, normalised: 0.75 },
-    { id: "c", name: "Aegis", score: 3.2, normalised: 0.55 },
-    { id: "d", name: "Hearth", score: 2.0, normalised: 0.25 },
-    { id: "e", name: "Horizon", score: 1.5, normalised: 0.125 },
+    { id: "a", name: "The Steward", shortName: "Steward", score: 4.1 },
+    { id: "b", name: "The Architect", shortName: "Architect", score: 4.0 },
+    { id: "c", name: "The Sentinel", shortName: "Sentinel", score: 3.2 },
+    { id: "d", name: "The Catalyst", shortName: "Catalyst", score: 2.0 },
+    { id: "e", name: "The Pathfinder", shortName: "Pathfinder", score: 1.5 },
   ];
   const blend = core.leadingRoles(data, roles);
   assert.equal(blend.isBlend, true);
-  assert.equal(blend.label, "Thread + Forge");
+  assert.equal(blend.label, "Steward + Architect");
   assert.equal(blend.blended.length, 2);
 
   // A flat profile is a flat profile, not a five-way blend.
@@ -414,21 +532,28 @@ check("a near tie produces a blend of exactly two roles", () => {
     roles.map((role) => ({ ...role, score: 3 })),
   );
   assert.equal(flat.blended.length, 2);
+
+  // Just outside the tolerance is a single role.
+  const single = core.leadingRoles(
+    data,
+    roles.map((role, index) => ({ ...role, score: index === 0 ? 4.2 : role.score })),
+  );
+  assert.equal(single.isBlend, false);
 });
 
 check("a secondary role is offered only within 0.30", () => {
   const base = [
-    { id: "a", name: "Thread", score: 4.5 },
-    { id: "b", name: "Forge", score: 4.2 },
-    { id: "c", name: "Aegis", score: 2.0 },
+    { id: "a", name: "The Steward", shortName: "Steward", score: 4.5 },
+    { id: "b", name: "The Architect", shortName: "Architect", score: 4.2 },
+    { id: "c", name: "The Sentinel", shortName: "Sentinel", score: 2.0 },
   ];
   const close = core.leadingRoles(data, base);
   assert.equal(close.isBlend, false);
-  assert.equal(close.secondary.name, "Forge");
+  assert.equal(close.secondary.shortName, "Architect");
 
   const far = core.leadingRoles(data, [
-    { id: "a", name: "Thread", score: 4.5 },
-    { id: "b", name: "Forge", score: 4.0 },
+    { id: "a", name: "The Steward", shortName: "Steward", score: 4.5 },
+    { id: "b", name: "The Architect", shortName: "Architect", score: 4.0 },
   ]);
   assert.equal(far.secondary, null);
 });
@@ -480,10 +605,11 @@ check("phase scores are calculated separately from the full profile", () => {
         : 3,
     ),
   );
-  const forge = (phase) => phase.roles.find((role) => role.id === "forge").score;
-  assert.equal(forge(profile.phases[0]), 3, "baseline untouched");
-  assert.equal(forge(profile.phases[1]), 5, "pressure raised");
-  assert.equal(forge(profile.phases[2]), 3, "recovery untouched");
+  const architect = (phase) =>
+    phase.roles.find((role) => role.id === "architect").score;
+  assert.equal(architect(profile.phases[0]), 3, "baseline untouched");
+  assert.equal(architect(profile.phases[1]), 5, "pressure raised");
+  assert.equal(architect(profile.phases[2]), 3, "recovery untouched");
   profile.phases.forEach((phase) => assert.equal(phase.definitive, true));
 });
 
@@ -1011,6 +1137,40 @@ check("the results page offers six navigable views", () => {
   const duration = Number(stylesSource.match(/--transition-view: (\d+)ms/)[1]);
   assert.ok(duration >= 220 && duration <= 300, `transition is ${duration}ms`);
   assert.match(stylesSource.slice(stylesSource.indexOf("@media (prefers-reduced-motion")), /\.results-view \{?[\s\S]{0,80}animation: none/);
+});
+
+check("the radar offers three states on a fixed scale with fixed axes", () => {
+  const radar = data.results.radar;
+  assert.deepEqual(
+    radar.states.map((state) => state.label),
+    ["Starting", "Under Pressure", "After Pressure"],
+  );
+  assert.deepEqual(
+    radar.states.map((state) => state.phase),
+    ["baseline", "pressure", "recovery"],
+  );
+  assert.equal(data.assessment.suitability.stableChange, 0.25);
+
+  // Fixed positions: the axis order comes straight from the role order and is
+  // never sorted or rotated at render time.
+  assert.match(resultsSource, /const order = data\.assessment\.roleOrder/);
+  assert.doesNotMatch(resultsSource, /order\.slice\(\)\.sort|order\.sort\(/);
+  assert.doesNotMatch(resultsSource, /rotate/);
+
+  // Rings are whole scale points, so the chart cannot imply a zero origin.
+  assert.match(resultsSource, /\[2, 3, 4, 5\]\.forEach/);
+  assert.match(resultsSource, /core\.MIN_RESPONSE\) \/ \(core\.MAX_RESPONSE - core\.MIN_RESPONSE\)/);
+
+  // Only the radius is interpolated, so a vertex can only move along its axis.
+  assert.match(resultsSource, /value \+ \(target\[index\] - value\) \* eased/);
+  assert.match(resultsSource, /radar-ghost/);
+  assert.match(resultsSource, /prefersReducedMotion\(\)/);
+  assert.match(resultsSource, /radar-tooltip/);
+  assert.match(resultsSource, /radar-table/);
+  assert.match(resultsSource, /stableLabel/);
+  // No percentages anywhere in the radar copy.
+  assert.doesNotMatch(JSON.stringify(radar), /%|percent/i);
+  assert.match(radar.note, /does not show your personality changing/i);
 });
 
 check("the results copy stays neutral and non-diagnostic", () => {

@@ -108,105 +108,319 @@
   /* --------------------------------------------------------------- charts */
 
   /*
-   * A five-axis radial chart on a fixed 1-to-5 scale. The rings are the scale
-   * points, so the shape can never imply a zero origin, and the exact scores
-   * are always available in the table beneath it.
+   * One five-axis radar on a fixed 1-to-5 scale, with three selectable states.
+   * The axes never move and never reorder: only the distance along each axis
+   * changes, so a shift reads as a contribution becoming more or less
+   * available rather than a personality turning into a different one.
    */
-  function buildRoleChart(roles, label) {
-    const ns = "http://www.w3.org/2000/svg";
-    const size = 380;
-    const centre = size / 2;
-    const radius = 104;
-    const svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", `-26 -12 ${size + 52} ${size + 28}`);
-    svg.classList.add("role-chart");
-    svg.setAttribute("role", "img");
-    svg.setAttribute(
-      "aria-label",
-      `${label} Each role is scored from one to five. ${roles
-        .map((role) => `${role.name} ${scoreText(role.score)}`)
-        .join(". ")}.`,
-    );
+  const RADAR_SIZE = 420;
+  const RADAR_CENTRE = RADAR_SIZE / 2;
+  const RADAR_RADIUS = 132;
+  const RADAR_DURATION = 620;
 
-    const angleFor = (index) => (Math.PI * 2 * index) / roles.length - Math.PI / 2;
-    const pointFor = (index, ratio) => ({
-      x: centre + Math.cos(angleFor(index)) * radius * ratio,
-      y: centre + Math.sin(angleFor(index)) * radius * ratio,
+  function radarPoint(index, count, ratio) {
+    const angle = (Math.PI * 2 * index) / count - Math.PI / 2;
+    return {
+      x: RADAR_CENTRE + Math.cos(angle) * RADAR_RADIUS * ratio,
+      y: RADAR_CENTRE + Math.sin(angle) * RADAR_RADIUS * ratio,
+    };
+  }
+
+  function radarPoints(ratios) {
+    return ratios
+      .map((ratio, index) => {
+        const point = radarPoint(index, ratios.length, ratio);
+        return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
+      })
+      .join(" ");
+  }
+
+  function buildRoleRadar() {
+    const ns = "http://www.w3.org/2000/svg";
+    const copy = data.results.radar;
+    const order = data.assessment.roleOrder;
+    const stable = data.assessment.suitability.stableChange;
+
+    // One entry per selectable state, in story order.
+    const states = copy.states.map((state) => {
+      const phase = profile.phases.find((entry) => entry.id === state.phase);
+      const roles = order.map((id) => phase.roles.find((role) => role.id === id));
+      return { ...state, phase, roles };
     });
 
-    // One ring per scale point: 2, 3, 4 and 5.
-    [0.25, 0.5, 0.75, 1].forEach((ratio, step) => {
+    const wrap = element("div", "radar-wrap");
+
+    /* ---- the switcher ---- */
+    const switcher = element("div", "radar-states");
+    switcher.setAttribute("role", "tablist");
+    switcher.setAttribute("aria-label", copy.heading);
+
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", `-34 -20 ${RADAR_SIZE + 68} ${RADAR_SIZE + 44}`);
+    svg.classList.add("role-radar");
+    svg.setAttribute("role", "img");
+
+    // Scale rings at every whole score from 2 to 5. Value 1 is the centre, so
+    // the chart can never imply a zero origin.
+    [2, 3, 4, 5].forEach((value) => {
+      const ratio = (value - core.MIN_RESPONSE) / (core.MAX_RESPONSE - core.MIN_RESPONSE);
       const ring = document.createElementNS(ns, "polygon");
-      ring.setAttribute(
-        "points",
-        roles
-          .map((_, index) => {
-            const point = pointFor(index, ratio);
-            return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
-          })
-          .join(" "),
-      );
-      ring.setAttribute("class", "chart-ring");
+      ring.setAttribute("points", radarPoints(order.map(() => ratio)));
+      ring.setAttribute("class", value === core.MAX_RESPONSE ? "radar-ring radar-ring-outer" : "radar-ring");
       svg.appendChild(ring);
 
       const tick = document.createElementNS(ns, "text");
-      tick.setAttribute("x", (centre + 4).toFixed(1));
-      tick.setAttribute("y", (centre - radius * ratio + 3).toFixed(1));
-      tick.setAttribute("class", "chart-scale");
-      tick.textContent = String(step + 2);
+      const top = radarPoint(0, order.length, ratio);
+      tick.setAttribute("x", (top.x + 6).toFixed(1));
+      tick.setAttribute("y", (top.y + 4).toFixed(1));
+      tick.setAttribute("class", "radar-tick");
+      tick.textContent = String(value);
       svg.appendChild(tick);
     });
 
-    roles.forEach((_, index) => {
+    order.forEach((id, index) => {
+      const outer = radarPoint(index, order.length, 1);
       const spoke = document.createElementNS(ns, "line");
-      const outer = pointFor(index, 1);
-      spoke.setAttribute("x1", String(centre));
-      spoke.setAttribute("y1", String(centre));
+      spoke.setAttribute("x1", String(RADAR_CENTRE));
+      spoke.setAttribute("y1", String(RADAR_CENTRE));
       spoke.setAttribute("x2", outer.x.toFixed(1));
       spoke.setAttribute("y2", outer.y.toFixed(1));
-      spoke.setAttribute("class", "chart-spoke");
+      spoke.setAttribute("class", "radar-spoke");
+      spoke.style.setProperty("--role-colour", data.assessment.roles[id].colour);
       svg.appendChild(spoke);
     });
 
+    // The previous state, kept as a thin translucent outline.
+    const ghost = document.createElementNS(ns, "polygon");
+    ghost.setAttribute("class", "radar-ghost");
+    ghost.setAttribute("points", radarPoints(order.map(() => 0)));
+    ghost.setAttribute("aria-hidden", "true");
+    svg.appendChild(ghost);
+
     const shape = document.createElementNS(ns, "polygon");
-    shape.setAttribute(
-      "points",
-      roles
-        .map((role, index) => {
-          const point = pointFor(index, Math.max(0.04, role.normalised));
-          return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
-        })
-        .join(" "),
-    );
-    shape.setAttribute("class", "chart-shape");
+    shape.setAttribute("class", "radar-shape");
     svg.appendChild(shape);
 
-    roles.forEach((role, index) => {
-      const point = pointFor(index, Math.max(0.04, role.normalised));
+    const dots = order.map((id, index) => {
       const dot = document.createElementNS(ns, "circle");
-      dot.setAttribute("cx", point.x.toFixed(1));
-      dot.setAttribute("cy", point.y.toFixed(1));
-      dot.setAttribute("r", "5");
-      dot.setAttribute("fill", colourFor(role));
+      dot.setAttribute("r", "6");
+      dot.setAttribute("class", "radar-dot");
+      dot.setAttribute("fill", data.assessment.roles[id].colour);
       svg.appendChild(dot);
-
-      const text = document.createElementNS(ns, "text");
-      const anchor = pointFor(index, 1.24);
-      text.setAttribute("x", anchor.x.toFixed(1));
-      text.setAttribute("y", anchor.y.toFixed(1));
-      text.setAttribute("class", "chart-label");
-      text.setAttribute(
-        "text-anchor",
-        Math.abs(anchor.x - centre) < 12 ? "middle" : anchor.x > centre ? "start" : "end",
-      );
-      text.textContent = role.name;
-      svg.appendChild(text);
+      return { id, index, node: dot };
     });
 
-    return svg;
+    order.forEach((id, index) => {
+      const label = document.createElementNS(ns, "text");
+      const anchor = radarPoint(index, order.length, 1.2);
+      label.setAttribute("x", anchor.x.toFixed(1));
+      label.setAttribute("y", anchor.y.toFixed(1));
+      label.setAttribute("class", "radar-label");
+      label.setAttribute(
+        "text-anchor",
+        Math.abs(anchor.x - RADAR_CENTRE) < 12
+          ? "middle"
+          : anchor.x > RADAR_CENTRE
+            ? "start"
+            : "end",
+      );
+      label.textContent = data.assessment.roles[id].shortName;
+      svg.appendChild(label);
+    });
+
+    /* ---- axis cards: exact score and signed change on hover or focus ---- */
+    const cards = element("div", "radar-axes");
+    const cardsById = {};
+    order.forEach((id) => {
+      const role = data.assessment.roles[id];
+      const card = element("button", "radar-axis");
+      card.type = "button";
+      card.style.setProperty("--role-colour", role.colour);
+      const tooltipId = `radar-tip-${id}`;
+      card.setAttribute("aria-describedby", tooltipId);
+
+      const swatch = element("span", "role-swatch");
+      swatch.setAttribute("aria-hidden", "true");
+      const name = element("span", "radar-axis-name", role.shortName);
+      const score = element("span", "radar-axis-score", "—");
+      const delta = element("span", "radar-axis-delta", "");
+      const tooltip = element("span", "radar-tooltip");
+      tooltip.id = tooltipId;
+      tooltip.setAttribute("role", "tooltip");
+
+      card.append(swatch, name, score, delta, tooltip);
+      cards.appendChild(card);
+      cardsById[id] = { card, score, delta, tooltip };
+    });
+
+    /* ---- the score and change table ---- */
+    const table = element("table", "radar-table");
+    table.appendChild(element("caption", "", copy.tableCaption));
+    const head = element("thead");
+    const headRow = element("tr");
+    headRow.append(
+      element("th", "", copy.columns.role),
+      element("th", "", copy.columns.previous),
+      element("th", "", copy.columns.score),
+      element("th", "", copy.columns.change),
+    );
+    head.appendChild(headRow);
+    const tbody = element("tbody");
+    const rowsById = {};
+    order.forEach((id) => {
+      const role = data.assessment.roles[id];
+      const row = element("tr");
+      const nameCell = element("td");
+      const name = element("span", "role-name");
+      const swatch = element("span", "role-swatch");
+      swatch.setAttribute("aria-hidden", "true");
+      swatch.style.setProperty("--role-colour", role.colour);
+      name.append(swatch, role.shortName);
+      nameCell.appendChild(name);
+      const previous = element("td", "numeric");
+      const current = element("td", "numeric role-score");
+      const change = element("td", "numeric");
+      row.append(nameCell, previous, current, change);
+      tbody.appendChild(row);
+      rowsById[id] = { previous, current, change };
+    });
+    table.append(head, tbody);
+
+    /* ---- state handling ---- */
+    let activeIndex = 0;
+    let animation = 0;
+    let currentRatios = states[0].roles.map((role) => role.normalised);
+
+    const describeChange = (delta) => {
+      if (delta === null) {
+        return { text: "—", label: "no previous state", stable: true };
+      }
+      if (Math.abs(delta) < stable) {
+        return { text: copy.stableLabel, label: copy.stableLabel, stable: true };
+      }
+      const text = `${delta > 0 ? "+" : "−"}${Math.abs(delta).toFixed(2)}`;
+      return { text, label: `${delta > 0 ? "up" : "down"} ${Math.abs(delta).toFixed(2)}`, stable: false };
+    };
+
+    const paint = (ratios) => {
+      shape.setAttribute("points", radarPoints(ratios));
+      dots.forEach((dot, index) => {
+        const point = radarPoint(index, ratios.length, ratios[index]);
+        dot.node.setAttribute("cx", point.x.toFixed(1));
+        dot.node.setAttribute("cy", point.y.toFixed(1));
+      });
+    };
+
+    // Each vertex travels along its own axis only: the radius is interpolated,
+    // the angle never is.
+    const animateTo = (target) => {
+      window.cancelAnimationFrame(animation);
+      if (prefersReducedMotion()) {
+        currentRatios = target.slice();
+        paint(currentRatios);
+        return;
+      }
+      const from = currentRatios.slice();
+      const started = performance.now();
+      const step = (now) => {
+        const progress = Math.min(1, (now - started) / RADAR_DURATION);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        currentRatios = from.map((value, index) => value + (target[index] - value) * eased);
+        paint(currentRatios);
+        if (progress < 1) {
+          animation = window.requestAnimationFrame(step);
+        }
+      };
+      animation = window.requestAnimationFrame(step);
+    };
+
+    const setState = (index, options) => {
+      const settings = options || {};
+      activeIndex = Math.max(0, Math.min(index, states.length - 1));
+      const state = states[activeIndex];
+      const earlier = activeIndex > 0 ? states[activeIndex - 1] : null;
+
+      switcher.querySelectorAll(".radar-state").forEach((button, position) => {
+        const selected = position === activeIndex;
+        button.setAttribute("aria-selected", String(selected));
+        button.tabIndex = selected ? 0 : -1;
+        button.classList.toggle("is-selected", selected);
+      });
+
+      ghost.setAttribute(
+        "points",
+        earlier ? radarPoints(earlier.roles.map((role) => role.normalised)) : radarPoints(state.roles.map(() => 0)),
+      );
+      ghost.style.opacity = earlier ? "1" : "0";
+
+      state.roles.forEach((role, index) => {
+        const before = earlier ? earlier.roles[index].score : null;
+        const delta = before === null ? null : role.score - before;
+        const change = describeChange(delta);
+        const entry = cardsById[role.id];
+        entry.score.textContent = outOfFive(role.score);
+        entry.delta.textContent = change.text;
+        entry.delta.dataset.stable = String(change.stable);
+        entry.tooltip.textContent = earlier
+          ? `${role.name}: ${scoreText(role.score)} of ${core.MAX_RESPONSE}, ${change.label} from ${earlier.label} (${scoreText(before)}).`
+          : `${role.name}: ${scoreText(role.score)} of ${core.MAX_RESPONSE} at ${state.label}.`;
+
+        const row = rowsById[role.id];
+        row.previous.textContent = before === null ? "—" : scoreText(before);
+        row.current.textContent = outOfFive(role.score);
+        row.change.textContent = change.text;
+        row.change.dataset.stable = String(change.stable);
+      });
+
+      svg.setAttribute(
+        "aria-label",
+        `${copy.heading}. ${state.label}. Each role is scored from one to five. ${state.roles
+          .map((role) => `${role.shortName} ${scoreText(role.score)}`)
+          .join(". ")}.`,
+      );
+
+      animateTo(state.roles.map((role) => role.normalised));
+      if (settings.announce) {
+        announce(`${state.label}. ${state.roles.map((role) => `${role.shortName} ${scoreText(role.score)}`).join(", ")}.`);
+      }
+    };
+
+    states.forEach((state, index) => {
+      const button = element("button", "radar-state", state.label);
+      button.type = "button";
+      button.setAttribute("role", "tab");
+      button.setAttribute("aria-selected", String(index === 0));
+      button.tabIndex = index === 0 ? 0 : -1;
+      button.addEventListener("click", () => setState(index, { announce: true }));
+      button.addEventListener("keydown", (event) => {
+        const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+        if (!step) {
+          return;
+        }
+        event.preventDefault();
+        const next = (index + step + states.length) % states.length;
+        setState(next, { announce: true });
+        switcher.querySelectorAll(".radar-state")[next].focus();
+      });
+      switcher.appendChild(button);
+    });
+
+    wrap.append(
+      switcher,
+      element("p", "view-intro", copy.intro),
+      svg,
+      cards,
+      table,
+      element("p", "radar-note", copy.note),
+    );
+
+    paint(currentRatios);
+    setState(0);
+    return wrap;
   }
 
   function roleTable(roles, caption) {
+    const copy = viewCopy("roles");
     const table = element("table", "role-table");
     table.appendChild(element("caption", "", caption));
 
@@ -215,6 +429,8 @@
     headRow.append(
       element("th", "", "Role"),
       element("th", "", `Score / ${core.MAX_RESPONSE}`),
+      element("th", "", copy.facetFloorLabel),
+      element("th", "", copy.suitabilityLabel),
     );
     head.appendChild(headRow);
 
@@ -226,9 +442,14 @@
       const swatch = element("span", "role-swatch");
       swatch.style.setProperty("--role-colour", colourFor(role));
       swatch.setAttribute("aria-hidden", "true");
-      name.append(swatch, role.name);
-      nameCell.append(name, element("span", "role-meaning", role.meaning));
-      row.append(nameCell, element("td", "role-score", outOfFive(role.score)));
+      name.append(swatch, role.shortName);
+      nameCell.append(name, element("span", "role-meaning", role.contribution));
+      row.append(
+        nameCell,
+        element("td", "numeric role-score", outOfFive(role.score)),
+        element("td", "numeric", scoreText(role.facetFloor)),
+        element("td", "numeric role-score", scoreText(role.profileSuitability)),
+      );
       body.appendChild(row);
     });
 
@@ -346,9 +567,9 @@
     const view = element("section", "results-view");
     view.appendChild(viewHeading(copy));
 
-    const layout = element("div", "roles-layout");
-    layout.appendChild(buildRoleChart(profile.roles, "Your five Aurora Roles."));
+    view.appendChild(buildRoleRadar());
 
+    const layout = element("div", "roles-layout");
     const side = element("div");
     const lead = element("div", "role-lead");
     lead.append(
@@ -369,12 +590,13 @@
         element(
           "p",
           "meta",
-          `${copy.secondaryLabel}: ${summary.overall.secondary.name}`,
+          `${copy.secondaryLabel}: ${summary.overall.secondary.shortName}`,
         ),
       );
     }
-    side.append(lead, roleTable(profile.roles, copy.tableCaption));
-    layout.appendChild(side);
+    lead.appendChild(element("p", "meta", copy.recommendedNote));
+    side.appendChild(lead);
+    layout.append(side, roleTable(profile.roles, copy.tableCaption));
 
     view.append(layout, element("p", "view-intro", data.assessment.roleNote));
     return view;

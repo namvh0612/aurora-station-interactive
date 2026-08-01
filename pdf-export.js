@@ -239,7 +239,7 @@
     y += 46;
 
     profile.roles.forEach((role) => {
-      drawExportText(context, role.name, EXPORT_MARGIN, y + 42, width - 520, {
+      drawExportText(context, role.shortName, EXPORT_MARGIN, y + 42, width - 520, {
         size: 42,
         family: "sans",
         weight: 600,
@@ -263,7 +263,7 @@
         },
       );
       drawScoreTrack(context, EXPORT_MARGIN, y + 74, width, role.normalised, role.colour);
-      drawExportText(context, role.meaning, EXPORT_MARGIN, y + 148, width, {
+      drawExportText(context, role.contribution, EXPORT_MARGIN, y + 148, width, {
         size: 26,
         family: "sans",
         colour: "#607277",
@@ -326,7 +326,7 @@
 
     // One row per role, three bars: baseline, pressure, recovery.
     profile.roles.forEach((role) => {
-      drawExportText(context, role.name, EXPORT_MARGIN, y + 34, 520, {
+      drawExportText(context, role.shortName, EXPORT_MARGIN, y + 34, 520, {
         size: 34,
         family: "sans",
         weight: 600,

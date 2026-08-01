@@ -640,14 +640,25 @@
     const domainScores = Object.fromEntries(
       domains.map((domain) => [domain.code, domain.score]),
     );
+    const facetScores = Object.fromEntries(
+      domains.flatMap((domain) => domain.facets.map((facet) => [facet.name, facet.score])),
+    );
+
+    const phases = scorePhases(data, safe);
+    const pressurePhase = phases.find((phase) => phase.id === "pressure");
+    const roles = scoreSuitability(
+      data,
+      scoreRoles(data, domainScores, facetScores),
+      pressurePhase ? pressurePhase.roles : [],
+    );
 
     return {
       playerName: safe.participant.name,
       complete: true,
       domains,
       facets: domains.flatMap((domain) => domain.facets),
-      roles: scoreRoles(data, domainScores),
-      phases: scorePhases(data, safe),
+      roles,
+      phases,
       scaleMin: MIN_RESPONSE,
       scaleMax: MAX_RESPONSE,
     };
@@ -672,22 +683,114 @@
     return data.assessment.roleOrder.map((id) => data.assessment.roles[id]);
   }
 
-  function scoreRoles(data, domainScores) {
+  function scoreRoles(data, domainScores, facetScores) {
     return roleDefinitions(data).map((definition) => {
       const score = roleScoreFor(definition, domainScores[definition.domain]);
       return {
         id: definition.id,
         name: definition.name,
+        shortName: definition.shortName,
         colour: definition.colour,
-        meaning: definition.meaning,
-        reading: definition.reading,
+        basis: definition.basis,
         contribution: definition.contribution,
+        reading: definition.reading,
+        inGroup: definition.inGroup,
         domain: definition.domain,
         inverse: definition.inverse,
         score,
         normalised: normalise(score),
+        facetFloor: facetScores ? facetFloorFor(data, definition, facetScores) : null,
       };
     });
+  }
+
+  /*
+   * The lowest supporting facet for a role. A role reads on the same scale as
+   * its facets, so an inverse role's supporting facets are inverted too: a
+   * high Anxiety facet is a low Sentinel support.
+   */
+  function facetFloorFor(data, definition, facetScores) {
+    const facets = data.assessment.domains[definition.domain].facets;
+    const supporting = facets
+      .map((facet) => facetScores[facet])
+      .filter((value) => Number.isFinite(value))
+      .map((value) => (definition.inverse ? REVERSE_CONSTANT - value : value));
+    return supporting.length ? Math.min(...supporting) : null;
+  }
+
+  /*
+   * How well the reader's own responses support each role. The facet floor is
+   * weighted in so that a strong domain average cannot hide a component the
+   * profile does not actually support.
+   */
+  function scoreSuitability(data, roles, pressureRoles) {
+    const weights = data.assessment.suitability.weights;
+    const pressureById = Object.fromEntries(
+      (pressureRoles || []).map((role) => [role.id, role.score]),
+    );
+
+    return roles.map((role) => {
+      const pressure = pressureById[role.id];
+      const parts = [
+        [weights.overall, role.score],
+        [weights.pressure, pressure],
+        [weights.facetFloor, role.facetFloor],
+      ];
+      const usable = parts.filter(([, value]) => Number.isFinite(value));
+      const totalWeight = usable.reduce((sum, [weight]) => sum + weight, 0);
+      const suitability = totalWeight
+        ? usable.reduce((sum, [weight, value]) => sum + weight * value, 0) / totalWeight
+        : null;
+
+      return {
+        ...role,
+        pressureScore: Number.isFinite(pressure) ? pressure : null,
+        profileSuitability: suitability,
+      };
+    });
+  }
+
+  /*
+   * Recommended Role = profile suitability + team composition + mission
+   * requirement. A solo journey knows only the first, so the other two are
+   * optional inputs and their absence is reported rather than hidden.
+   */
+  function recommendRole(data, roles, options) {
+    const settings = options || {};
+    const team = settings.teamComposition || null;
+    const mission = settings.missionRequirement || null;
+
+    const scored = roles.map((role) => {
+      const teamNeed = Number(team?.[role.id]);
+      const missionNeed = Number(mission?.[role.id]);
+      const parts = [role.profileSuitability];
+      if (Number.isFinite(teamNeed)) {
+        parts.push(teamNeed);
+      }
+      if (Number.isFinite(missionNeed)) {
+        parts.push(missionNeed);
+      }
+      const usable = parts.filter((value) => Number.isFinite(value));
+      return {
+        ...role,
+        teamNeed: Number.isFinite(teamNeed) ? teamNeed : null,
+        missionNeed: Number.isFinite(missionNeed) ? missionNeed : null,
+        recommendationScore: usable.length
+          ? usable.reduce((sum, value) => sum + value, 0) / usable.length
+          : null,
+      };
+    });
+
+    return {
+      roles: scored,
+      inputs: {
+        profileSuitability: true,
+        teamComposition: Boolean(team),
+        missionRequirement: Boolean(mission),
+      },
+      complete: Boolean(team && mission),
+      leading: leadingRoles(data, scored, "recommendationScore"),
+    };
   }
 
   /*
@@ -695,15 +798,34 @@
    * a blend rather than a winner; a role within the secondary threshold is
    * offered alongside. No role is ever described as better.
    */
-  function leadingRoles(data, roles) {
-    const thresholds = data.assessment.shiftThresholds;
+  function leadingRoles(data, roles, metric) {
+    const key = metric || "score";
+    const tolerance = data.assessment.suitability.tieTolerance;
+    const secondaryGap = data.assessment.shiftThresholds.secondary;
+    const valueOf = (role) => role[key];
+
+    /*
+     * Ties are never resolved by array order. Equal leading values fall back to
+     * the facet floor, which is the component a role is actually supported by,
+     * and then to the name so the result is stable and explainable.
+     */
     const ranked = roles
-      .filter((role) => Number.isFinite(role.score))
+      .filter((role) => Number.isFinite(valueOf(role)))
       .slice()
-      .sort((left, right) => right.score - left.score);
+      .sort((left, right) => {
+        const byMetric = valueOf(right) - valueOf(left);
+        if (Math.abs(byMetric) > 1e-9) {
+          return byMetric;
+        }
+        const byFloor = (right.facetFloor ?? -Infinity) - (left.facetFloor ?? -Infinity);
+        if (Math.abs(byFloor) > 1e-9) {
+          return byFloor;
+        }
+        return left.name.localeCompare(right.name);
+      });
 
     if (!ranked.length) {
-      return { primary: null, blended: [], secondary: null, isBlend: false, label: "" };
+      return { primary: null, blended: [], secondary: null, isBlend: false, ranked: [], label: "" };
     }
 
     // A blend is the top two, never a pile of near-ties: five roles within a
@@ -711,13 +833,11 @@
     const top = ranked[0];
     const runnerUp = ranked[1];
     const isBlend =
-      Boolean(runnerUp) && top.score - runnerUp.score <= thresholds.blend;
+      Boolean(runnerUp) && valueOf(top) - valueOf(runnerUp) <= tolerance;
     const blended = isBlend ? [top, runnerUp] : [top];
     const secondary =
-      !isBlend &&
-      ranked[1] &&
-      top.score - ranked[1].score <= thresholds.secondary
-        ? ranked[1]
+      !isBlend && runnerUp && valueOf(top) - valueOf(runnerUp) <= secondaryGap
+        ? runnerUp
         : null;
 
     return {
@@ -726,7 +846,8 @@
       secondary,
       isBlend,
       ranked,
-      label: blended.map((role) => role.name).join(" + "),
+      metric: key,
+      label: blended.map((role) => role.shortName || role.name).join(" + "),
     };
   }
 
@@ -913,7 +1034,9 @@
       return null;
     }
     const copy = data.results.summaryTemplates;
-    const overall = leadingRoles(data, profile.roles);
+    // The overall lead is the role the profile best supports, not simply the
+    // highest raw score.
+    const overall = leadingRoles(data, profile.roles, "profileSuitability");
     const baseline = phaseByld(profile, "baseline");
     const pressure = phaseByld(profile, "pressure");
     const recovery = phaseByld(profile, "recovery");
@@ -948,7 +1071,7 @@
 
     const contribution = copy.contribution.replace(
       "{contribution}",
-      joinList(overall.blended.map((role) => role.contribution)),
+      joinList(overall.blended.map((role) => role.inGroup)),
     );
 
     return {
@@ -992,6 +1115,7 @@
     describeShift,
     domainDefinitions,
     emptyState,
+    facetFloorFor,
     flattenItems,
     getKeyedScore,
     getNarrativeBand,
@@ -1007,11 +1131,13 @@
     pendingQuestion,
     phaseDefinitions,
     previousResponse,
+    recommendRole,
     recordResponse,
     responseLabels,
     revealDelay,
     roleDefinitions,
     roleScoreFor,
+    scoreSuitability,
     sanitisePreferences,
     sanitiseState,
     savePreferences,

@@ -1261,44 +1261,243 @@ body.results-page {
 
 .roles-layout {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-5) var(--space-6);
   align-items: start;
-  grid-template-columns: 5fr 7fr;
+  margin-top: var(--space-6);
+  grid-template-columns: 4fr 8fr;
 }
 
-.role-chart {
+/* ---- contextual radar ---- */
+
+.radar-wrap {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.radar-states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: 0.2rem;
+  border: 1px solid var(--dawn-line);
+  border-radius: var(--radius);
+}
+
+.radar-state {
+  flex: 1 1 auto;
+  min-height: var(--tap);
+  padding: 0.5rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--dawn-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-ui);
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.radar-state:hover {
+  background: var(--dawn);
+  color: var(--dawn-ink);
+}
+
+.radar-state.is-selected {
+  border-color: var(--dawn-line);
+  background: var(--dawn-raised);
+  color: var(--dawn-ink);
+  font-weight: 600;
+}
+
+.role-radar {
   width: 100%;
-  max-width: 24rem;
+  max-width: 26rem;
   height: auto;
   margin: 0 auto;
 }
 
-.chart-ring,
-.chart-spoke {
+.radar-ring {
   fill: none;
   stroke: var(--dawn-line);
   stroke-width: 1;
 }
 
-.chart-shape {
-  fill: rgba(20, 40, 47, 0.1);
+.radar-ring-outer {
+  stroke-width: 1.6;
+}
+
+.radar-spoke {
+  stroke: var(--role-colour, var(--dawn-line));
+  stroke-width: 1.2;
+  opacity: 0.4;
+}
+
+/* The previous state, held as a thin translucent outline. */
+.radar-ghost {
+  fill: none;
+  stroke: var(--dawn-muted);
+  stroke-dasharray: 4 4;
+  stroke-width: 1.2;
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+
+.radar-shape {
+  fill: rgba(20, 40, 47, 0.12);
   stroke: var(--dawn-ink);
-  stroke-width: 1.5;
+  stroke-width: 1.8;
 }
 
-.chart-label {
-  fill: var(--dawn-muted);
+.radar-dot {
+  stroke: var(--dawn-raised);
+  stroke-width: 1.8;
+}
+
+.radar-label {
+  fill: var(--dawn-ink);
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
-.chart-scale {
+.radar-tick {
   fill: var(--dawn-muted);
   font-family: var(--font-sans);
-  font-size: 8px;
+  font-size: 9px;
   font-variant-numeric: tabular-nums;
+}
+
+.radar-axes {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+}
+
+.radar-axis {
+  position: relative;
+  display: grid;
+  gap: 0.15rem 0.4rem;
+  align-items: baseline;
+  min-height: var(--tap);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--dawn-line);
+  border-radius: var(--radius);
+  background: var(--dawn-raised);
+  color: var(--dawn-ink);
+  font-family: var(--font-sans);
+  text-align: left;
+  cursor: default;
+  grid-template-columns: auto 1fr auto;
+}
+
+.radar-axis:hover,
+.radar-axis:focus-visible {
+  border-color: var(--role-colour, var(--dawn-line));
+}
+
+.radar-axis .role-swatch {
+  background: var(--role-colour, var(--dawn-ink));
+}
+
+.radar-axis-name {
+  font-size: var(--text-ui);
+  font-weight: 600;
+}
+
+.radar-axis-score {
+  font-size: var(--text-ui);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.radar-axis-delta {
+  grid-column: 2 / -1;
+  color: var(--dawn-muted);
+  font-size: var(--text-meta);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.radar-axis-delta[data-stable="false"] {
+  color: var(--dawn-ink);
+  font-weight: 600;
+}
+
+/*
+ * Sized to its card so it can never widen the page, even on the rightmost
+ * axis. The same values are always available in the table below.
+ */
+.radar-tooltip {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  bottom: calc(100% + 0.4rem);
+  left: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--dawn-line);
+  border-radius: var(--radius);
+  background: var(--dawn-ink);
+  color: var(--dawn);
+  font-size: var(--text-meta);
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.radar-axis:hover .radar-tooltip,
+.radar-axis:focus-visible .radar-tooltip {
+  opacity: 1;
+}
+
+.radar-table,
+.role-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: var(--text-ui);
+}
+
+.radar-table caption,
+.role-table caption {
+  margin-bottom: var(--space-2);
+  color: var(--dawn-muted);
+  font-size: var(--text-meta);
+  letter-spacing: var(--tracking-meta);
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.radar-table th,
+.radar-table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--dawn-line);
+  text-align: left;
+}
+
+.radar-table th {
+  color: var(--dawn-muted);
+  font-size: var(--text-meta);
+  font-weight: 600;
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+}
+
+.radar-table td.numeric,
+.radar-table th:not(:first-child) {
+  text-align: right;
+}
+
+.radar-table td[data-stable="true"] {
+  color: var(--dawn-muted);
+}
+
+.radar-note {
+  color: var(--dawn-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-ui);
 }
 
 .role-lead {
@@ -1856,6 +2055,13 @@ body.results-page {
 
   .sky-ribbon {
     transition: opacity 400ms ease;
+  }
+
+  /* The radar snaps between states rather than travelling between them. */
+  .radar-ghost,
+  .radar-state,
+  .radar-tooltip {
+    transition: none;
   }
 
   .reader-progress span,
