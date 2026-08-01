@@ -683,6 +683,46 @@
     return data.assessment.roleOrder.map((id) => data.assessment.roles[id]);
   }
 
+  /*
+   * The five contributions read against each other. Two cycles, both carried in
+   * the content file: one where a contribution creates the conditions the next
+   * one needs, and one where a contribution restrains another that has run
+   * long. This is a reading of relationships, not a compatibility score, and
+   * nothing here totals or ranks.
+   */
+  function elementForRole(data, roleId) {
+    return Object.values(data.assessment.elements).find((entry) => entry.role === roleId) || null;
+  }
+
+  function relationsFor(data, roleId) {
+    const element = elementForRole(data, roleId);
+    if (!element) {
+      return null;
+    }
+    const cycles = data.assessment.cycles;
+    const ring = cycles.generating;
+    const at = ring.indexOf(element.id);
+    if (at < 0) {
+      return null;
+    }
+
+    const roleOf = (elementId) => data.assessment.elements[elementId].role;
+    const feeds = ring[(at + 1) % ring.length];
+    const fedBy = ring[(at - 1 + ring.length) % ring.length];
+    const checks = cycles.controlling[element.id];
+    const checkedBy = Object.keys(cycles.controlling).find(
+      (key) => cycles.controlling[key] === element.id,
+    );
+
+    return {
+      element: element.id,
+      supports: roleOf(feeds),
+      supportedBy: roleOf(fedBy),
+      checks: roleOf(checks),
+      checkedBy: roleOf(checkedBy),
+    };
+  }
+
   function scoreRoles(data, domainScores, facetScores) {
     return roleDefinitions(data).map((definition) => {
       const score = roleScoreFor(definition, domainScores[definition.domain]);
@@ -690,7 +730,12 @@
         id: definition.id,
         name: definition.name,
         shortName: definition.shortName,
+        // The element is the identity; the two tones are the same hue set for
+        // the ground it is drawn on, so a trace stays legible on both.
+        element: definition.element,
         colour: definition.colour,
+        colourNight: definition.colourNight,
+        colourPaper: definition.colourPaper,
         basis: definition.basis,
         contribution: definition.contribution,
         reading: definition.reading,
@@ -1148,6 +1193,8 @@
     savePreferences,
     saveState,
     scoreProfile,
+    elementForRole,
+    relationsFor,
     setPlayerName,
     splitParagraphs,
     summariseProfile,

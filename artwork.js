@@ -396,11 +396,84 @@
     return overlay;
   }
 
+  /*
+   * The five contributions on a ring. The outer path is the feeding cycle,
+   * drawn in order around the circle; the inner star is the checking cycle,
+   * where each node reaches across to the one it restrains. The reader's own
+   * contribution is the filled node, so the figure is read from it outward.
+   *
+   * `nodes` is [{ id, label, colour }] in cycle order; `links` names the four
+   * roles the reader relates to.
+   */
+  function elementCycle(nodes, leadId, links) {
+    const size = 300;
+    const figure = svg(size, size, "art-cycle");
+    figure.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    const centre = size / 2;
+    const radius = size * 0.34;
+
+    const placed = nodes.map((node, index) => {
+      const angle = (Math.PI * 2 * index) / nodes.length - Math.PI / 2;
+      return {
+        ...node,
+        x: centre + Math.cos(angle) * radius,
+        y: centre + Math.sin(angle) * radius,
+      };
+    });
+
+    // The feeding cycle: one closed ring through every node in order.
+    figure.appendChild(
+      shape("path", {
+        d: path(placed.map((node) => [node.x, node.y]), true),
+        class: "art-cycle-ring",
+      }),
+    );
+
+    // The checking cycle: each node reaches to the second node along.
+    placed.forEach((node, index) => {
+      const target = placed[(index + 2) % placed.length];
+      figure.appendChild(
+        shape("path", {
+          d: path([[node.x, node.y], [target.x, target.y]], false),
+          class: "art-cycle-check",
+        }),
+      );
+    });
+
+    placed.forEach((node) => {
+      const lead = node.id === leadId;
+      const related =
+        links && [links.supports, links.supportedBy, links.checks, links.checkedBy].includes(node.id);
+      const dot = shape("circle", {
+        cx: node.x.toFixed(1),
+        cy: node.y.toFixed(1),
+        r: lead ? 13 : 9,
+        class: lead ? "art-cycle-node art-cycle-node-lead" : "art-cycle-node",
+        fill: lead || related ? node.colour : "none",
+        stroke: node.colour,
+      });
+      figure.appendChild(dot);
+
+      const text = shape("text", {
+        x: node.x.toFixed(1),
+        // Labels sit outside the ring, above or below by which half they are on.
+        y: (node.y + (node.y < centre ? -22 : 30)).toFixed(1),
+        class: lead ? "art-cycle-label art-cycle-label-lead" : "art-cycle-label",
+        "text-anchor": "middle",
+      });
+      text.textContent = node.label;
+      figure.appendChild(text);
+    });
+
+    return figure;
+  }
+
   const api = {
     actPlate,
     auroraRibbons,
     calibration,
     coreColumn,
+    elementCycle,
     fieldContours,
     grainOverlay,
     horizon,

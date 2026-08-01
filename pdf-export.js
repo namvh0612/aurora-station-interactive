@@ -258,12 +258,12 @@
           size: 42,
           family: "sans",
           weight: 600,
-          colour: role.colour,
+          colour: role.colourPaper,
           align: "right",
           lineHeight: 52,
         },
       );
-      drawScoreTrack(context, EXPORT_MARGIN, y + 74, width, role.normalised, role.colour);
+      drawScoreTrack(context, EXPORT_MARGIN, y + 74, width, role.normalised, role.colourPaper);
       drawExportText(context, role.contribution, EXPORT_MARGIN, y + 148, width, {
         size: 26,
         family: "sans",
@@ -293,14 +293,14 @@
   function drawProfileRolePage(context, data, profile, summary, pageNumber, pageCount) {
     const lead = summary.overall;
     const primary = lead.primary;
-    drawExportPageBase(context, pageNumber, profile.playerName, primary.colour, pageCount);
+    drawExportPageBase(context, pageNumber, profile.playerName, primary.colourPaper, pageCount);
 
     let y = drawExportHeading(
       context,
       data.results.chapters[0].eyebrow,
       lead.isBlend ? lead.label : primary.name,
       data.results.roleIntro,
-      primary.colour,
+      primary.colourPaper,
     );
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
@@ -347,7 +347,7 @@
       [labels.watchFor, primary.watchFor],
       [labels.action, `${primary.actionTitle} — ${primary.action}`],
     ].forEach(([label, copy]) => {
-      drawExportLabel(context, label, EXPORT_MARGIN, y, primary.colour);
+      drawExportLabel(context, label, EXPORT_MARGIN, y, primary.colourPaper);
       y += 54;
       y = drawExportText(context, copy, EXPORT_MARGIN, y, width, {
         size: 30,
@@ -366,6 +366,90 @@
       size: 28,
       colour: "#4b5457",
       lineHeight: 42,
+    });
+  }
+
+  /*
+   * The contribution read against the other four: which one it tends to feed,
+   * which tends to feed it, and which holds it in check. A reading of
+   * relationships between contributions, never a rating of people.
+   */
+  function drawProfileRelationsPage(context, data, profile, summary, core, pageNumber, pageCount) {
+    const primary = summary.overall.primary;
+    const relations = core.relationsFor(data, primary.id);
+    const element = core.elementForRole(data, primary.id);
+    const copy = data.results.relationsCopy;
+    const labels = data.results.relationsLabels;
+    const chapter = data.results.chapters.find((entry) => entry.id === "relations");
+
+    drawExportPageBase(context, pageNumber, profile.playerName, primary.colourPaper, pageCount);
+    let y = drawExportHeading(
+      context,
+      chapter.eyebrow,
+      chapter.title,
+      data.results.relationsIntro,
+      primary.colourPaper,
+    );
+
+    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    y += 10;
+    drawExportLabel(context, `${labels.yours} · ${primary.name}`, EXPORT_MARGIN, y, "#14181a");
+    y += 52;
+    y = drawExportText(context, `${labels.keywords} · ${element.keywords}`, EXPORT_MARGIN, y, width, {
+      size: 27,
+      family: "sans",
+      colour: "#4b5457",
+      lineHeight: 38,
+    });
+    y += 44;
+    drawExportRule(context, y, "#c1caca", 2);
+    y += 60;
+
+    [
+      ["supports", labels.supports],
+      ["supportedBy", labels.supportedBy],
+      ["checks", labels.checks],
+      ["checkedBy", labels.checkedBy],
+    ].forEach(([key, label]) => {
+      const other = profile.roles.find((role) => role.id === relations[key]);
+      const otherElement = core.elementForRole(data, other.id);
+      context.fillStyle = other.colourPaper;
+      context.fillRect(EXPORT_MARGIN, y - 6, 6, 118);
+
+      drawExportLabel(context, label, EXPORT_MARGIN + 34, y, other.colourPaper);
+      y += 48;
+      y = drawExportText(context, other.name, EXPORT_MARGIN + 34, y, width - 34, {
+        size: 40,
+        colour: "#14181a",
+        lineHeight: 50,
+        maxLines: 1,
+      });
+      y += 14;
+      y = drawExportText(
+        context,
+        copy[key].replace("{role}", other.name),
+        EXPORT_MARGIN + 34,
+        y,
+        width - 34,
+        { size: 28, colour: "#262b2d", lineHeight: 41, maxLines: 3 },
+      );
+      y += 8;
+      y = drawExportText(context, otherElement.keywords, EXPORT_MARGIN + 34, y, width - 34, {
+        size: 25,
+        family: "sans",
+        colour: "#5c6568",
+        lineHeight: 35,
+        maxLines: 1,
+      });
+      y += 38;
+    });
+
+    drawExportRule(context, y, "#c1caca", 2);
+    y += 56;
+    drawExportText(context, data.results.relationsNote, EXPORT_MARGIN, y, width, {
+      size: 26,
+      colour: "#4b5457",
+      lineHeight: 39,
     });
   }
 
@@ -467,7 +551,7 @@
           lineHeight: 30,
           maxLines: 1,
         });
-        drawScoreTrack(context, barX, barY, barWidth, entry.normalised, role.colour);
+        drawScoreTrack(context, barX, barY, barWidth, entry.normalised, role.colourPaper);
         drawExportText(
           context,
           entry.score.toFixed(1),
@@ -490,13 +574,17 @@
 
   /* One page per domain: interpretation, its guidance, then its three facets. */
   function drawProfileDomainPage(context, data, profile, domain, pageNumber, pageCount) {
-    drawExportPageBase(context, pageNumber, profile.playerName, domain.colour, pageCount);
+    // A current takes the colour of the contribution that reads it, so a page
+    // and the role bars on page 1 agree.
+    const trace =
+      (profile.roles.find((role) => role.domain === domain.code) || {}).colourPaper || "#14181a";
+    drawExportPageBase(context, pageNumber, profile.playerName, trace, pageCount);
     let y = drawExportHeading(
       context,
       `${String(pageNumber - 2).padStart(2, "0")} - Domain`,
       domain.name,
       domain.focus,
-      domain.colour,
+      trace,
     );
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
@@ -506,7 +594,7 @@
       EXPORT_MARGIN,
       y + 56,
       700,
-      { size: 74, family: "sans", weight: 600, colour: domain.colour, lineHeight: 84 },
+      { size: 74, family: "sans", weight: 600, colour: trace, lineHeight: 84 },
     );
     drawExportText(
       context,
@@ -524,7 +612,7 @@
       },
     );
     y += 130;
-    drawScoreTrack(context, EXPORT_MARGIN, y, width, domain.normalised, domain.colour);
+    drawScoreTrack(context, EXPORT_MARGIN, y, width, domain.normalised, trace);
     y += 96;
 
     y = drawExportText(context, domain.interpretation, EXPORT_MARGIN, y, width, {
@@ -547,7 +635,7 @@
       [labels.overextension, guidance.overextension],
       [labels.reflection, guidance.reflection],
     ].forEach(([label, copy]) => {
-      drawExportLabel(context, label, EXPORT_MARGIN, y, domain.colour);
+      drawExportLabel(context, label, EXPORT_MARGIN, y, trace);
       y += 48;
       y = drawExportText(context, copy, EXPORT_MARGIN, y, width, {
         size: 28,
@@ -567,7 +655,7 @@
       `${labels.facets} · ${labels.instrument} ${instrument.name}`,
       EXPORT_MARGIN,
       y,
-      domain.colour,
+      trace,
     );
     y += 62;
 
@@ -589,12 +677,12 @@
           size: 34,
           family: "sans",
           weight: 600,
-          colour: domain.colour,
+          colour: trace,
           align: "right",
           lineHeight: 44,
         },
       );
-      drawScoreTrack(context, EXPORT_MARGIN, y + 62, width, facet.normalised, domain.colour);
+      drawScoreTrack(context, EXPORT_MARGIN, y + 62, width, facet.normalised, trace);
       drawExportText(context, facet.meaning, EXPORT_MARGIN, y + 130, width, {
         size: 25,
         colour: "#5c6568",
@@ -1242,8 +1330,8 @@
     const { canvas, context } = exportCanvas();
     const summary = core.summariseProfile(data, profile);
     // Overview, the contribution in full, the movement, one page per current,
-    // the observations, and the reading guidance.
-    const pageCount = profile.domains.length + 5;
+    // the relationships, the observations, and the reading guidance.
+    const pageCount = profile.domains.length + 6;
     const images = [];
 
     const capture = async (pageNumber, draw) => {
@@ -1278,6 +1366,9 @@
         ),
       );
     }
+    await capture(pageCount - 2, () =>
+      drawProfileRelationsPage(context, data, profile, summary, core, pageCount - 2, pageCount),
+    );
     await capture(pageCount - 1, () =>
       drawProfileObservationPage(context, data, profile, summary, pageCount - 1, pageCount),
     );

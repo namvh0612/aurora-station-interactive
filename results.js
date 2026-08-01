@@ -139,8 +139,8 @@
 
     const right = el("div");
     if (art) {
-      const dial = art.instrumentDial(primary.normalised, primary.colour, primary.name);
-      dial.style.setProperty("--trace", primary.colour);
+      const dial = art.instrumentDial(primary.normalised, primary.colourPaper, primary.name);
+      dial.style.setProperty("--trace", primary.colourPaper);
       right.appendChild(dial);
     }
     const instrument = data.assessment.instruments[primary.domain];
@@ -260,7 +260,7 @@
       const dot = document.createElementNS(ns, "circle");
       dot.setAttribute("r", "5.5");
       dot.setAttribute("class", "plot-node");
-      dot.setAttribute("fill", data.assessment.roles[id].colour);
+      dot.setAttribute("fill", data.assessment.roles[id].colourPaper);
       plot.appendChild(dot);
       return { id, index, node: dot };
     });
@@ -292,7 +292,7 @@
 
       const swatch = el("span", "reading-swatch");
       swatch.setAttribute("aria-hidden", "true");
-      swatch.style.setProperty("--trace", role.colour);
+      swatch.style.setProperty("--trace", role.colourPaper);
       const name = el("span", "reading-name", role.shortName);
       const value = el("span", "reading-value", "—");
       const change = el("span", "reading-change", "");
@@ -477,7 +477,7 @@
     profile.domains.forEach((domain) => {
       const role = profile.roles.find((entry) => entry.domain === domain.code);
       const row = el("article", "spectrum");
-      row.style.setProperty("--trace", role.colour);
+      row.style.setProperty("--trace", role.colourPaper);
 
       const left = el("div");
       left.append(
@@ -524,7 +524,7 @@
       const guidance = data.assessment.domains[domain.code].guidance[domain.band];
 
       const current = el("article", "current");
-      current.style.setProperty("--trace", role.colour);
+      current.style.setProperty("--trace", role.colourPaper);
 
       const head = el("div", "current-head");
       const title = el("div");
@@ -534,8 +534,8 @@
       );
       const dial = el("div", "current-instrument");
       if (art) {
-        const face = art.instrumentDial(domain.normalised, role.colour, domain.name);
-        face.style.setProperty("--trace", role.colour);
+        const face = art.instrumentDial(domain.normalised, role.colourPaper, domain.name);
+        face.style.setProperty("--trace", role.colourPaper);
         dial.appendChild(face);
       }
       dial.append(
@@ -576,7 +576,84 @@
     return node;
   }
 
-  /* ------------------------------------------------------------- V: closing */
+  /* --------------------------------------------- V: what supports and checks */
+
+  /*
+   * Read outward from the contribution the record supports most clearly: which
+   * contribution yours tends to feed, which tends to feed yours, and which
+   * holds it in check when it runs long. It is a reading of relationships
+   * between contributions, never a rating of people or a suggestion about who
+   * to work with.
+   */
+  function buildRelationsChapter() {
+    const { node, body } = section("relations");
+    const primary = summary.overall.primary;
+    const relations = core.relationsFor(data, primary.id);
+    const labels = COPY.relationsLabels;
+    const copy = COPY.relationsCopy;
+
+    body.appendChild(el("p", "chapter-intro", COPY.relationsIntro));
+
+    const lede = el("div", "role-lede");
+
+    const figure = el("div", "relations-figure");
+    if (art) {
+      const nodes = data.assessment.cycles.generating.map((elementId) => {
+        const element = data.assessment.elements[elementId];
+        const role = roleFor(element.role);
+        return { id: element.role, label: role.shortName, colour: role.colourPaper };
+      });
+      figure.appendChild(
+        art.elementCycle(nodes, primary.id, relations),
+      );
+    }
+    figure.append(
+      el("p", "mark", `${labels.cycleGenerating} · ${labels.cycleControlling}`),
+      el("p", "mark mark-sentence", COPY.relationsNote),
+    );
+
+    const own = el("div");
+    const element = core.elementForRole(data, primary.id);
+    own.append(
+      el("p", "mark", labels.yours),
+      el("h3", "role-name", primary.name),
+      el("p", "mark role-basis", `${labels.keywords} · ${element.keywords}`),
+      el("p", "relations-shadow", `${labels.shadow}: ${element.shadow}`),
+    );
+
+    lede.append(own, figure);
+    body.appendChild(lede);
+
+    const lines = el("div", "role-lines");
+    [
+      ["supports", labels.supports],
+      ["supportedBy", labels.supportedBy],
+      ["checks", labels.checks],
+      ["checkedBy", labels.checkedBy],
+    ].forEach(([key, label]) => {
+      const other = roleFor(relations[key]);
+      const otherElement = core.elementForRole(data, other.id);
+      const line = el("div", "role-line relations-line");
+      line.style.setProperty("--trace", other.colourPaper);
+
+      const head = el("div");
+      head.append(el("p", "mark", label), el("p", "relations-role", other.name));
+
+      const detail = el("div");
+      detail.append(
+        el("p", "", copy[key].replace("{role}", other.name)),
+        el("p", "mark mark-sentence relations-keywords", otherElement.keywords),
+      );
+
+      line.append(head, detail);
+      lines.appendChild(line);
+    });
+    body.appendChild(lines);
+
+    return node;
+  }
+
+  /* ------------------------------------------------------------ VI: closing */
 
   function exportButton(label, className, run) {
     const button = el("button", className, label);
@@ -765,7 +842,12 @@
       if (options && options.silent) {
         return;
       }
-      window.scrollTo({ top: 0, behavior: "auto" });
+      // Land on the chapter that was asked for, not on the top of the report.
+      // The rail is sticky, so its own height has to come off the target or
+      // the section head arrives underneath it.
+      const head = chapters[to].getBoundingClientRect().top + window.scrollY;
+      const clearance = rail.getBoundingClientRect().height + 8;
+      window.scrollTo({ top: Math.max(0, Math.round(head - clearance)), behavior: "auto" });
       chapters[to].focus({ preventScroll: true });
       say(`${COPY.chapters[to].title}. Chapter ${to + 1} of ${chapters.length}.`);
     }
@@ -811,6 +893,7 @@
       buildShiftChapter(),
       buildCurrentsChapter(),
       buildDetailChapter(),
+      buildRelationsChapter(),
       buildCloseChapter(),
     ];
     shell.replaceChildren(buildMasthead(), ...buildPager(chapters));

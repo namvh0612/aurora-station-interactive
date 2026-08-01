@@ -128,7 +128,7 @@ Aurora Station is a static site with no build step and no dependencies. Open `in
 
 There are two pages: `index.html` carries the Prelude, all twelve Acts and the completion panel; `results.html` is the Watchkeeper Profile. Everything on the Results page is recalculated from your raw responses each time it loads — no score is cached, and an unfinished journey is sent back to the story.
 
-The report is read one chapter at a time. All five chapters are built into the page; the pager decides which is shown, puts the chapter in the address bar, and works with the browser's own back and forward buttons. The watch itself can be restarted at any point from the masthead, which clears the record and keeps your sound and reading-pace settings.
+The report is read one chapter at a time. All six chapters are built into the page; the pager decides which is shown, puts the chapter in the address bar, and works with the browser's own back and forward buttons. The watch itself can be restarted at any point from the masthead, which clears the record and keeps your sound and reading-pace settings. On a phone the station controls collapse behind a single button rather than a rail that has to be scrolled sideways.
 
 Both exports are named for the watchkeeper and the night the watch closed, so re-exporting the same record replaces it while a second watch keeps its own file.
 
@@ -154,6 +154,8 @@ The visual language is a **polar psychological observatory**: near-black polar n
 Two font families carry everything: an editorial display serif for narrative, act titles and the report, and a technical mono for labels, readings, timestamps and responses. There are no raster assets and no external font or script hosts; every figure is drawn in `artwork.js`.
 
 The reading column is centred and its measure grows with the page, so the same document reads as one column on a phone and as a centred page on a laptop rather than a narrow strip against empty ground. Act plates are the exception: they run full-bleed to the edges of the display. The measure still tightens through the degraded stretch, as a share of itself.
+
+The five behavioural currents carry the five elements — Wood, Fire, Earth, Metal and Water — assigned by the Big Five trait each already reads. The element supplies the colour and the shape of one chapter of the report: which contribution yours tends to feed, which tends to feed yours, and which holds it in check. It is used for that relationship and nothing else. Every reading in the report comes from the sixty recorded responses; no part of it is derived from a date of birth. Each element keeps one hue across the whole product, set light enough to read on the night and deep enough to read on paper.
 
 The aurora is a narrative event, not a background. It is absent through onboarding and the whole early and middle watch, enters at Act 09 when the storm breaks, deepens through the remaining acts, and is gone by the time the report opens.
 

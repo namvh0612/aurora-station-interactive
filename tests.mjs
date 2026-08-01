@@ -1176,17 +1176,22 @@ check("the artwork is drawn in the project, not fetched", () => {
 });
 
 check("the debrief is read one chapter at a time, and loses nothing", () => {
-  assert.equal(data.results.chapters.length, 5);
+  assert.equal(data.results.chapters.length, 6);
   assert.deepEqual(
     data.results.chapters.map((entry) => entry.id),
-    ["role", "shift", "currents", "detail", "close"],
+    ["role", "shift", "currents", "detail", "relations", "close"],
   );
   // Every chapter is still built and put in the page in one pass; paging only
   // decides which one is shown.
   assert.match(resultsSource, /shell\.replaceChildren\(/);
-  ["buildRoleChapter", "buildShiftChapter", "buildCurrentsChapter", "buildDetailChapter", "buildCloseChapter"].forEach(
-    (name) => assert.match(resultsSource, new RegExp(name), name),
-  );
+  [
+    "buildRoleChapter",
+    "buildShiftChapter",
+    "buildCurrentsChapter",
+    "buildDetailChapter",
+    "buildRelationsChapter",
+    "buildCloseChapter",
+  ].forEach((name) => assert.match(resultsSource, new RegExp(name), name));
   assert.match(resultsSource, /buildPager\(/);
   // A chapter is addressable and steppable with the browser's own controls.
   assert.match(resultsSource, /popstate/);
@@ -1232,8 +1237,9 @@ check("the export prints the report, not a summary of it", () => {
     "whyTemplates",
     "instruments",
   ].forEach((key) => assert.match(pdfSource, new RegExp(key), `export is missing ${key}`));
-  // Overview, contribution, movement, five currents, observations, guidance.
-  assert.match(pdfSource, /profile\.domains\.length \+ 5/);
+  // Overview, contribution, movement, five currents, relationships,
+  // observations, guidance.
+  assert.match(pdfSource, /profile\.domains\.length \+ 6/);
   assert.match(pdfSource, /drawProfileRolePage/);
   assert.match(pdfSource, /drawProfileObservationPage/);
 });
@@ -1268,15 +1274,20 @@ check("the watch can be restarted without clearing storage by hand", () => {
 });
 
 check("the reading centres on a wide page instead of hugging one edge", () => {
-  // Both surfaces cap their width from the measure and centre what is left.
-  [".watch {", ".report-shell {"].forEach((selector) => {
-    const block = stylesSource.slice(
-      stylesSource.indexOf(selector),
-      stylesSource.indexOf("}", stylesSource.indexOf(selector)),
-    );
-    assert.match(block, /max-width: calc\(var\(--measure(-wide)?\) \+ var\(--gutter\) \* 2\)/, selector);
-    assert.match(block, /margin-inline: auto/, selector);
-  });
+  const shell = stylesSource.slice(
+    stylesSource.indexOf(".report-shell {"),
+    stylesSource.indexOf("}", stylesSource.indexOf(".report-shell {")),
+  );
+  assert.match(shell, /max-width: calc\(var\(--measure-wide\) \+ var\(--gutter\) \* 2\)/);
+  assert.match(shell, /margin-inline: auto/);
+  // A full-bleed block reaches the display without escaping the page, so
+  // nothing has to be clipped to hide it.
+  assert.match(
+    stylesSource,
+    /padding-inline: max\(var\(--gutter\), calc\(\(100% - var\(--measure\)\) \/ 2\)\)/,
+  );
+  assert.doesNotMatch(stylesSource, /margin-inline: calc\(50% - 50vw\)/);
+  assert.doesNotMatch(stylesSource, /overflow-x: hidden/);
   // The column itself is centred, not pushed against one gutter.
   [".passage {", ".observation {", ".completion {"].forEach((selector) => {
     const block = stylesSource.slice(
@@ -1290,6 +1301,125 @@ check("the reading centres on a wide page instead of hugging one edge", () => {
   assert.match(stylesSource, /max-width: calc\(var\(--measure\) \* 0\.86\)/);
   // The report no longer opens on a share of the viewport.
   assert.doesNotMatch(stylesSource, /min-height: 82svh/);
+});
+
+check("the five currents carry the five elements", () => {
+  const elements = data.assessment.elements;
+  const expected = {
+    wood: "pathfinder",
+    fire: "catalyst",
+    earth: "steward",
+    metal: "architect",
+    water: "sentinel",
+  };
+  assert.deepEqual(Object.keys(elements).sort(), Object.keys(expected).sort());
+  Object.entries(expected).forEach(([elementId, roleId]) => {
+    assert.equal(elements[elementId].role, roleId, elementId);
+    assert.ok(elements[elementId].keywords, `${elementId} keywords`);
+    assert.ok(elements[elementId].shadow, `${elementId} shadow`);
+    assert.ok(data.assessment.roles[roleId].element, `${roleId} element`);
+  });
+  // Every role carries the deck value plus a tone for each ground.
+  core.DOMAIN_ORDER.forEach(() => {});
+  Object.values(data.assessment.roles).forEach((role) => {
+    ["colour", "colourNight", "colourPaper"].forEach((key) => {
+      assert.match(role[key], /^#[0-9a-f]{6}$/, `${role.id} ${key}`);
+    });
+  });
+});
+
+check("a trace is legible on the ground it is drawn on", () => {
+  // WCAG relative luminance; a meaningful graphic needs 3:1.
+  const lin = (v) => {
+    const channel = v / 255;
+    return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = (hex) => {
+    const [r, g, b] = [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  };
+  const ratio = (a, b) => {
+    const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (high + 0.05) / (low + 0.05);
+  };
+
+  const night = "#05080b";
+  const paper = "#e6eaeb";
+  Object.values(data.assessment.roles).forEach((role) => {
+    assert.ok(
+      ratio(role.colourNight, night) >= 3,
+      `${role.id} night ${ratio(role.colourNight, night).toFixed(2)}:1`,
+    );
+    assert.ok(
+      ratio(role.colourPaper, paper) >= 3,
+      `${role.id} paper ${ratio(role.colourPaper, paper).toFixed(2)}:1`,
+    );
+  });
+  // The five stay distinguishable from one another on each ground.
+  const hues = Object.values(data.assessment.roles).map((role) => role.colour);
+  assert.equal(new Set(hues).size, 5);
+});
+
+check("the relationships read outward from the leading contribution", () => {
+  const cycles = data.assessment.cycles;
+  assert.equal(cycles.generating.length, 5);
+  // Every element feeds one and is fed by one; the ring closes.
+  assert.equal(new Set(cycles.generating).size, 5);
+  // Every element checks one and is checked by one.
+  const targets = Object.values(cycles.controlling);
+  assert.equal(new Set(targets).size, 5);
+  assert.equal(new Set(Object.keys(cycles.controlling)).size, 5);
+  Object.entries(cycles.controlling).forEach(([from, to]) => {
+    assert.notEqual(from, to, `${from} checks itself`);
+    // Checking reaches across the ring, never to a neighbour on it.
+    const at = cycles.generating.indexOf(from);
+    const gap = (cycles.generating.indexOf(to) - at + 5) % 5;
+    assert.equal(gap, 2, `${from} -> ${to} is not a reach across the ring`);
+  });
+
+  // The deck's two worked examples, in Aurora's own names.
+  assert.equal(core.relationsFor(data, "architect").checks, "pathfinder");
+  assert.equal(core.relationsFor(data, "sentinel").checks, "catalyst");
+
+  data.assessment.roleOrder.forEach((id) => {
+    const relations = core.relationsFor(data, id);
+    ["supports", "supportedBy", "checks", "checkedBy"].forEach((key) => {
+      assert.ok(data.assessment.roles[relations[key]], `${id} ${key}`);
+      assert.notEqual(relations[key], id, `${id} ${key} points at itself`);
+    });
+    // What you feed and what feeds you are never the same contribution.
+    assert.notEqual(relations.supports, relations.supportedBy, id);
+    assert.notEqual(relations.checks, relations.checkedBy, id);
+  });
+});
+
+check("the relationships chapter suggests, and never rates", () => {
+  const copy = data.results.relationsCopy;
+  ["supports", "supportedBy", "checks", "checkedBy"].forEach((key) => {
+    assert.ok(copy[key].includes("{role}"), `${key} template`);
+  });
+  // No pair score, no cohesion figure, no compatibility rating.
+  [resultsSource, pdfSource].forEach((source) => {
+    assert.doesNotMatch(source, /cohesion/i);
+    assert.doesNotMatch(source, /compatib/i);
+  });
+  const relationCopy = [
+    data.results.relationsIntro,
+    data.results.relationsNote,
+    ...Object.values(copy),
+  ].join(" ");
+  // These words may appear only where the copy is denying them, the way the
+  // report already denies being a diagnosis.
+  [...relationCopy.matchAll(/compatib|rating|\bscore|birth|zodiac|astrolog/gi)].forEach((match) => {
+    const lead = relationCopy.slice(Math.max(0, match.index - 44), match.index);
+    assert.match(lead, /\b(no|not|never|nothing|none)\b/i, `unqualified "${match[0]}"`);
+  });
+  // The elements are named as a shape, and the derivation is stated.
+  assert.match(data.results.relationsNote, /five elements/i);
+  assert.match(data.assessment.cycles.note, /date of birth/i);
+  // The export carries the same page.
+  assert.match(pdfSource, /drawProfileRelationsPage/);
+  assert.match(pdfSource, /profile\.domains\.length \+ 6/);
 });
 
 check("a chapter index is a numeral, not a padded number", () => {

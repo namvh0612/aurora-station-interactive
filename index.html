@@ -37,30 +37,41 @@
           <span class="mark" id="sequence-label">OBS 00 / 60</span>
           <span class="sequence-ticks" id="sequence-ticks" aria-hidden="true"></span>
         </div>
-        <button class="control" id="pace-toggle" type="button" aria-pressed="false">Pause</button>
-        <button class="control" id="pace-now" type="button">Reveal</button>
-        <div class="sequence" role="radiogroup" aria-label="Reading pace" id="pace-control">
-          <button class="control" type="button" role="radio" data-pace="slow" aria-checked="false">Slow</button>
-          <button class="control" type="button" role="radio" data-pace="normal" aria-checked="true">Normal</button>
-          <button class="control" type="button" role="radio" data-pace="fast" aria-checked="false">Fast</button>
+        <button
+          class="control control-menu"
+          id="controls-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="controls-panel"
+        >
+          Controls
+        </button>
+        <div class="controls-panel" id="controls-panel">
+          <button class="control" id="pace-toggle" type="button" aria-pressed="false">Pause</button>
+          <button class="control" id="pace-now" type="button">Reveal</button>
+          <div class="sequence" role="radiogroup" aria-label="Reading pace" id="pace-control">
+            <button class="control" type="button" role="radio" data-pace="slow" aria-checked="false">Slow</button>
+            <button class="control" type="button" role="radio" data-pace="normal" aria-checked="true">Normal</button>
+            <button class="control" type="button" role="radio" data-pace="fast" aria-checked="false">Fast</button>
+          </div>
+          <button
+            class="control"
+            id="sound-toggle"
+            type="button"
+            aria-pressed="true"
+            aria-label="Mute station sound"
+          >
+            <span class="sound-label">Sound</span>
+          </button>
+          <button
+            class="control control-quiet"
+            id="restart"
+            type="button"
+            aria-label="Start the watch again from the beginning"
+          >
+            Restart
+          </button>
         </div>
-        <button
-          class="control"
-          id="sound-toggle"
-          type="button"
-          aria-pressed="true"
-          aria-label="Mute station sound"
-        >
-          <span class="sound-label">Sound</span>
-        </button>
-        <button
-          class="control control-quiet"
-          id="restart"
-          type="button"
-          aria-label="Start the watch again from the beginning"
-        >
-          Restart
-        </button>
       </div>
     </header>
 

@@ -388,7 +388,10 @@ window.AURORA_STATION_DATA = {
         "domain": "openMindedness",
         "basis": "Open-Mindedness",
         "inverse": false,
-        "colour": "#42b4e6",
+        "element": "Wood",
+        "colour": "#3dcd58",
+        "colourNight": "#3dcd58",
+        "colourPaper": "#237a35",
         "contribution": "Explores possibilities and reframes uncertainty.",
         "reading": "keeping more than one explanation alive and looking for the route that has not been tried",
         "inGroup": "finds the option a group has not yet considered",
@@ -405,7 +408,10 @@ window.AURORA_STATION_DATA = {
         "domain": "extraversion",
         "basis": "Extraversion",
         "inverse": false,
-        "colour": "#ef5b7a",
+        "element": "Fire",
+        "colour": "#b10043",
+        "colourNight": "#e0175c",
+        "colourPaper": "#b10043",
         "contribution": "Creates momentum and mobilises others.",
         "reading": "putting energy into the room and making your engagement visible to the people in it",
         "inGroup": "raises the level of a room when the work needs momentum",
@@ -422,7 +428,10 @@ window.AURORA_STATION_DATA = {
         "domain": "agreeableness",
         "basis": "Agreeableness",
         "inverse": false,
-        "colour": "#3dcd58",
+        "element": "Earth",
+        "colour": "#e47f00",
+        "colourNight": "#e47f00",
+        "colourPaper": "#a35a00",
         "contribution": "Maintains trust, cooperation and human connection.",
         "reading": "keeping people in contact with one another and protecting the working relationship",
         "inGroup": "holds a group together when the work starts to pull people apart",
@@ -439,7 +448,10 @@ window.AURORA_STATION_DATA = {
         "domain": "conscientiousness",
         "basis": "Conscientiousness",
         "inverse": false,
-        "colour": "#ff8a3d",
+        "element": "Metal",
+        "colour": "#9fa0a4",
+        "colourNight": "#9fa0a4",
+        "colourPaper": "#5c6166",
         "contribution": "Creates structure and dependable execution.",
         "reading": "holding sequence and finishing what the situation started",
         "inGroup": "turns an intention into something that actually gets carried through",
@@ -456,7 +468,10 @@ window.AURORA_STATION_DATA = {
         "domain": "negativeEmotionality",
         "basis": "Emotional Stability",
         "inverse": true,
-        "colour": "#9b51e0",
+        "element": "Water",
+        "colour": "#42b4e6",
+        "colourNight": "#42b4e6",
+        "colourPaper": "#10688f",
         "contribution": "Maintains calm, awareness and resilience under pressure.",
         "reading": "staying level while the situation moves and keeping your own state out of the problem",
         "inGroup": "gives others something steady to work against when conditions are not steady",
@@ -475,6 +490,60 @@ window.AURORA_STATION_DATA = {
       "sentinel"
     ],
     "roleNote": "Aurora Roles are mission contributions derived from your BFI-2 profile. They are not fixed personality types. All five sit on the same one-to-five scale, they do not total anything, and no role is better than another.",
+    "elements": {
+      "wood": {
+        "id": "wood",
+        "name": "Wood",
+        "role": "pathfinder",
+        "keywords": "Initiating, creative, unconventional, visionary",
+        "shadow": "Many ideas, and no one left to finalise them"
+      },
+      "fire": {
+        "id": "fire",
+        "name": "Fire",
+        "role": "catalyst",
+        "keywords": "Spreading, driving, energetic, active",
+        "shadow": "Impulsive and loud, and short of depth"
+      },
+      "earth": {
+        "id": "earth",
+        "name": "Earth",
+        "role": "steward",
+        "keywords": "Bonding, mediating, nurturing, steadying",
+        "shadow": "Avoids conflict, and is reluctant on the hard calls"
+      },
+      "metal": {
+        "id": "metal",
+        "name": "Metal",
+        "role": "architect",
+        "keywords": "Disciplined, exacting, completing, quality-led",
+        "shadow": "Rigid and perfectionist, and slow to adapt"
+      },
+      "water": {
+        "id": "water",
+        "name": "Water",
+        "role": "sentinel",
+        "keywords": "Calm, analytical, deep, adaptable",
+        "shadow": "Passive and detached, and prone to over-analysis"
+      }
+    },
+    "cycles": {
+      "generating": [
+        "water",
+        "wood",
+        "fire",
+        "earth",
+        "metal"
+      ],
+      "controlling": {
+        "wood": "earth",
+        "earth": "water",
+        "water": "fire",
+        "fire": "metal",
+        "metal": "wood"
+      },
+      "note": "The five elements are used here for the shape of a relationship between contributions, and for nothing else. No part of your reading is derived from a date of birth."
+    },
     "roleMapping": {
       "The Pathfinder": "Open-Mindedness",
       "The Catalyst": "Extraversion",
@@ -1991,10 +2060,16 @@ window.AURORA_STATION_DATA = {
         "eyebrow": "SECTION IV · DETAIL"
       },
       {
-        "id": "close",
+        "id": "relations",
         "index": "V",
+        "title": "What supports and what checks",
+        "eyebrow": "SECTION V · RELATIONS"
+      },
+      {
+        "id": "close",
+        "index": "VI",
         "title": "Closing the record",
-        "eyebrow": "SECTION V · CLOSE"
+        "eyebrow": "SECTION VI · CLOSE"
       }
     ],
     "roleIntro": "One contribution the record supports most clearly. It is a reading of this night, not a fixed type.",
@@ -2017,6 +2092,25 @@ window.AURORA_STATION_DATA = {
     "shiftStableCopy": "Little moved. Across the three stretches no contribution shifted far enough to read as a change, which suggests your approach was not especially sensitive to how difficult the night became.",
     "currentsIntro": "Five behavioural currents, each a range rather than a score to win. Neither end is better, and the centre is a real position rather than a missing answer.",
     "detailIntro": "Each current read in full: what it was doing, what it is likely to give you, what it can cost, and one question worth sitting with.",
+    "relationsIntro": "Contributions do not sit apart from one another. Read from the one your record supports most clearly, this is which contribution yours tends to feed, which one tends to feed yours, and which one holds it in check when it runs long. None of it is a compatibility rating, and none of it says who to work with.",
+    "relationsNote": "These relationships come from the five elements: an old way of describing how forces feed and restrain one another, used here only for the shape of the relationship. Everything about you in this report comes from your own sixty responses.",
+    "relationsLabels": {
+      "supports": "Your contribution tends to feed",
+      "supportedBy": "Tends to be fed by",
+      "checks": "You tend to hold in check",
+      "checkedBy": "Tends to hold you in check",
+      "cycleGenerating": "Feeding",
+      "cycleControlling": "Checking",
+      "keywords": "Reads as",
+      "shadow": "When it runs long",
+      "yours": "Yours"
+    },
+    "relationsCopy": {
+      "supports": "When your contribution is working, it tends to create the conditions {role} needs. Offering it deliberately is usually more useful than waiting to be asked.",
+      "supportedBy": "{role} tends to create the conditions yours needs. When your own reading feels thin, this is the contribution worth having near you.",
+      "checks": "Your contribution tends to restrain {role} when that one runs long. Used well this is a useful brake; used constantly it becomes friction.",
+      "checkedBy": "{role} tends to restrain yours when yours runs long. That is a check rather than an obstacle, and it is easier to accept before it is needed than during."
+    },
     "radar": {
       "heading": "Contribution across the watch",
       "states": [

@@ -27,6 +27,9 @@
   const paceControl = document.getElementById("pace-control");
   const soundToggle = document.getElementById("sound-toggle");
   const restartControl = document.getElementById("restart");
+  const controlsToggle = document.getElementById("controls-toggle");
+  const controlsPanel = document.getElementById("controls-panel");
+  const masthead = document.querySelector(".masthead");
   const newPassage = document.getElementById("new-passage");
   const announcer = document.getElementById("announcer");
   const auroraLayer = document.getElementById("env-aurora");
@@ -121,7 +124,7 @@
     const roleId = data.assessment.roleOrder.find(
       (id) => data.assessment.roles[id].domain === item.domain,
     );
-    return roleId ? data.assessment.roles[roleId].colour : "var(--signal)";
+    return roleId ? data.assessment.roles[roleId].colourNight : "var(--signal)";
   }
 
   function persist() {
@@ -714,7 +717,43 @@
     }
   }
 
+  /*
+   * On a phone the seven controls do not fit beside the sequence, and a rail
+   * that scrolls sideways hides six of them behind a gesture nobody is told
+   * about. They collapse behind one button instead. Above the phone
+   * breakpoint the panel is display: contents, so the controls sit in the bar
+   * exactly as before and this button is not rendered at all.
+   */
+  function controlsOpen() {
+    return masthead.classList.contains("is-open");
+  }
+
+  function setControls(open) {
+    masthead.classList.toggle("is-open", open);
+    controlsToggle.setAttribute("aria-expanded", String(open));
+    if (open) {
+      controlsPanel.querySelector("button:not([tabindex='-1'])")?.focus();
+    }
+  }
+
+  function closeControls(returnFocus) {
+    if (!controlsOpen()) {
+      return;
+    }
+    setControls(false);
+    if (returnFocus) {
+      controlsToggle.focus();
+    }
+  }
+
   function updateControls() {
+    // The button has to say whether the watch is paused without being opened.
+    controlsToggle.setAttribute(
+      "aria-label",
+      prefs.paused ? "Station controls, the watch is paused" : "Station controls",
+    );
+    controlsToggle.dataset.paused = String(Boolean(prefs.paused));
+
     paceToggle.textContent = prefs.paused ? "Resume" : "Pause";
     paceToggle.setAttribute("aria-pressed", String(Boolean(prefs.paused)));
     paceToggle.setAttribute(
@@ -968,6 +1007,18 @@
   }
 
   function bind() {
+    controlsToggle.addEventListener("click", () => setControls(!controlsOpen()));
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeControls(true);
+      }
+    });
+    document.addEventListener("pointerdown", (event) => {
+      if (controlsOpen() && !masthead.contains(event.target)) {
+        closeControls(false);
+      }
+    });
+
     paceToggle.addEventListener("click", togglePause);
     restartControl.addEventListener("click", () => {
       // The watch is long, and abandoning it should not mean clearing storage

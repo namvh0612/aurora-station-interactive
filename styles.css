@@ -58,12 +58,26 @@
   /* Faint, but still 4.9:1 on paper — station marks are small and must read. */
   --ink-faint: #5c6568;
 
-  /* ---- behavioural traces ---- */
-  --trace-pathfinder: #42b4e6;
-  --trace-catalyst: #ef5b7a;
-  --trace-steward: #3dcd58;
-  --trace-architect: #ff8a3d;
-  --trace-sentinel: #9b51e0;
+  /*
+   * ---- behavioural traces ----
+   *
+   * The five elements, on the currents their Big Five reading already matches:
+   * Wood, Fire, Earth, Metal, Water. The hue is the identity and does not
+   * change; the value does, because a colour chosen for a white slide does not
+   * clear 3:1 on a near-black night or on mineral paper.
+   */
+  --trace-pathfinder: #3dcd58;
+  --trace-catalyst: #e0175c;
+  --trace-steward: #e47f00;
+  --trace-architect: #9fa0a4;
+  --trace-sentinel: #42b4e6;
+
+  /* The same five, deepened for paper. */
+  --trace-pathfinder-paper: #237a35;
+  --trace-catalyst-paper: #b10043;
+  --trace-steward-paper: #a35a00;
+  --trace-architect-paper: #5c6166;
+  --trace-sentinel-paper: #10688f;
 
   /*
    * ---- measure and rhythm ----
@@ -103,7 +117,6 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  overflow-x: hidden;
   background: var(--void);
   color: var(--mineral);
   font-family: var(--type-display);
@@ -395,6 +408,19 @@ body[data-aurora="present"] .env-aurora {
   min-width: 0;
 }
 
+/*
+ * Above the phone breakpoint the panel is not a panel: its children sit in
+ * the bar directly, exactly as they did before, and the button that would
+ * open it is not rendered.
+ */
+.controls-panel {
+  display: contents;
+}
+
+.control-menu {
+  display: none;
+}
+
 /* Progress reads as an observation sequence, not a percentage. */
 .sequence {
   display: flex;
@@ -524,21 +550,36 @@ body[data-aurora="present"] .env-aurora {
 /* ----------------------------------------------------------------- story */
 
 /*
- * The reading column is offset within a page of a readable width, and the page
- * itself centres. The width is set from the measure rather than a round number
- * so the offset stays proportional to the text instead of drifting away from
- * it as the display grows.
+ * The watch spans the display so an act plate can run edge to edge without
+ * escaping its parent with negative margins. Everything that is read is
+ * centred inside it at the measure, so the column stays the same width the
+ * plate is wide behind it.
  */
 .watch {
   position: relative;
   z-index: 1;
-  max-width: calc(var(--measure) + var(--gutter) * 2);
-  margin-inline: auto;
   padding: 0 0 14rem;
 }
 
+/*
+ * A full-bleed block: the background reaches the edges of the display while
+ * its content stays in the same column as the reading around it.
+ */
+.act-plate,
+.interlude,
 .watch:focus {
   outline: none;
+}
+
+/*
+ * A full-bleed block: the ground reaches the edges of the display while its
+ * content stays in the same column as the reading around it. No negative
+ * margins, so nothing escapes the page and nothing has to be clipped.
+ */
+.act-plate,
+.interlude,
+.prologue {
+  padding-inline: max(var(--gutter), calc((100% - var(--measure)) / 2));
 }
 
 /* The prologue holds the whole viewport before anything else happens. */
@@ -546,7 +587,7 @@ body[data-aurora="present"] .env-aurora {
   display: grid;
   align-content: center;
   min-height: 100svh;
-  padding: 8rem var(--gutter) 6rem;
+  padding-block: 8rem 6rem;
 }
 
 .prologue-mark {
@@ -577,7 +618,7 @@ body[data-aurora="present"] .env-aurora {
   align-content: end;
   min-height: 92svh;
   margin: 10rem 0 4rem;
-  padding: 0 var(--gutter) 4rem;
+  padding-block: 0 4rem;
   isolation: isolate;
 }
 
@@ -677,7 +718,6 @@ body[data-aurora="present"] .env-aurora {
 
 .interlude {
   margin: 8rem 0 3rem;
-  padding: 0 var(--gutter);
 }
 
 .interlude-title {
@@ -1040,15 +1080,12 @@ body.report .art-grain {
   padding: 0 0 8rem;
 }
 
-/*
- * The act plate is the one full-bleed moment, so it reaches past the reading
- * column to the edges of the display.
- */
-.act-plate,
-.interlude {
-  margin-inline: calc(50% - 50vw);
-  padding-inline: max(var(--gutter), calc(50vw - 50% + var(--gutter)));
+/* The environment is behind the reading, never a layer the reading sits in. */
+.environment,
+.art-grain {
+  overflow: clip;
 }
+
 
 .report-shell:focus {
   outline: none;
@@ -1095,12 +1132,17 @@ body.report .art-grain {
  * every chapter, so the reader always knows the shape of the whole record and
  * how much of it is still ahead.
  */
+/*
+ * The rail shares its edges with the reading column, so the page has one set
+ * of vertical rules rather than a bar overhanging the copy it labels.
+ */
 .pager-rail {
   position: sticky;
   z-index: 10;
   top: 0;
   display: flex;
   gap: 0;
+  margin-inline: var(--gutter);
   border-bottom: var(--rule) solid var(--paper-line);
   background: var(--paper);
 }
@@ -1160,12 +1202,94 @@ body.report .art-grain {
   border-top: var(--rule) solid var(--paper-line);
 }
 
+/* Stepping through the report is primary navigation, so it keeps a full
+   target at every width, not only on a phone. */
+.pager-foot .control {
+  min-height: var(--tap);
+  padding-inline: 1.25rem;
+}
+
 .pager-position {
   text-align: center;
 }
 
+/* ------------------------------------------------- relations between currents */
+
+.relations-figure {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
+
+.art-cycle {
+  width: 100%;
+  max-width: 20rem;
+  height: auto;
+}
+
+/* The feeding ring is continuous; the checking reaches are broken. */
+.art-cycle-ring {
+  fill: none;
+  stroke: var(--ink-faint);
+  stroke-width: 1.5;
+}
+
+.art-cycle-check {
+  fill: none;
+  stroke: var(--ink-faint);
+  stroke-dasharray: 3 5;
+  stroke-width: 1;
+}
+
+.art-cycle-node {
+  stroke-width: 2;
+}
+
+.art-cycle-node-lead {
+  stroke-width: 3;
+}
+
+.art-cycle-label {
+  fill: var(--ink-dim);
+  font-family: var(--type-operational);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+.art-cycle-label-lead {
+  fill: var(--ink);
+}
+
+.relations-shadow {
+  margin-top: 1rem;
+  color: var(--ink-dim);
+}
+
+/* The current is named by a mark beside it, not by a coloured edge. */
+.relations-role {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  font-size: var(--step-section);
+}
+
+.relations-role::before {
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--trace, var(--ink-faint));
+  content: "";
+}
+
+.relations-keywords {
+  margin-top: 0.5rem;
+}
+
+/* Copy passes under the sticky rail, so it needs room to arrive. */
 .chapter {
-  padding: 5rem var(--gutter) 0;
+  padding: 4rem var(--gutter) 0;
+  scroll-margin-top: 5rem;
 }
 
 .chapter-head {
@@ -1627,28 +1751,14 @@ body.report .action-quiet {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* One column, so the reading takes the gutters directly. */
   .passage,
   .watch[data-phase="pressure"] .passage,
   .watch[data-phase="recovery"] .passage,
   .observation,
   .completion {
     max-width: none;
-  }
-
-  .watch {
-    padding-left: var(--gutter);
-    padding-right: var(--gutter);
-  }
-
-  .act-plate,
-  .interlude {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .completion {
-    margin-left: 0;
-    margin-right: 0;
+    padding-inline: var(--gutter);
   }
 }
 
@@ -1679,18 +1789,54 @@ body.report .action-quiet {
   .masthead-controls {
     flex: 1 1 auto;
     flex-wrap: nowrap;
-    justify-content: flex-start;
-    overflow-x: auto;
-    scrollbar-width: none;
-    overscroll-behavior-x: contain;
-  }
-
-  .masthead-controls::-webkit-scrollbar {
-    display: none;
+    justify-content: space-between;
   }
 
   .masthead-controls > * {
     flex: 0 0 auto;
+  }
+
+  /* One button, and everything behind it. */
+  .control-menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .control-menu[data-paused="true"]::before {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--signal-live);
+    content: "";
+  }
+
+  .controls-panel {
+    position: absolute;
+    z-index: 30;
+    top: 100%;
+    right: var(--gutter);
+    display: none;
+    grid-auto-flow: row;
+    gap: 0.4rem;
+    padding: 0.75rem;
+    border: var(--rule) solid var(--edge);
+    background: var(--deep);
+  }
+
+  .masthead.is-open .controls-panel {
+    display: grid;
+  }
+
+  .controls-panel .control {
+    width: 100%;
+    justify-content: center;
+  }
+
+  #pace-control {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
   }
 
   /* The rail scrolls rather than shrinking, so a chapter keeps its name. */
@@ -1715,7 +1861,7 @@ body.report .action-quiet {
   }
 
   .prologue {
-    padding: 5rem var(--gutter) 4rem;
+    padding-block: 5rem 4rem;
   }
 
   .interlude {
