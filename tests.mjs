@@ -329,25 +329,269 @@ check("no response is imputed and invalid values are rejected", () => {
   assert.equal(core.answeredCount(core.recordResponse(data, state, "q05", 3)), 1);
 });
 
-check("the summary never names a type and respects its thresholds", () => {
-  const flat = core.summariseProfile(data, core.scoreProfile(data, answerAll(() => 3)));
-  assert.match(flat, /midpoint/i);
+/* ---------------------------------------------------------- Aurora Roles */
 
-  const skewed = core.summariseProfile(
+check("the five roles map onto the five domains as specified", () => {
+  assert.deepEqual(data.assessment.roleOrder, [
+    "thread",
+    "horizon",
+    "aegis",
+    "hearth",
+    "forge",
+  ]);
+  assert.deepEqual(data.assessment.roleMapping, {
+    Thread: "Agreeableness",
+    Horizon: "Open-Mindedness",
+    Aegis: "6 - Negative Emotionality",
+    Hearth: "Extraversion",
+    Forge: "Conscientiousness",
+  });
+
+  const expected = {
+    thread: { domain: "agreeableness", inverse: false, colour: "#3dcd58" },
+    horizon: { domain: "openMindedness", inverse: false, colour: "#42b4e6" },
+    aegis: { domain: "negativeEmotionality", inverse: true, colour: "#9b51e0" },
+    hearth: { domain: "extraversion", inverse: false, colour: "#ef5b7a" },
+    forge: { domain: "conscientiousness", inverse: false, colour: "#ff8a3d" },
+  };
+  Object.entries(expected).forEach(([id, definition]) => {
+    const role = data.assessment.roles[id];
+    assert.equal(role.domain, definition.domain, `${id} domain`);
+    assert.equal(role.inverse, definition.inverse, `${id} inverse`);
+    assert.equal(role.colour, definition.colour, `${id} colour`);
+  });
+});
+
+check("Aegis is the inverse of Negative Emotionality and others are direct", () => {
+  const profile = core.scoreProfile(
     data,
+    answerAll((index, item) =>
+      item.domain === "negativeEmotionality" ? (item.reverse ? 1 : 5) : 3,
+    ),
+  );
+  const byId = Object.fromEntries(profile.roles.map((role) => [role.id, role.score]));
+  const domains = Object.fromEntries(
+    profile.domains.map((domain) => [domain.code, domain.score]),
+  );
+  assert.equal(domains.negativeEmotionality, 5);
+  assert.equal(byId.aegis, 1, "6 - 5");
+  assert.equal(byId.thread, domains.agreeableness);
+  assert.equal(byId.horizon, domains.openMindedness);
+  assert.equal(byId.hearth, domains.extraversion);
+  assert.equal(byId.forge, domains.conscientiousness);
+  assert.equal(core.roleScoreFor({ inverse: true }, 2), 4);
+  assert.equal(core.roleScoreFor({ inverse: false }, 2), 2);
+});
+
+check("role scores stay on the 1-5 scale and never total", () => {
+  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
+  assert.equal(profile.roles.length, 5);
+  profile.roles.forEach((role) => {
+    assert.ok(role.score >= 1 && role.score <= 5, `${role.name} ${role.score}`);
+    assert.equal(role.normalised, (role.score - 1) / 4, `${role.name} normalised`);
+  });
+  ["total", "sum", "percentage", "share"].forEach((key) => {
+    assert.equal(key in profile.roles[0], false, `role.${key}`);
+  });
+});
+
+check("a near tie produces a blend of exactly two roles", () => {
+  const roles = [
+    { id: "a", name: "Thread", score: 4.1, normalised: 0.775 },
+    { id: "b", name: "Forge", score: 4.0, normalised: 0.75 },
+    { id: "c", name: "Aegis", score: 3.2, normalised: 0.55 },
+    { id: "d", name: "Hearth", score: 2.0, normalised: 0.25 },
+    { id: "e", name: "Horizon", score: 1.5, normalised: 0.125 },
+  ];
+  const blend = core.leadingRoles(data, roles);
+  assert.equal(blend.isBlend, true);
+  assert.equal(blend.label, "Thread + Forge");
+  assert.equal(blend.blended.length, 2);
+
+  // A flat profile is a flat profile, not a five-way blend.
+  const flat = core.leadingRoles(
+    data,
+    roles.map((role) => ({ ...role, score: 3 })),
+  );
+  assert.equal(flat.blended.length, 2);
+});
+
+check("a secondary role is offered only within 0.30", () => {
+  const base = [
+    { id: "a", name: "Thread", score: 4.5 },
+    { id: "b", name: "Forge", score: 4.2 },
+    { id: "c", name: "Aegis", score: 2.0 },
+  ];
+  const close = core.leadingRoles(data, base);
+  assert.equal(close.isBlend, false);
+  assert.equal(close.secondary.name, "Forge");
+
+  const far = core.leadingRoles(data, [
+    { id: "a", name: "Thread", score: 4.5 },
+    { id: "b", name: "Forge", score: 4.0 },
+  ]);
+  assert.equal(far.secondary, null);
+});
+
+/* -------------------------------------------------------- context phases */
+
+check("every act belongs to one phase and phases hold whole acts", () => {
+  assert.deepEqual(data.assessment.phaseOrder, ["baseline", "pressure", "recovery"]);
+  const seen = new Set();
+  core.phaseDefinitions(data).forEach((phase) => {
+    assert.ok(phase.acts.length >= 3, `${phase.id} needs three acts`);
+    phase.acts.forEach((act) => {
+      assert.equal(seen.has(act), false, `act ${act} in two phases`);
+      seen.add(act);
+    });
+  });
+  assert.equal(seen.size, 12);
+
+  data.story.acts.forEach((act) => {
+    assert.ok(act.contextPhase, `${act.id} has no phase`);
+    act.items.forEach((item) => {
+      assert.equal(item.contextPhase, act.contextPhase, `${item.id} phase`);
+    });
+  });
+});
+
+check("each phase carries equal representation of the five domains", () => {
+  core.phaseDefinitions(data).forEach((phase) => {
+    const counts = {};
+    items
+      .filter((item) => item.contextPhase === phase.id)
+      .forEach((item) => {
+        counts[item.domain] = (counts[item.domain] || 0) + 1;
+      });
+    const values = core.DOMAIN_ORDER.map((code) => counts[code]);
+    assert.equal(new Set(values).size, 1, `${phase.id} uneven: ${values}`);
+    assert.equal(values[0], phase.acts.length, `${phase.id} per domain`);
+  });
+});
+
+check("phase scores are calculated separately from the full profile", () => {
+  const profile = core.scoreProfile(
+    data,
+    answerAll((index, item) =>
+      item.domain === "conscientiousness" && item.contextPhase === "pressure"
+        ? item.reverse
+          ? 1
+          : 5
+        : 3,
+    ),
+  );
+  const forge = (phase) => phase.roles.find((role) => role.id === "forge").score;
+  assert.equal(forge(profile.phases[0]), 3, "baseline untouched");
+  assert.equal(forge(profile.phases[1]), 5, "pressure raised");
+  assert.equal(forge(profile.phases[2]), 3, "recovery untouched");
+  profile.phases.forEach((phase) => assert.equal(phase.definitive, true));
+});
+
+check("phase facets are not reported separately", () => {
+  const profile = core.scoreProfile(data, answerAll(() => 4));
+  profile.phases.forEach((phase) => {
+    assert.equal("facets" in phase, false, `${phase.id} exposes facets`);
+  });
+  assert.equal(profile.facets.length, 15);
+  assert.match(data.assessment.phaseNote, /not official BFI-2 scores/i);
+});
+
+check("shifts use the 0.25 and 0.50 thresholds", () => {
+  assert.equal(core.describeShift(data, 0.24), null);
+  assert.equal(core.describeShift(data, -0.24), null);
+  assert.equal(core.describeShift(data, 0.25), "subtle");
+  assert.equal(core.describeShift(data, 0.49), "subtle");
+  assert.equal(core.describeShift(data, 0.5), "notable");
+  assert.equal(core.describeShift(data, -1.2), "notable");
+});
+
+check("a stable pattern reports no shifts at all", () => {
+  const profile = core.scoreProfile(data, answerAll(() => 3));
+  const comparison = core.compareRoles(data, profile.phases[0], profile.phases[1]);
+  assert.equal(comparison.stable, true);
+  assert.deepEqual(comparison.shifts, []);
+});
+
+check("the summary describes patterns, never a type or a verdict", () => {
+  const profiles = [
+    core.scoreProfile(data, answerAll(() => 3)),
     core.scoreProfile(
       data,
       answerAll((index, item) =>
-        item.domain === "extraversion" ? (item.reverse ? 1 : 5) : 3,
+        item.domain === "conscientiousness" && item.contextPhase === "pressure"
+          ? item.reverse
+            ? 1
+            : 5
+          : 3,
       ),
     ),
-  );
-  assert.match(skewed, /Extraversion/);
-  [flat, skewed].forEach((summary) => {
-    assert.doesNotMatch(summary, /\btype\b/i);
-    assert.doesNotMatch(summary, /\bbetter\b/i);
-    assert.doesNotMatch(summary, /strength|weakness/i);
+  ];
+
+  profiles.forEach((profile) => {
+    const summary = core.summariseProfile(data, profile);
+    assert.ok(summary.overall.primary, "no leading role");
+    ["consistency", "adaptation", "contribution"].forEach((key) => {
+      const words = summary[key].trim().split(/\s+/).length;
+      assert.ok(words >= 50 && words <= 90, `${key} is ${words} words`);
+      assert.doesNotMatch(summary[key], /\byour type\b/i);
+      assert.doesNotMatch(summary[key], /\bstrength|weakness\b/i);
+      assert.doesNotMatch(summary[key], /\bsuccessful|unsuccessful\b/i);
+      assert.doesNotMatch(summary[key], /\bshould\b/i);
+    });
+    assert.ok(summary.reflection.endsWith("?"), "reflection is a question");
   });
+});
+
+/* ---------------------------------------------------------- aurora state */
+
+check("the aurora is off everywhere except its own act", () => {
+  assert.equal(data.story.auroraAct, 9);
+  const complete = answerFirst(60);
+  const nodes = core.buildNodes(data, complete);
+  const states = new Map();
+  for (let revealed = 0; revealed <= nodes.length; revealed += 1) {
+    const value = core.auroraStateFor(data, complete, nodes, revealed);
+    if (!states.has(value)) {
+      states.set(value, []);
+    }
+    states.get(value).push(revealed);
+  }
+
+  assert.deepEqual([...states.keys()].sort(), ["burst", "fading", "off"]);
+
+  const actAt = (revealed) => {
+    let act = 0;
+    for (let index = 0; index < revealed; index += 1) {
+      if (nodes[index].actNumber) {
+        act = nodes[index].actNumber;
+      }
+    }
+    return act;
+  };
+
+  states.get("burst").forEach((revealed) => {
+    assert.equal(actAt(revealed), 9, `burst outside act 9 at ${revealed}`);
+  });
+  states.get("fading").forEach((revealed) => {
+    assert.equal(actAt(revealed), 9, `fading outside act 9 at ${revealed}`);
+  });
+  // The fade comes after the burst and the sky is dark again by the rescue.
+  assert.ok(Math.min(...states.get("fading")) > Math.max(...states.get("burst")));
+  assert.equal(core.auroraStateFor(data, complete, nodes, nodes.length), "off");
+});
+
+check("the aurora is off through the prelude and an unstarted watch", () => {
+  assert.equal(core.auroraStateFor(data, core.emptyState(), null, 0), "off");
+  assert.equal(core.auroraStateFor(data, answerFirst(0), null, 0), "off");
+  assert.equal(core.auroraStateFor(data, answerFirst(20), null, 200), "off");
+});
+
+check("the reader's context phase tracks the story", () => {
+  assert.equal(core.contextPhaseFor(data, answerFirst(0)), "baseline");
+  assert.equal(core.contextPhaseFor(data, answerFirst(19)), "baseline");
+  assert.equal(core.contextPhaseFor(data, answerFirst(20)), "pressure");
+  assert.equal(core.contextPhaseFor(data, answerFirst(39)), "pressure");
+  assert.equal(core.contextPhaseFor(data, answerFirst(40)), "recovery");
 });
 
 /* --------------------------------------------------------- journey state */
@@ -668,19 +912,130 @@ check("the response scale keeps five buttons on one row with no connector", () =
   assert.match(stylesSource, /--response-height: 3\.375rem/);
 });
 
+check("exactly two font families are used, and no monospace", () => {
+  assert.match(stylesSource, /--font-serif:/);
+  assert.match(stylesSource, /--font-sans:/);
+  // No third family, and nothing falls back to a monospace stack.
+  [stylesSource, pdfSource].forEach((source) => {
+    assert.doesNotMatch(source, /monospace/i, "monospace stack");
+    assert.doesNotMatch(source, /ui-monospace|Courier|Cascadia|IBM Plex Mono|SF Mono/i);
+  });
+  const families = [...stylesSource.matchAll(/font-family:\s*([^;]+);/g)].map((match) =>
+    match[1].trim(),
+  );
+  assert.ok(families.length > 0);
+  families.forEach((value) => {
+    assert.ok(
+      /var\(--font-serif\)|var\(--font-sans\)/.test(value),
+      `unexpected font-family: ${value}`,
+    );
+  });
+});
+
+check("the typography scale matches the specified hierarchy", () => {
+  assert.match(stylesSource, /--text-hero: clamp\(2\.5rem, 6vw, 5rem\)/);
+  assert.match(stylesSource, /--text-act: clamp\(2rem, 4vw, 3\.5rem\)/);
+  assert.match(stylesSource, /--text-section: clamp\(1\.5rem, 3vw, 2\.25rem\)/);
+  assert.match(stylesSource, /--text-body: clamp\(/);
+  assert.match(stylesSource, /--text-ui: clamp\(/);
+  assert.match(stylesSource, /--text-meta: clamp\(/);
+  // Metadata is the sans in uppercase with tracking and tabular numerals.
+  const metaBlock = stylesSource.slice(
+    stylesSource.indexOf(".meta {"),
+    stylesSource.indexOf(".numeric {"),
+  );
+  assert.match(metaBlock, /font-family: var\(--font-sans\)/);
+  assert.match(metaBlock, /text-transform: uppercase/);
+  assert.match(metaBlock, /letter-spacing: var\(--tracking-meta\)/);
+  assert.match(metaBlock, /font-variant-numeric: tabular-nums/);
+});
+
 check("the stylesheet honours the layout and accessibility rules", () => {
   assert.match(stylesSource, /--page-max: 1180px/);
-  assert.match(stylesSource, /--narrative-max: 760px/);
-  assert.match(stylesSource, /--serif:/);
-  assert.match(stylesSource, /--sans:/);
-  assert.match(stylesSource, /--technical: ui-monospace/);
+  // Narrative measure sits in the 720-820px band.
+  const measure = Number(stylesSource.match(/--measure: (\d+)px/)[1]);
+  assert.ok(measure >= 720 && measure <= 820, `measure is ${measure}px`);
   assert.match(stylesSource, /--tap: 3rem/);
   assert.match(stylesSource, /:focus-visible/);
   assert.match(stylesSource, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(stylesSource, /@media \(prefers-contrast: more\)/);
   assert.match(stylesSource, /\.skip-link/);
-  // Facet bars use one domain colour, never a red-to-green gradient.
+  // Bars use one colour per domain or role, never a red-to-green gradient.
   assert.match(stylesSource, /background: var\(--domain-colour, var\(--dawn-ink\)\)/);
+  assert.match(stylesSource, /background: var\(--role-colour, var\(--dawn-ink\)\)/);
+  assert.doesNotMatch(stylesSource, /linear-gradient\([^)]*red[^)]*green/i);
+});
+
+check("the aurora is a state, not a permanent background", () => {
+  assert.match(stylesSource, /\.sky-ribbon \{/);
+  // Hidden by default; only the burst and fade states reveal it.
+  const ribbon = stylesSource.slice(
+    stylesSource.indexOf(".sky-ribbon {"),
+    stylesSource.indexOf(".sky-ribbon::before"),
+  );
+  assert.match(ribbon, /opacity: 0;/);
+  assert.match(ribbon, /visibility: hidden;/);
+  assert.match(stylesSource, /body\[data-aurora="burst"\] \.sky-ribbon/);
+  assert.match(stylesSource, /body\[data-aurora="fading"\] \.sky-ribbon/);
+  assert.doesNotMatch(stylesSource, /aurora-surge-active|aurora-rescue/);
+  // Reduced motion swaps movement for opacity rather than removing the state.
+  const reduced = stylesSource.slice(
+    stylesSource.indexOf("@media (prefers-reduced-motion: reduce)"),
+  );
+  assert.match(reduced, /\.sky-ribbon \{\s*transition: opacity/);
+  assert.match(appSource, /data-aurora|dataset\.aurora/);
+  assert.match(appSource, /core\.auroraStateFor/);
+});
+
+check("the results page offers six navigable views", () => {
+  assert.equal(data.results.views.length, 6);
+  assert.deepEqual(
+    data.results.views.map((view) => view.id),
+    ["complete", "roles", "pressure", "recovery", "detail", "summary"],
+  );
+  data.results.views.forEach((view) => {
+    assert.ok(view.hash, `${view.id} hash`);
+    assert.ok(view.label, `${view.id} label`);
+    assert.ok(view.shortLabel, `${view.id} short label`);
+  });
+  assert.match(resultsSource, /function showView/);
+  assert.match(resultsSource, /ArrowLeft/);
+  assert.match(resultsSource, /ArrowRight/);
+  assert.match(resultsSource, /popstate/);
+  assert.match(resultsSource, /touchstart/);
+  assert.match(resultsSource, /pageLabelTemplate/);
+  assert.match(resultsSource, /results-dot/);
+  // Navigation is never automatic.
+  assert.doesNotMatch(resultsSource, /setInterval/);
+  // Transition sits in the 220-300ms band and drops out under reduced motion.
+  const duration = Number(stylesSource.match(/--transition-view: (\d+)ms/)[1]);
+  assert.ok(duration >= 220 && duration <= 300, `transition is ${duration}ms`);
+  assert.match(stylesSource.slice(stylesSource.indexOf("@media (prefers-reduced-motion")), /\.results-view \{?[\s\S]{0,80}animation: none/);
+});
+
+check("the results copy stays neutral and non-diagnostic", () => {
+  const copy = JSON.stringify(data.results);
+  [
+    /\bbest role\b/i,
+    /\bwinner\b/i,
+    /\byou are a\b/i,
+    /\bpersonality type\b/i,
+    /\bstrengths? and weakness/i,
+    /\bpercentile\b/i,
+  ].forEach((pattern) => assert.doesNotMatch(copy, pattern, String(pattern)));
+
+  // "Diagnosis" may appear only where the copy is denying one.
+  [...copy.matchAll(/.{0,24}diagnos/gi)].forEach((match) => {
+    assert.match(match[0], /\bnot\b[^.]*$/i, `unqualified diagnostic claim: ${match[0]}`);
+  });
+  assert.match(
+    data.results.views.find((view) => view.id === "complete").disclaimer,
+    /not a diagnosis/i,
+  );
+  // Conditional voice, not verdicts.
+  const pressure = data.results.views.find((view) => view.id === "pressure");
+  assert.match(pressure.shiftLeadIn, /your responses suggest/i);
+  assert.match(pressure.stableCopy, /suggests/i);
 });
 
 check("the results page recalculates and refuses incomplete journeys", () => {
@@ -690,7 +1045,8 @@ check("the results page recalculates and refuses incomplete journeys", () => {
   assert.doesNotMatch(resultsSource, /location\.search/);
   assert.doesNotMatch(resultsSource, /URLSearchParams/);
   assert.match(resultsSource, /outOfFive/);
-  assert.match(resultsSource, /confirmRestart/);
+  assert.match(resultsSource, /restartConfirm/);
+  assert.match(resultsSource, /core\.clearJourney/);
 });
 
 check("scores are shown out of five on both surfaces", () => {

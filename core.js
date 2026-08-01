@@ -637,70 +637,331 @@
       };
     });
 
+    const domainScores = Object.fromEntries(
+      domains.map((domain) => [domain.code, domain.score]),
+    );
+
     return {
       playerName: safe.participant.name,
       complete: true,
       domains,
       facets: domains.flatMap((domain) => domain.facets),
+      roles: scoreRoles(data, domainScores),
+      phases: scorePhases(data, safe),
       scaleMin: MIN_RESPONSE,
       scaleMax: MAX_RESPONSE,
     };
   }
 
-  const SUMMARY_DISTANCE = 0.5;
-  const FACET_CONTRAST = 0.75;
+  /* ---------------------------------------------------------- Aurora Roles */
 
   /*
-   * Narrative summary rules. These thresholds are presentation rules, not
-   * BFI-2 norms, and no domain is ever described as the reader's "type".
+   * The five roles are a narrative reading of the same five domains, kept on
+   * the same 1-5 scale. Aegis is the inverse representation of Negative
+   * Emotionality, so a higher Aegis means greater steadiness. Nothing here is
+   * a share of anything: the roles are independent and never total.
+   */
+  function roleScoreFor(definition, domainScore) {
+    if (!Number.isFinite(domainScore)) {
+      return null;
+    }
+    return definition.inverse ? REVERSE_CONSTANT - domainScore : domainScore;
+  }
+
+  function roleDefinitions(data) {
+    return data.assessment.roleOrder.map((id) => data.assessment.roles[id]);
+  }
+
+  function scoreRoles(data, domainScores) {
+    return roleDefinitions(data).map((definition) => {
+      const score = roleScoreFor(definition, domainScores[definition.domain]);
+      return {
+        id: definition.id,
+        name: definition.name,
+        colour: definition.colour,
+        meaning: definition.meaning,
+        reading: definition.reading,
+        contribution: definition.contribution,
+        domain: definition.domain,
+        inverse: definition.inverse,
+        score,
+        normalised: normalise(score),
+      };
+    });
+  }
+
+  /*
+   * Which role or roles led. Two scores within the blend threshold are read as
+   * a blend rather than a winner; a role within the secondary threshold is
+   * offered alongside. No role is ever described as better.
+   */
+  function leadingRoles(data, roles) {
+    const thresholds = data.assessment.shiftThresholds;
+    const ranked = roles
+      .filter((role) => Number.isFinite(role.score))
+      .slice()
+      .sort((left, right) => right.score - left.score);
+
+    if (!ranked.length) {
+      return { primary: null, blended: [], secondary: null, isBlend: false, label: "" };
+    }
+
+    // A blend is the top two, never a pile of near-ties: five roles within a
+    // tenth of each other is a flat profile, not a five-way blend.
+    const top = ranked[0];
+    const runnerUp = ranked[1];
+    const isBlend =
+      Boolean(runnerUp) && top.score - runnerUp.score <= thresholds.blend;
+    const blended = isBlend ? [top, runnerUp] : [top];
+    const secondary =
+      !isBlend &&
+      ranked[1] &&
+      top.score - ranked[1].score <= thresholds.secondary
+        ? ranked[1]
+        : null;
+
+    return {
+      primary: top,
+      blended,
+      secondary,
+      isBlend,
+      ranked,
+      label: blended.map((role) => role.name).join(" + "),
+    };
+  }
+
+  /* -------------------------------------------------------- context phases */
+
+  function phaseDefinitions(data) {
+    return data.assessment.phaseOrder.map((id) => data.assessment.phases[id]);
+  }
+
+  function scorePhases(data, state) {
+    const safe = sanitiseState(data, state);
+    const items = flattenItems(data);
+
+    return phaseDefinitions(data).map((phase) => {
+      const domainValues = {};
+      items
+        .filter((item) => item.contextPhase === phase.id)
+        .forEach((item) => {
+          const raw = safe.assessment.answers[item.id];
+          if (!isValidResponse(raw)) {
+            return;
+          }
+          (domainValues[item.domain] = domainValues[item.domain] || []).push(
+            getKeyedScore(raw, item.reverse),
+          );
+        });
+
+      const domainScores = Object.fromEntries(
+        DOMAIN_ORDER.map((code) => [code, mean(domainValues[code] || [])]),
+      );
+
+      return {
+        id: phase.id,
+        label: phase.label,
+        shortLabel: phase.shortLabel,
+        window: phase.window,
+        description: phase.description,
+        acts: phase.acts.slice(),
+        // Phase results are only definitive once the phase holds three Acts.
+        definitive: phase.acts.length >= 3,
+        domainScores,
+        roles: scoreRoles(data, domainScores),
+      };
+    });
+  }
+
+  function phaseByld(profile, id) {
+    return profile.phases.find((phase) => phase.id === id) || null;
+  }
+
+  /*
+   * A shift is the movement of one role between two phases. Anything below the
+   * ignore threshold is not interpreted at all.
+   */
+  function describeShift(data, magnitude) {
+    const thresholds = data.assessment.shiftThresholds;
+    const size = Math.abs(magnitude);
+    if (size < thresholds.ignore) {
+      return null;
+    }
+    return size >= thresholds.notable ? "notable" : "subtle";
+  }
+
+  function compareRoles(data, fromPhase, toPhase) {
+    const before = Object.fromEntries(fromPhase.roles.map((role) => [role.id, role]));
+    const shifts = toPhase.roles
+      .map((role) => {
+        const previous = before[role.id];
+        if (!Number.isFinite(role.score) || !Number.isFinite(previous?.score)) {
+          return null;
+        }
+        const delta = role.score - previous.score;
+        const size = describeShift(data, delta);
+        return size ? { ...role, delta, size, direction: delta > 0 ? "rose" : "fell" } : null;
+      })
+      .filter(Boolean)
+      .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta));
+
+    return { shifts, stable: shifts.length === 0 };
+  }
+
+  /* Where the recovery pattern sits relative to the start and the worst of it. */
+  function describeReturn(data, profile) {
+    const baseline = phaseByld(profile, "baseline");
+    const pressure = phaseByld(profile, "pressure");
+    const recovery = phaseByld(profile, "recovery");
+    if (!baseline || !pressure || !recovery) {
+      return null;
+    }
+
+    const distance = (left, right) => {
+      const byId = Object.fromEntries(right.roles.map((role) => [role.id, role.score]));
+      const gaps = left.roles
+        .filter((role) => Number.isFinite(role.score) && Number.isFinite(byId[role.id]))
+        .map((role) => Math.abs(role.score - byId[role.id]));
+      return gaps.length ? gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length : null;
+    };
+
+    const toBaseline = distance(recovery, baseline);
+    const toPressure = distance(recovery, pressure);
+    const thresholds = data.assessment.shiftThresholds;
+
+    if (!Number.isFinite(toBaseline) || !Number.isFinite(toPressure)) {
+      return null;
+    }
+    if (Math.abs(toBaseline - toPressure) < thresholds.ignore) {
+      return "new-balance";
+    }
+    return toBaseline < toPressure ? "returned" : "retained";
+  }
+
+  /* --------------------------------------------------------- aurora state */
+
+  /*
+   * The aurora is a narrative event, not a background. It is off everywhere
+   * except the Act where the sky opens, where it bursts and then fades, and it
+   * is gone well before the rescue team arrives.
+   */
+  function auroraStateFor(data, state, nodes, revealed) {
+    const auroraAct = data.story.auroraAct;
+    const safe = sanitiseState(data, state);
+    if (!safe.participant.name) {
+      return "off";
+    }
+
+    const stream = Array.isArray(nodes) ? nodes : buildNodes(data, safe);
+    const seen = stream.slice(0, Math.max(0, Math.min(revealed ?? stream.length, stream.length)));
+    const actNodes = seen.filter((node) => node.actNumber === auroraAct || node.actId === actIdFor(data, auroraAct));
+    if (!actNodes.length) {
+      return "off";
+    }
+
+    const total = stream.filter(
+      (node) => node.actNumber === auroraAct || node.actId === actIdFor(data, auroraAct),
+    ).length;
+    const later = seen.some(
+      (node) =>
+        (node.actNumber && node.actNumber > auroraAct) ||
+        (node.actId && actNumberFor(data, node.actId) > auroraAct),
+    );
+
+    if (later) {
+      return "off";
+    }
+    // The last quarter of the Act is the fade.
+    return total > 0 && actNodes.length / total > 0.75 ? "fading" : "burst";
+  }
+
+  function actIdFor(data, actNumber) {
+    const act = data.story.acts.find((entry) => entry.number === actNumber);
+    return act ? act.id : null;
+  }
+
+  function actNumberFor(data, actId) {
+    const act = data.story.acts.find((entry) => entry.id === actId);
+    return act ? act.number : 0;
+  }
+
+  function contextPhaseFor(data, state) {
+    const safe = sanitiseState(data, state);
+    const act = Math.min(
+      ACT_COUNT,
+      Math.floor(answeredCount(safe) / ITEMS_PER_ACT) + 1,
+    );
+    const entry = data.story.acts.find((candidate) => candidate.number === act);
+    return entry ? entry.contextPhase : "baseline";
+  }
+
+  /* ------------------------------------------------------ narrative summary */
+
+  function joinList(values) {
+    if (values.length <= 1) {
+      return values[0] || "";
+    }
+    return `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
+  }
+
+  /*
+   * The closing summary. Every sentence is conditional, describes a pattern
+   * rather than an identity, and never frames a role as a strength or a fault.
    */
   function summariseProfile(data, profile) {
     if (!profile) {
-      return "";
+      return null;
     }
-    const copy = data.results.summary;
-    const distinctive = profile.domains
-      .map((domain) => ({ domain, distance: Math.abs(domain.score - 3) }))
-      .filter((entry) => entry.distance >= SUMMARY_DISTANCE)
-      .sort((left, right) => right.distance - left.distance)
-      .slice(0, 2);
+    const copy = data.results.summaryTemplates;
+    const overall = leadingRoles(data, profile.roles);
+    const baseline = phaseByld(profile, "baseline");
+    const pressure = phaseByld(profile, "pressure");
+    const recovery = phaseByld(profile, "recovery");
+    const startingLead = leadingRoles(data, baseline.roles);
+    const pressureLead = leadingRoles(data, pressure.roles);
+    const recoveryLead = leadingRoles(data, recovery.roles);
 
-    const sentences = [];
-    if (!distinctive.length) {
-      sentences.push(copy.balanced);
-    } else {
-      const phrases = distinctive.map((entry) =>
-        (entry.domain.score > 3 ? copy.aboveTemplate : copy.belowTemplate).replace(
-          "{domain}",
-          entry.domain.name,
-        ),
-      );
-      const highlights =
-        phrases.length === 1 ? phrases[0] : `${phrases[0]} and ${phrases[1]}`;
-      sentences.push(copy.lead.replace("{highlights}", highlights));
-      sentences.push(copy.closing);
-    }
+    const consistency =
+      startingLead.primary?.id === pressureLead.primary?.id
+        ? copy.consistencyAnchored
+            .replace("{overall}", overall.label)
+            .replace("{reading}", overall.primary.reading)
+        : copy.consistencyMoved
+            .replace("{starting}", startingLead.label)
+            .replace("{pressure}", pressureLead.label);
 
-    for (const domain of profile.domains) {
-      const scored = domain.facets.filter((facet) => Number.isFinite(facet.score));
-      if (scored.length < 2) {
-        continue;
-      }
-      const sorted = scored.slice().sort((left, right) => right.score - left.score);
-      const high = sorted[0];
-      const low = sorted[sorted.length - 1];
-      if (high.score - low.score >= FACET_CONTRAST) {
-        sentences.push(
-          copy.facetTemplate
-            .replace("{domain}", domain.name)
-            .replace("{high}", high.name)
-            .replace("{low}", low.name),
-        );
-        break;
-      }
-    }
+    const pressureComparison = compareRoles(data, baseline, pressure);
+    const returnKind = describeReturn(data, profile);
+    const recoveryClause =
+      returnKind === "returned"
+        ? copy.recoveryReturned
+        : returnKind === "retained"
+          ? copy.recoveryRetained
+          : copy.recoveryNew;
 
-    return sentences.join(" ");
+    const adaptation = pressureComparison.stable
+      ? copy.adaptationStable
+      : copy.adaptationShift
+          .replace("{pressure}", pressureComparison.shifts[0].name)
+          .replace("{reading}", pressureComparison.shifts[0].reading)
+          .replace("{recoveryClause}", recoveryClause);
+
+    const contribution = copy.contribution.replace(
+      "{contribution}",
+      joinList(overall.blended.map((role) => role.contribution)),
+    );
+
+    return {
+      overall,
+      starting: startingLead,
+      pressure: pressureLead,
+      recovery: recoveryLead,
+      consistency,
+      adaptation,
+      contribution,
+      reflection: data.results.views.find((view) => view.id === "summary")
+        .reflectionTemplate,
+    };
   }
 
   const api = {
@@ -718,12 +979,17 @@
     TEXT_SPEEDS,
     DOMAIN_ORDER,
     answeredCount,
+    auroraStateFor,
     bandForScore,
     buildNodes,
     canGoBack,
     clearJourney,
+    compareRoles,
+    contextPhaseFor,
     currentItem,
     defaultPreferences,
+    describeReturn,
+    describeShift,
     domainDefinitions,
     emptyState,
     flattenItems,
@@ -732,16 +998,20 @@
     goBack,
     isComplete,
     itemIdForNumber,
+    leadingRoles,
     loadPreferences,
     loadState,
     narrativeForRaw,
     normalise,
     normalisePlayerName,
     pendingQuestion,
+    phaseDefinitions,
     previousResponse,
     recordResponse,
     responseLabels,
     revealDelay,
+    roleDefinitions,
+    roleScoreFor,
     sanitisePreferences,
     sanitiseState,
     savePreferences,

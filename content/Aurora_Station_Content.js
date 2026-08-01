@@ -1,7 +1,7 @@
 /* Edit this data file to update the story; no rebuild is required. */
 window.AURORA_STATION_DATA = {
   "schemaVersion": "1.0.0",
-  "contentVersion": "6.0.0-bfi2-aligned",
+  "contentVersion": "7.0.0-aurora-roles",
   "id": "aurora-station",
   "title": "Aurora Station",
   "subtitle": "The Final Watch",
@@ -247,6 +247,127 @@ window.AURORA_STATION_DATA = {
         "domain": "openMindedness",
         "meaning": "Originality, imagination and inventive thinking"
       }
+    },
+    "phases": {
+      "baseline": {
+        "id": "baseline",
+        "label": "Baseline",
+        "shortLabel": "Before",
+        "acts": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "window": "21:58 – 22:55",
+        "description": "The handover and the first Sector C fault, worked through ordinary procedure and contained."
+      },
+      "pressure": {
+        "id": "pressure",
+        "label": "Under pressure",
+        "shortLabel": "Pressure",
+        "acts": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "window": "22:56 – 03:50",
+        "description": "Base unreachable, heat rationed, an unexplained signal beneath the ice and hours in the whiteout."
+      },
+      "recovery": {
+        "id": "recovery",
+        "label": "After pressure",
+        "shortLabel": "Recovery",
+        "acts": [
+          9,
+          10,
+          11,
+          12
+        ],
+        "window": "03:50 – 05:20",
+        "description": "The storm breaks, the last reserve is committed, and the station waits for Ridge."
+      }
+    },
+    "phaseNote": "Phase scores are an Aurora Station narrative interpretation of the same responses. They are not official BFI-2 scores and have no norms.",
+    "phaseOrder": [
+      "baseline",
+      "pressure",
+      "recovery"
+    ],
+    "roles": {
+      "thread": {
+        "id": "thread",
+        "name": "Thread",
+        "domain": "agreeableness",
+        "inverse": false,
+        "colour": "#3dcd58",
+        "meaning": "Cooperation, trust, consideration, and maintaining connection",
+        "reading": "keeping people in contact with one another and protecting the working relationship",
+        "contribution": "holds a group together when the work starts to pull people apart"
+      },
+      "horizon": {
+        "id": "horizon",
+        "name": "Horizon",
+        "domain": "openMindedness",
+        "inverse": false,
+        "colour": "#42b4e6",
+        "meaning": "Curiosity, imagination, and reframing possibilities",
+        "reading": "keeping more than one explanation alive and looking for the frame that has not been tried",
+        "contribution": "finds the option a group has not yet considered"
+      },
+      "aegis": {
+        "id": "aegis",
+        "name": "Aegis",
+        "domain": "negativeEmotionality",
+        "inverse": true,
+        "colour": "#9b51e0",
+        "meaning": "Calmness, emotional steadiness, and resistance to destabilisation",
+        "reading": "staying level while the situation moves and keeping your own state out of the problem",
+        "contribution": "gives others something steady to work against when conditions are not steady"
+      },
+      "hearth": {
+        "id": "hearth",
+        "name": "Hearth",
+        "domain": "extraversion",
+        "inverse": false,
+        "colour": "#ef5b7a",
+        "meaning": "Social engagement, visible energy, and activating others",
+        "reading": "putting energy into the room and making your engagement visible to the people in it",
+        "contribution": "raises the level of a room when the work needs momentum"
+      },
+      "forge": {
+        "id": "forge",
+        "name": "Forge",
+        "domain": "conscientiousness",
+        "inverse": false,
+        "colour": "#ff8a3d",
+        "meaning": "Structure, persistence, responsibility, and dependable execution",
+        "reading": "holding sequence and finishing what the situation started",
+        "contribution": "turns an intention into something that actually gets carried through"
+      }
+    },
+    "roleOrder": [
+      "thread",
+      "horizon",
+      "aegis",
+      "hearth",
+      "forge"
+    ],
+    "roleNote": "The five roles are independent tendencies on the same one-to-five scale. They are not shares of a fixed personality, they do not total anything, and no role is better than another.",
+    "roleMapping": {
+      "Thread": "Agreeableness",
+      "Horizon": "Open-Mindedness",
+      "Aegis": "6 - Negative Emotionality",
+      "Hearth": "Extraversion",
+      "Forge": "Conscientiousness"
+    },
+    "shiftThresholds": {
+      "ignore": 0.25,
+      "subtle": 0.25,
+      "notable": 0.5,
+      "blend": 0.15,
+      "secondary": 0.3
     }
   },
   "story": {
@@ -280,7 +401,8 @@ window.AURORA_STATION_DATA = {
               "low": "You let the quiet hold. Mira signs, nods once and goes. The room keeps its own company until the outer door seals.",
               "mid": "You say enough to close the handover cleanly, then let the silence come back. Ilan stays at the window.",
               "high": "You keep the three of you talking until the last minute—the storm, the ridge, the winter list. Mira leaves mid-sentence, almost smiling."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q02",
@@ -299,7 +421,8 @@ window.AURORA_STATION_DATA = {
               "low": "You take the folder and go straight to the line. Whatever the season cost her is hers to carry south.",
               "mid": "You register how thin she looks, note it, and return to the page. The unresolved check matters more right now.",
               "high": "You ask how she is, and mean it. She answers briefly, but something in her shoulders drops before she lifts her bag."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q03",
@@ -318,7 +441,8 @@ window.AURORA_STATION_DATA = {
               "low": "You lay the pages out and number what is still open before anything else. Three items. The Sector C line is item one.",
               "mid": "You skim the stack, keep the shape of it in your head, and move on. It will hold for now.",
               "high": "You leave the stack as it is. The night will sort itself, and the pages can wait until something asks for them."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q04",
@@ -337,7 +461,8 @@ window.AURORA_STATION_DATA = {
               "low": "The unfinished line sits behind everything you do. You return to the panel twice more than the schedule asks.",
               "mid": "It stays with you, but at a distance—a thing to watch rather than a thing to carry.",
               "high": "You file it as one open item among several and let your attention settle back into the ordinary shape of the watch."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q05",
@@ -356,10 +481,12 @@ window.AURORA_STATION_DATA = {
               "low": "You notice all of it—the paper-coloured glass, the way the lamp gives out at the doorway. None of it goes in the log, and all of it stays with you.",
               "mid": "The room registers as a room. Once, briefly, the light across the glass catches you.",
               "high": "The room is a room. You check what needs checking and let the rest of it stay furniture."
-            }
+            },
+            "contextPhase": "baseline"
           }
         ],
-        "closing": "At 22:06, the console gives one soft tone. The temperature line jumps twice. This time the current line moves with it."
+        "closing": "At 22:06, the console gives one soft tone. The temperature line jumps twice. This time the current line moves with it.",
+        "contextPhase": "baseline"
       },
       {
         "id": "act-02",
@@ -385,7 +512,8 @@ window.AURORA_STATION_DATA = {
               "low": "You wait to see what he suggests. He offers the magnetic channel, and you follow it.",
               "mid": "You name two options and let him choose between them. He takes the second.",
               "high": "You state the order aloud—alarm history first, then the channel—and the room organises itself around it."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q07",
@@ -404,7 +532,8 @@ window.AURORA_STATION_DATA = {
               "low": "You cut across him. The sharpness in your voice ends the discussion faster than the argument does.",
               "mid": "You hold your position without heat, though you do not invite him to expand on his.",
               "high": "You let him finish, restate his objection back to him, then set your reading beside it. The room stays workable."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q08",
@@ -423,7 +552,8 @@ window.AURORA_STATION_DATA = {
               "low": "You start it now, while the evidence is fresh, and let the rest of the watch move around it.",
               "mid": "You begin the first half and mark where to resume. The remainder can wait for a quieter hour.",
               "high": "You note it as a task for later. There will be time before dawn, and nothing is trending."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q09",
@@ -442,7 +572,8 @@ window.AURORA_STATION_DATA = {
               "low": "Something in you closes a little. If the obvious check finds nothing, the night is probably going to stay unreadable.",
               "mid": "You accept the null result without much feeling either way and set up the second pass.",
               "high": "A clean first pass narrows the field. You start the second with the sense that the answer is still in reach."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q10",
@@ -461,10 +592,12 @@ window.AURORA_STATION_DATA = {
               "low": "It cleared. You close the entry and move to the next item on the sheet.",
               "mid": "You note the coincidence in the log without following it, and leave the question where anyone could pick it up.",
               "high": "You go looking for the mechanism—what could couple heat and current in the same instant—and the search opens more than it closes."
-            }
+            },
+            "contextPhase": "baseline"
           }
         ],
-        "closing": "The corridor tightens around the beam of your lamp. Frost coats the pipes. The air grows warmer with every step towards Sector C."
+        "closing": "The corridor tightens around the beam of your lamp. Frost coats the pipes. The air grows warmer with every step towards Sector C.",
+        "contextPhase": "baseline"
       },
       {
         "id": "act-03",
@@ -490,7 +623,8 @@ window.AURORA_STATION_DATA = {
               "low": "Something in you lifts. Whatever is behind the panel is real, and you want to be the one to reach it.",
               "mid": "You feel the pull of it briefly, then set it aside and fetch the tools.",
               "high": "It is another task. You collect what is needed and open the panel without any particular quickening."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q12",
@@ -509,7 +643,8 @@ window.AURORA_STATION_DATA = {
               "low": "You take the inspection as sound and look for what has changed since. Six weeks is time enough for a new fault.",
               "mid": "You keep the earlier check in mind without leaning on it, and verify the section yourself.",
               "high": "You assume the inspection was cursory. Whatever passed six weeks ago probably should not have."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q13",
@@ -528,7 +663,8 @@ window.AURORA_STATION_DATA = {
               "low": "You jump to step eight. The time saved is real, and so is the step you did not verify.",
               "mid": "You compress the middle steps rather than skip them, and note which ones were shortened.",
               "high": "You work the sequence as written, all eleven steps, and the slow ones take exactly as long as they always do."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q14",
@@ -547,7 +683,8 @@ window.AURORA_STATION_DATA = {
               "low": "Your state stays level through all of it. The numbers move; you do not.",
               "mid": "The rises tighten something in you and the falls release it, but not by much.",
               "high": "Each climb pulls you up with it and each fall drops you. By the fourth cycle you can hear it in your own voice."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q15",
@@ -566,10 +703,12 @@ window.AURORA_STATION_DATA = {
               "low": "You go for the store. The walk costs eleven minutes and the storm takes most of the warmth you had.",
               "mid": "You make do with a partial arrangement and accept that it will need redoing properly in daylight.",
               "high": "You build something out of a spare bracket and two lengths of strap. It is not in any manual, and it holds."
-            }
+            },
+            "contextPhase": "baseline"
           }
         ],
-        "closing": "The Sector C branch begins to cool. Then a dull impact travels through the floor. The main generator trips, and the station returns in emergency red."
+        "closing": "The Sector C branch begins to cool. Then a dull impact travels through the floor. The main generator trips, and the station returns in emergency red.",
+        "contextPhase": "baseline"
       },
       {
         "id": "act-04",
@@ -595,7 +734,8 @@ window.AURORA_STATION_DATA = {
               "low": "You talk the whole way through it—positions, timings, what you are seeing—and the talk is what keeps you both aligned.",
               "mid": "You speak when something needs saying and not otherwise.",
               "high": "You work in silence. Ilan learns where you are from the sound of your movements rather than your voice."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q17",
@@ -614,7 +754,8 @@ window.AURORA_STATION_DATA = {
               "low": "You think about how the end of a long season narrows what a person can see, and the anger does not really arrive.",
               "mid": "You set the question of fault aside. It can be answered later, by someone else.",
               "high": "Someone made this harder than it needed to be. That sits with you while you work."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q18",
@@ -633,7 +774,8 @@ window.AURORA_STATION_DATA = {
               "low": "You move between all three as each one calls, and afterwards the log has a gap you cannot reconstruct.",
               "mid": "You keep isolation and ventilation separated and let the log take whatever is left.",
               "high": "You fix the order before you start—isolation, ventilation, log—and hold it even when the middle one wants to jump the queue."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q19",
@@ -652,7 +794,8 @@ window.AURORA_STATION_DATA = {
               "low": "You pass through it the way you pass through any other step, and only notice afterwards that it was the dangerous one.",
               "mid": "You feel it while it lasts and let it go when the step closes.",
               "high": "Those twenty seconds arrive in your hands and your breathing, and they do not leave when the step does."
-            }
+            },
+            "contextPhase": "baseline"
           },
           {
             "id": "q20",
@@ -671,10 +814,12 @@ window.AURORA_STATION_DATA = {
               "low": "You use the sound as a signal and nothing more. When it changes, you check the panel.",
               "mid": "You catch yourself listening once, then return to the readings.",
               "high": "You listen to the whole sequence. Later you will not be able to explain why it mattered, only that you would know it again."
-            }
+            },
+            "contextPhase": "baseline"
           }
         ],
-        "closing": "At 22:55, the red lights hold steady. The long-range radio rack remains dark. Aurora can no longer reach Hobart."
+        "closing": "At 22:55, the red lights hold steady. The long-range radio rack remains dark. Aurora can no longer reach Hobart.",
+        "contextPhase": "baseline"
       },
       {
         "id": "act-05",
@@ -700,7 +845,8 @@ window.AURORA_STATION_DATA = {
               "low": "You wait for the shape of it to settle. Ilan begins allocating tasks, and the night acquires a lead by default.",
               "mid": "You take the parts that are clearly yours and leave the rest open.",
               "high": "You say that you are running the watch until Hobart is back, and set the first three tasks before anyone can disagree."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q22",
@@ -719,7 +865,8 @@ window.AURORA_STATION_DATA = {
               "low": "You set out the wind figures and let him reach the conclusion himself. He withdraws the idea without either of you naming it a bad one.",
               "mid": "You say it will not work and give one reason. He accepts the reason.",
               "high": "You take the plan apart in front of him, point by point, until there is nothing left of it. He does not raise another idea for some time."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q23",
@@ -738,7 +885,8 @@ window.AURORA_STATION_DATA = {
               "low": "You start it immediately and keep it exactly. The log fills with identical entries.",
               "mid": "You start it, miss one slot while working elsewhere, and pick it up again.",
               "high": "You keep finding something more pressing. The first two slots pass before the schedule really begins."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q24",
@@ -757,7 +905,8 @@ window.AURORA_STATION_DATA = {
               "low": "Without someone to check against, your own reasoning starts to sound thinner than it did an hour ago.",
               "mid": "You proceed, with a quiet reservation you do not voice.",
               "high": "You find the ground is still under you. The absence of Hobart removes a confirmation, not a capability."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q25",
@@ -776,10 +925,12 @@ window.AURORA_STATION_DATA = {
               "low": "You follow him into it. For twenty minutes the storm is somewhere else, and the argument is genuinely interesting.",
               "mid": "You listen without joining in, and bring it back to the panel when the slot comes round.",
               "high": "You steer it back to the schedule. Whatever the record means, it does not change what has to be done in the next hour."
-            }
+            },
+            "contextPhase": "pressure"
           }
         ],
-        "closing": "The heating screen shows three zones and enough power for one loop. Outside that loop, the station will begin to freeze."
+        "closing": "The heating screen shows three zones and enough power for one loop. Outside that loop, the station will begin to freeze.",
+        "contextPhase": "pressure"
       },
       {
         "id": "act-06",
@@ -805,7 +956,8 @@ window.AURORA_STATION_DATA = {
               "low": "You take the longer half of the building and are still moving when Ilan sits down.",
               "mid": "You divide it evenly and keep pace with him through most of it.",
               "high": "You settle into the slower share. Ilan covers more ground, and neither of you remarks on it."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q27",
@@ -824,7 +976,8 @@ window.AURORA_STATION_DATA = {
               "low": "It stays with you. Something in how you read the rest of the handover has changed.",
               "mid": "You set it down for tonight and leave the question open for daylight.",
               "high": "You let it go. It was the end of a long season, and the report can be written without a name attached to the failure."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q28",
@@ -843,7 +996,8 @@ window.AURORA_STATION_DATA = {
               "low": "You work the tail to the end, item by item, including the ones that save almost nothing.",
               "mid": "You take the worthwhile ones and leave the rest.",
               "high": "You stop when the returns get small. Several standby loads keep drawing quietly for the rest of the night."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q29",
@@ -862,7 +1016,8 @@ window.AURORA_STATION_DATA = {
               "low": "The sight of it goes through you. For a while afterwards your attention keeps returning to that line.",
               "mid": "You register what it means, feel it briefly, and go back to the list.",
               "high": "You note it as data—rate, location, implication—and it does not follow you out of the corridor."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q30",
@@ -881,10 +1036,12 @@ window.AURORA_STATION_DATA = {
               "low": "You find three things the list never anticipated, including one that buys nearly an hour.",
               "mid": "You add a couple of obvious items and leave the structure of the list intact.",
               "high": "You work the list as written. It was drawn up by people with more time than you have tonight."
-            }
+            },
+            "contextPhase": "pressure"
           }
         ],
-        "closing": "The last fans wind down. In the new silence, three slow knocks pass through the floor, followed by a long pause."
+        "closing": "The last fans wind down. In the new silence, three slow knocks pass through the floor, followed by a long pause.",
+        "contextPhase": "pressure"
       },
       {
         "id": "act-07",
@@ -910,7 +1067,8 @@ window.AURORA_STATION_DATA = {
               "low": "You are in it with him from the first minute, thinking out loud, finishing each other's sentences over the sound of it.",
               "mid": "You contribute when you are certain and stay quiet otherwise.",
               "high": "You keep your observations to yourself. Some of them turn out to have been the useful ones."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q32",
@@ -929,7 +1087,8 @@ window.AURORA_STATION_DATA = {
               "low": "You leave him to it and continue with the reserve calculation. The first minute of the recording is unusable.",
               "mid": "You set the gain for him and return to your own work.",
               "high": "You stay with it until the levels are right, then stay a little longer, and the calculation waits."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q33",
@@ -948,7 +1107,8 @@ window.AURORA_STATION_DATA = {
               "low": "You keep it in your head and write down the times that seem important. Some of them are not the right ones.",
               "mid": "You log the changes and let the conditions go unrecorded.",
               "high": "You keep it properly—every setting, every adjustment, ruled and timed—because whoever reads this will not be able to ask you."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q34",
@@ -967,7 +1127,8 @@ window.AURORA_STATION_DATA = {
               "low": "Once the recorder is running the question becomes an interesting one rather than a worrying one.",
               "mid": "It surfaces now and then between tasks and goes again.",
               "high": "It stays underneath everything—the eleven seconds, the ice, the absence of any explanation—for the rest of the night."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q35",
@@ -986,10 +1147,12 @@ window.AURORA_STATION_DATA = {
               "low": "It is a periodic signal. You record its parameters and leave the rest alone.",
               "mid": "You notice the shape and mention it once, then return to measuring it.",
               "high": "You keep a clean channel of it running longer than the analysis needs, because some of what is in it will not survive being reduced to numbers."
-            }
+            },
+            "contextPhase": "pressure"
           }
         ],
-        "closing": "The recorder falls back to low power. Under the red lights, the next knock seems closer than the last, though the measured level has not changed."
+        "closing": "The recorder falls back to low power. Under the red lights, the next knock seems closer than the last, though the measured level has not changed.",
+        "contextPhase": "pressure"
       },
       {
         "id": "act-08",
@@ -1015,7 +1178,8 @@ window.AURORA_STATION_DATA = {
               "low": "You get him seated, get the account written down in order, and by the end of it he is describing rather than insisting.",
               "mid": "You calm him partly. He agrees to the checks without agreeing to the reading.",
               "high": "Nothing you say lands. He holds his account exactly as first given, and the verification proceeds around him."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q37",
@@ -1034,7 +1198,8 @@ window.AURORA_STATION_DATA = {
               "low": "You run it again without comment. Whatever it costs you does not reach him.",
               "mid": "You agree, and something in how you agree tells him what it is costing.",
               "high": "You tell him what you think of a third sweep. He runs it himself, alone, and does not ask again."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q38",
@@ -1053,7 +1218,8 @@ window.AURORA_STATION_DATA = {
               "low": "You clear what can be reached from inside and let the rest stand as unverified.",
               "mid": "You cover most of it and leave the furthest arc for daylight.",
               "high": "You take it to the end, every arc and both doors, and finish at 03:20 with nothing found and nothing left unchecked."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q39",
@@ -1072,7 +1238,8 @@ window.AURORA_STATION_DATA = {
               "low": "You come in cold and hungry and otherwise unchanged.",
               "mid": "Something of it comes inside with you and thins out over the next half hour.",
               "high": "It settles into you—the grey, the noise, the pointlessness of it—and it is still there when the wind drops."
-            }
+            },
+            "contextPhase": "pressure"
           },
           {
             "id": "q40",
@@ -1091,10 +1258,12 @@ window.AURORA_STATION_DATA = {
               "low": "You settle on exhaustion and stop there. It is the explanation that requires the least of you.",
               "mid": "You hold two possibilities and let the rest go.",
               "high": "You keep all four alive, weight them differently as the evidence comes in, and refuse to close on any of them."
-            }
+            },
+            "contextPhase": "pressure"
           }
         ],
-        "closing": "At 03:50, the wind drops below its peak. Green light spills across the snow, and every surviving instrument begins to drift."
+        "closing": "At 03:50, the wind drops below its peak. Green light spills across the snow, and every surviving instrument begins to drift.",
+        "contextPhase": "pressure"
       },
       {
         "id": "act-09",
@@ -1120,7 +1289,8 @@ window.AURORA_STATION_DATA = {
               "low": "You are running on the last of it. What gets done in the next hour gets done slowly.",
               "mid": "There is enough left for what is needed and not much beyond it.",
               "high": "Something about the light returns a measure of it. You go back to the panel moving faster than you have for an hour."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q42",
@@ -1139,7 +1309,8 @@ window.AURORA_STATION_DATA = {
               "low": "You take the request at face value—it is the reason he came south—and approve it.",
               "mid": "You approve it and note the draw.",
               "high": "You wonder how much of this is the station's night and how much of it is his career, and you say yes with the question still open."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q43",
@@ -1158,7 +1329,8 @@ window.AURORA_STATION_DATA = {
               "low": "Two readings are missed. Neither of them, in the end, mattered.",
               "mid": "You take them late but you take them all.",
               "high": "Every reading goes in on time, including the one at the height of it, which you take with your back to the window."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q44",
@@ -1177,7 +1349,8 @@ window.AURORA_STATION_DATA = {
               "low": "It gets through. For a minute or two you are not much use to anyone, and Ilan does not mention it afterwards.",
               "mid": "You feel it move in you and hold most of it.",
               "high": "You take it in and stay level. The reading is due in four minutes and you are there for it."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q45",
@@ -1196,10 +1369,12 @@ window.AURORA_STATION_DATA = {
               "low": "You sketch three mechanisms in the margin of the log, two of which are almost certainly wrong and one of which is not.",
               "mid": "You can see the shape of a connection without being able to fill it in.",
               "high": "Nothing comes. Two facts stay two facts, and the space between them stays empty."
-            }
+            },
+            "contextPhase": "recovery"
           }
         ],
-        "closing": "The reserve is now measured in minutes. Mira asks for heat. Ilan asks for one uninterrupted recording."
+        "closing": "The reserve is now measured in minutes. Mira asks for heat. Ilan asks for one uninterrupted recording.",
+        "contextPhase": "recovery"
       },
       {
         "id": "act-10",
@@ -1225,7 +1400,8 @@ window.AURORA_STATION_DATA = {
               "low": "You work it alone on paper and put the figure in front of him when it is finished.",
               "mid": "You check the inputs with him and do the rest yourself.",
               "high": "You run the whole thing out loud, every assumption spoken, and he catches an error in the third line that you would not have found."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q47",
@@ -1244,7 +1420,8 @@ window.AURORA_STATION_DATA = {
               "low": "You cannot separate them. What this means for him is in the room whether or not it belongs in the arithmetic.",
               "mid": "You keep the two apart while calculating and let them meet afterwards.",
               "high": "You work the reserve as a reserve. What it costs anyone is a separate question, and you do not open it here."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q48",
@@ -1263,7 +1440,8 @@ window.AURORA_STATION_DATA = {
               "low": "You copy the whole thing out clean, assumptions first, so that the number can be checked by someone who was not here.",
               "mid": "You tidy the final page and leave the working sheets as they are.",
               "high": "You have the number. The sheets stay where they fell, and by morning nobody could reconstruct how it was reached."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q49",
@@ -1282,7 +1460,8 @@ window.AURORA_STATION_DATA = {
               "low": "The fear is there and it is specific: the frost line, the hours, the distance to the Ridge camp.",
               "mid": "It is present without being loud.",
               "high": "You look at the number and it stays a number. What has to happen next is clear enough to work with."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q50",
@@ -1301,10 +1480,12 @@ window.AURORA_STATION_DATA = {
               "low": "You find yourself listening to it, and it enters the record of the night as clearly as any reading.",
               "mid": "You notice it and put it aside.",
               "high": "It is background. There is a decision to make and it does not need a soundtrack."
-            }
+            },
+            "contextPhase": "recovery"
           }
         ],
-        "closing": "No calculation removes the loss. The only question left is what Aurora will protect."
+        "closing": "No calculation removes the loss. The only question left is what Aurora will protect.",
+        "contextPhase": "recovery"
       },
       {
         "id": "act-11",
@@ -1330,7 +1511,8 @@ window.AURORA_STATION_DATA = {
               "low": "You take it. Whatever follows, it will have been your decision and you say so aloud before making it.",
               "mid": "You decide, but only after he has said what he would do.",
               "high": "You would hand it to him if you could. The handover is signed in your name, and that settles it whether you want it settled or not."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q52",
@@ -1349,7 +1531,8 @@ window.AURORA_STATION_DATA = {
               "low": "It comes out flat and fast. He hears the decision and not much of the reasoning.",
               "mid": "You state it plainly and answer the questions he asks.",
               "high": "You put it to him properly—what you are choosing, why, and what it costs—and you do it in a voice that has room in it for his answer."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q53",
@@ -1368,7 +1551,8 @@ window.AURORA_STATION_DATA = {
               "low": "The discussion runs past its usefulness. When the decision comes, some of what it was meant to protect has already gone.",
               "mid": "You close it in reasonable time, with one circuit more than it needed.",
               "high": "You take it to a decision inside four minutes, and the two minutes saved go into the load."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q54",
@@ -1387,7 +1571,8 @@ window.AURORA_STATION_DATA = {
               "low": "You make the choice and the loss stays a fact rather than a weight.",
               "mid": "It sits on you for a while after the switch and then eases.",
               "high": "It comes down and stays. For the rest of the night there is a flatness underneath everything you do."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q55",
@@ -1406,10 +1591,12 @@ window.AURORA_STATION_DATA = {
               "low": "You pick the thread up and follow it with him for a while. It is the most interesting conversation of the night.",
               "mid": "You let him finish and do not take it further.",
               "high": "You bring it back to the schedule. Whatever it means can be worked out somewhere warmer."
-            }
+            },
+            "contextPhase": "recovery"
           }
         ],
-        "closing": "At 04:12, the wind drops below the travel limit. Thirty kilometres south, Ridge starts its vehicles. No voice reaches Aurora."
+        "closing": "At 04:12, the wind drops below the travel limit. Thirty kilometres south, Ridge starts its vehicles. No voice reaches Aurora.",
+        "contextPhase": "recovery"
       },
       {
         "id": "act-12",
@@ -1435,7 +1622,8 @@ window.AURORA_STATION_DATA = {
               "low": "You conserve everything, including your voice. The hours pass in a kind of grey economy.",
               "mid": "You keep things moving when they slow and let them slow again.",
               "high": "You keep something alive in the room—talk, a plan for the morning, an argument about nothing—and the temperature does not drop any slower for it, but the hours do pass."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q57",
@@ -1454,7 +1642,8 @@ window.AURORA_STATION_DATA = {
               "low": "You plan for nobody coming. It is the assumption that keeps the refuge plan honest.",
               "mid": "You hope for it and prepare as though it will not happen.",
               "high": "You take it as given that they will come the moment the road opens, and something in the room is easier for it."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q58",
@@ -1473,7 +1662,8 @@ window.AURORA_STATION_DATA = {
               "low": "Every entry goes in on the half hour, in a hand that gets worse and never stops.",
               "mid": "Most of them go in. Two half hours pass unrecorded.",
               "high": "The log thins out and then stops. The last two hours of Aurora Station are not written down by anyone."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q59",
@@ -1492,7 +1682,8 @@ window.AURORA_STATION_DATA = {
               "low": "You acknowledge, give position and status, and your voice does not change at all.",
               "mid": "Something goes through you and you keep it out of the transmission.",
               "high": "It takes you completely for a moment—relief, or something less simple than relief—and Ilan has to take the handset."
-            }
+            },
+            "contextPhase": "recovery"
           },
           {
             "id": "q60",
@@ -1511,12 +1702,16 @@ window.AURORA_STATION_DATA = {
               "low": "You complete the standard log. It is accurate, and it is all that is required.",
               "mid": "You add a short note at the end for whoever reads it next.",
               "high": "You write a second account beside the first—the sound, the light, the things that were seen and not verified—because the standard form has nowhere to put them."
-            }
+            },
+            "contextPhase": "recovery"
           }
         ],
-        "closing": "The outer door opens into white headlamps, engine noise and blue Ridge jackets. For the first time that night, responsibility begins to leave your hands."
+        "closing": "The outer door opens into white headlamps, engine noise and blue Ridge jackets. For the first time that night, responsibility begins to leave your hands.",
+        "contextPhase": "recovery"
       }
-    ]
+    ],
+    "auroraAct": 9,
+    "auroraNote": "The aurora is a narrative event. It is invisible everywhere except Act 9, where the storm breaks and the sky opens, and it fades before the rescue team arrives."
   },
   "ending": {
     "rescue": "Ridge technicians isolate the damaged bus before connecting their portable generator to the safe service inlet. Heat returns first, then radio light, then the low ordinary hum of a working room.\n\nThe pulse beneath the ice disappears into that noise.",
@@ -1604,16 +1799,78 @@ window.AURORA_STATION_DATA = {
   "results": {
     "eyebrow": "AURORA STATION",
     "heading": "WATCHKEEPER PROFILE",
-    "heroHeading": "YOUR WATCHKEEPER PROFILE",
-    "descriptiveNote": "This profile describes patterns in your own responses. It is descriptive, not diagnostic.",
-    "overviewHeading": "The five domains",
-    "detailHeading": "Domains and facets",
-    "guidanceHeading": "HOW TO READ THIS PROFILE",
-    "guidance": [
-      "This profile describes patterns in your self-reported responses. It does not measure ability, competence, mental health or suitability for a role.",
-      "Scores may vary with context, experience and interpretation. No domain or facet is inherently better than another."
+    "pageLabelTemplate": "{current} / {total}",
+    "previous": "Previous",
+    "next": "Next",
+    "views": [
+      {
+        "id": "complete",
+        "hash": "complete",
+        "label": "The watch is complete",
+        "shortLabel": "Complete",
+        "title": "The Watch Is Complete",
+        "bridge": "The last signal settles into silence. What remains is not a verdict, but a record of how you moved through uncertainty.",
+        "body": "Sixty reflections were recorded across twelve hours of a station that stopped behaving predictably. The pages that follow describe patterns in those responses—how you tended to move at the start, under the worst of it, and once the pressure eased.",
+        "disclaimer": "This describes self-reported tendencies within one story. It is not a diagnosis, a measure of ability, or a judgement of how you would act anywhere else."
+      },
+      {
+        "id": "roles",
+        "hash": "roles",
+        "label": "Your Aurora Roles",
+        "shortLabel": "Roles",
+        "title": "Your Aurora Roles",
+        "intro": "Five independent tendencies, each on the same one-to-five scale. They are read together, not ranked against one another.",
+        "tableCaption": "Aurora Role scores from all sixty responses",
+        "overallLabel": "Most available across the watch",
+        "secondaryLabel": "Close alongside it",
+        "blendNote": "These two sat within 0.15 of each other, so they are read as a blend rather than a single role."
+      },
+      {
+        "id": "pressure",
+        "hash": "pressure",
+        "label": "Under pressure",
+        "shortLabel": "Pressure",
+        "title": "Under Pressure",
+        "intro": "The same five roles, scored separately across the opening Acts and across the hours when the station was at its least predictable.",
+        "stableCopy": "Your pattern held. Across the two phases no role moved by 0.25 or more, which suggests that the way you responded early was much the same as the way you responded when conditions worsened.",
+        "shiftLeadIn": "When pressure rose, your responses suggest that you relied more heavily on {role}: {reading}.",
+        "shiftDropLeadIn": "At the same time {role} became less visible in your responses."
+      },
+      {
+        "id": "recovery",
+        "hash": "recovery",
+        "label": "After pressure",
+        "shortLabel": "After",
+        "title": "After Pressure",
+        "intro": "What changed once the storm broke and the situation became bounded again.",
+        "stableCopy": "Little moved. Your responses through the closing Acts stayed close to the pattern you carried through the pressure itself.",
+        "shiftLeadIn": "After the immediate strain eased, {role} returned more strongly to your profile, suggesting renewed attention to {reading}.",
+        "returnedCopy": "That brings you close to where you started, which may suggest the pressure pattern was a temporary adjustment rather than a lasting change.",
+        "retainedCopy": "That keeps you nearer the pressure pattern than the one you began with, which may suggest the adjustment outlasted the conditions that prompted it.",
+        "newBalanceCopy": "That settles into a pattern which matches neither the opening nor the worst of it, which may suggest a new balance rather than a return."
+      },
+      {
+        "id": "detail",
+        "hash": "detail",
+        "label": "Domains and facets",
+        "shortLabel": "Detail",
+        "title": "Domains and Facets",
+        "intro": "The BFI-2-aligned scoring in full: five domains, each from twelve items, and fifteen facets, each from four.",
+        "higherNote": "Higher is not automatically better. Each score describes how strongly you agreed that a set of statements described you, and every position on every scale has situations that suit it.",
+        "negativeEmotionalityNote": "A higher Negative Emotionality score means more frequent or more intense worry, low mood and emotional reactivity. It is reported as itself and never quietly inverted.",
+        "aegisNote": "Aegis is the inverse representation of that same domain, calculated as 6 - Negative Emotionality, so a higher Aegis describes greater steadiness."
+      },
+      {
+        "id": "summary",
+        "hash": "summary",
+        "label": "Your Watchkeeper summary",
+        "shortLabel": "Summary",
+        "title": "Your Watchkeeper Summary",
+        "intro": "One reading of the whole watch.",
+        "reflectionLabel": "A question to sit with",
+        "reflectionTemplate": "When the next situation stops behaving predictably, which of these do you want to reach for first—and which one would you rather not lose while you do?"
+      }
     ],
-    "privacy": "Your name and responses stay in this browser. Aurora Station has no backend and sends nothing anywhere.",
     "actions": {
       "profilePdf": "Download Profile PDF",
       "storyPdf": "Download Story PDF",
@@ -1621,13 +1878,16 @@ window.AURORA_STATION_DATA = {
       "restart": "Restart Journey"
     },
     "restartConfirm": "Restart Aurora Station?\n\nThis will remove your name, responses, story progress and results. Sound and reading-speed preferences will be retained.",
-    "summary": {
-      "balanced": "Across the five domains your responses stayed close to the midpoint. That describes a profile that shifted with the situation rather than holding one setting throughout.",
-      "aboveTemplate": "a higher self-reported expression of {domain}",
-      "belowTemplate": "a lower self-reported expression of {domain}",
-      "lead": "Your responses across the watch were most distinctive in {highlights}.",
-      "facetTemplate": "Within {domain}, {high} stood noticeably higher than {low}.",
-      "closing": "Everything else sat closer to the middle of the scale."
+    "privacy": "Your name and responses stay in this browser. Aurora Station has no backend and sends nothing anywhere.",
+    "summaryTemplates": {
+      "consistencyAnchored": "Across the watch your pattern stayed anchored in {overall}: {reading}. It was the tendency most available to you at the start and it did not give that position up, even as the conditions around it changed. That kind of consistency is not the same as rigidity. It suggests a way of working you return to by default, and which the rest of your responses arranged themselves around.",
+      "consistencyMoved": "Across the watch the most available tendency changed hands. You opened anchored in {starting}, and by the hardest hours {pressure} had moved ahead of it. That does not mean one replaced the other. It suggests that what you reach for first is sensitive to what the situation is asking, and that more than one way of working was genuinely available to you.",
+      "adaptationShift": "When the station stopped behaving predictably, {pressure} became more visible in your responses: {reading}. This reads as an adjustment rather than a personality change—the kind of shift that shows what you lean on when the ordinary approach stops being enough. {recoveryClause}",
+      "adaptationStable": "Pressure did not move you far. Through the worst of the night your responses stayed close to the pattern you began with, and they stayed close to it again once the situation became bounded. That steadiness is a finding in itself: it suggests your approach is not especially reactive to how difficult conditions become, for better and for worse.",
+      "recoveryReturned": "Once the pressure eased, the pattern came back towards where it started.",
+      "recoveryRetained": "Once the pressure eased, the adjustment mostly stayed.",
+      "recoveryNew": "Once the pressure eased, the pattern settled somewhere new.",
+      "contribution": "In a group, a pattern like this tends to {contribution}. That is a contribution rather than a role you must occupy: it describes what other people are likely to be able to rely on from you, and it says nothing about what you are unable to do. The tendencies that sat lower here are not deficits, and they can be deliberately reached for when a situation calls for them."
     }
   }
 };

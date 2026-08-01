@@ -200,7 +200,7 @@
     heading.append(
       element(
         "p",
-        "technical-label act-kicker",
+        "meta act-kicker",
         `ACT ${String(node.actNumber).padStart(2, "0")} / ${core.ACT_COUNT} · ${node.time}`,
       ),
       element("h2", "act-title", node.title),
@@ -215,7 +215,7 @@
   function appendInterludeHeading(node) {
     const heading = element("header", "interlude-heading");
     heading.append(
-      element("p", "technical-label", node.eyebrow),
+      element("p", "meta", node.eyebrow),
       element("h2", "interlude-title", node.title),
     );
     story.appendChild(heading);
@@ -225,7 +225,7 @@
   function appendPrologueHeading(node) {
     const heading = element("header", "prologue-heading");
     heading.append(
-      element("p", "technical-label", node.eyebrow),
+      element("p", "meta", node.eyebrow),
       element("h1", "story-title", data.title),
       element("p", "prologue-subtitle", node.title),
     );
@@ -245,9 +245,9 @@
     panel.tabIndex = -1;
     panel.setAttribute("aria-label", `Watchkeeper reflection for Act ${actNumber}`);
 
-    const kicker = element("p", "technical-label reflection-kicker", "WATCHKEEPER REFLECTION");
-    const counter = element("p", "technical-label reflection-counter", "");
-    const statementNumber = element("p", "technical-label reflection-statement-number", "");
+    const kicker = element("p", "meta reflection-kicker", "WATCHKEEPER REFLECTION");
+    const counter = element("p", "meta reflection-counter", "");
+    const statementNumber = element("p", "meta reflection-statement-number", "");
     const statement = element("h3", "reflection-statement", "");
     statement.id = `statement-act-${actNumber}`;
 
@@ -282,7 +282,7 @@
       return button;
     });
 
-    const signalLabel = element("p", "technical-label response-signal-label", "RESPONSE SIGNAL");
+    const signalLabel = element("p", "meta response-signal-label", "RESPONSE SIGNAL");
     const readout = element("p", "response-readout", "");
 
     const footer = element("div", "reflection-footer");
@@ -665,16 +665,14 @@
     }
   }
 
+  /*
+   * The sky is driven by where the reader is in the story, not by scroll
+   * position or answer count. The ribbon exists only inside the Act where it
+   * erupts, and it is off again before the rescue team arrives.
+   */
   function updateAtmosphere() {
-    const answered = core.answeredCount(state);
-    document.body.classList.toggle(
-      "aurora-surge-active",
-      answered >= 40 && answered < TOTAL_ITEMS,
-    );
-    document.body.classList.toggle("aurora-rescue-contact", answered >= 58);
-    document.body.classList.toggle("aurora-rescue-faint", answered >= 59);
-    const act = actByNumber(Math.min(core.ACT_COUNT, Math.floor(answered / core.ITEMS_PER_ACT) + 1));
-    document.body.dataset.storyPhase = act ? act.id : "act-01";
+    document.body.dataset.aurora = core.auroraStateFor(data, state, nodes, revealed);
+    document.body.dataset.contextPhase = core.contextPhaseFor(data, state);
   }
 
   /* ----------------------------------------------------------- the prelude */
@@ -689,7 +687,7 @@
     dialog.setAttribute("aria-labelledby", "station-entry-heading");
 
     const frame = element("div", "station-entry-frame");
-    const label = element("p", "technical-label entry-label", identity.label);
+    const label = element("p", "meta entry-label", identity.label);
     const heading = element("h1", "entry-heading", identity.heading);
     heading.id = "station-entry-heading";
     const intro = element("p", "entry-intro", identity.intro);
@@ -700,7 +698,7 @@
     const form = element("form", "identity-form");
     form.noValidate = true;
 
-    const nameLabel = element("label", "technical-label entry-field-label", identity.fieldLabel);
+    const nameLabel = element("label", "meta entry-field-label", identity.fieldLabel);
     nameLabel.htmlFor = "player-name";
     const nameInput = element("input", "entry-name-input");
     nameInput.id = "player-name";
