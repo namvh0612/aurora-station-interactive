@@ -3,28 +3,26 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Aurora Station — your Watchkeeper Profile." />
+    <meta name="description" content="Aurora Station — the dawn observation report." />
     <meta name="color-scheme" content="light" />
-    <meta name="theme-color" content="#f2f1ea" />
+    <meta name="theme-color" content="#efe9dd" />
     <meta name="robots" content="noindex" />
-    <title>Aurora Station — Watchkeeper Profile</title>
+    <title>Aurora Station — Observation Report</title>
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./content/Aurora_Station_Content.js"></script>
     <script defer src="./core.js"></script>
+    <script defer src="./artwork.js"></script>
     <script defer src="./pdf-export.js"></script>
-    <script defer src="./audio.js"></script>
     <script defer src="./results.js"></script>
   </head>
-  <body class="results-page">
-    <a class="skip-link" href="#results">Skip to the profile</a>
-    <main id="results" class="results-shell" tabindex="-1">
-      <p class="loading-copy">Recalculating your profile…</p>
+  <body class="report">
+    <a class="skip-link" href="#report">Skip to the report</a>
+    <main class="report-shell" id="report" tabindex="-1">
+      <p class="loading-note">Reading the night back…</p>
     </main>
-    <div id="screen-reader-status" class="sr-only" role="status" aria-live="polite"></div>
+    <div class="sr-only" id="announcer" role="status" aria-live="polite"></div>
     <noscript>
-      <p class="noscript-message">
-        Aurora Station needs JavaScript enabled to calculate your profile.
-      </p>
+      <p class="loading-note">Aurora Station needs JavaScript enabled to assemble the report.</p>
     </noscript>
   </body>
 </html>

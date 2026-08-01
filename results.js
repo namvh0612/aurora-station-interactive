@@ -1,26 +1,23 @@
 /*
- * Aurora Station — Results page.
+ * Aurora Station — the dawn observation report.
  *
- * Six navigable views on one route. Everything is recalculated from the raw
- * responses on load: no cached score is trusted, nothing is imputed, and an
- * incomplete assessment is returned to the story.
+ * One continuous document, ruled and numbered like a filed record. Everything
+ * is recalculated from the raw responses on load: no cached score is trusted,
+ * nothing is imputed, and an incomplete watch is returned to the story.
  *
- * The five Aurora Roles are a narrative reading of the five BFI-2 domains and
- * are labelled as such throughout. No role is presented as better than another,
- * nothing is a percentage, and every chart keeps the fixed 1-5 scale.
+ * The report never shows how a number was produced. Weights, floors and
+ * formulas stay inside core.js; this page reads out only what they mean.
  */
-(function startAuroraResults() {
+(function readAuroraReport() {
   "use strict";
 
   const data = window.AURORA_STATION_DATA;
   const core = window.AuroraCore;
-  const pdfExporter = window.AuroraPdf;
+  const art = window.AuroraArtwork;
+  const pdf = window.AuroraPdf;
 
-  const shell = document.getElementById("results");
-  const liveRegion = document.getElementById("screen-reader-status");
-
-  const SWIPE_DISTANCE = 60;
-  const SWIPE_SLOPE = 40;
+  const shell = document.getElementById("report");
+  const announcer = document.getElementById("announcer");
 
   const storage = (() => {
     try {
@@ -35,13 +32,14 @@
   let profile = null;
   let state = null;
   let summary = null;
-  let views = [];
-  let activeIndex = 0;
+
+  const COPY = data.results;
+  const LABELS = COPY.labels;
 
   /* ------------------------------------------------------------- helpers */
 
-  function element(tagName, className, text) {
-    const node = document.createElement(tagName);
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
     if (className) {
       node.className = className;
     }
@@ -51,33 +49,33 @@
     return node;
   }
 
-  function announce(message) {
-    if (!liveRegion || !message) {
+  function say(message) {
+    if (!announcer || !message) {
       return;
     }
-    liveRegion.textContent = "";
+    announcer.textContent = "";
     window.setTimeout(() => {
-      liveRegion.textContent = message;
+      announcer.textContent = message;
     }, 30);
   }
 
-  function prefersReducedMotion() {
+  function stillMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
-  function scoreText(value) {
+  function reading(value) {
     return Number.isFinite(value) ? value.toFixed(1) : "—";
   }
 
-  function outOfFive(value) {
-    return `${scoreText(value)} / ${core.MAX_RESPONSE}`;
+  function outOf(value) {
+    return `${reading(value)} / ${core.MAX_RESPONSE}`;
   }
 
   function signed(value) {
     return `${value > 0 ? "+" : "−"}${Math.abs(value).toFixed(2)}`;
   }
 
-  function fileSafeName(value) {
+  function fileName(value) {
     const safe = String(value || "Watchkeeper")
       .normalize("NFKD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -87,311 +85,337 @@
     return safe || "Watchkeeper";
   }
 
-  function completionDate() {
+  function completedOn() {
     const stamp = Number(state.completedAt);
     const date = Number.isFinite(stamp) && stamp > 0 ? new Date(stamp) : new Date();
-    return date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    return date
+      .toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })
+      .toUpperCase();
+  }
+
+  function roleFor(id) {
+    return profile.roles.find((role) => role.id === id);
+  }
+
+  function domainFor(code) {
+    return profile.domains.find((domain) => domain.code === code);
+  }
+
+  function chapter(id) {
+    return COPY.chapters.find((entry) => entry.id === id);
+  }
+
+  function section(id) {
+    const copy = chapter(id);
+    const node = el("section", "chapter");
+    node.id = `chapter-${id}`;
+    const head = el("div", "chapter-head");
+    head.append(el("p", "mark", copy.eyebrow), el("h2", "chapter-title", copy.title));
+    node.appendChild(head);
+    const body = el("div", "chapter-body");
+    node.appendChild(body);
+    return { node, body };
+  }
+
+  /* ----------------------------------------------------------- I: contribution */
+
+  function buildRoleChapter() {
+    const { node, body } = section("role");
+    const lead = summary.overall;
+    const primary = lead.primary;
+
+    const lede = el("div", "role-lede");
+
+    const left = el("div");
+    left.append(
+      el("p", "mark", COPY.roleIntro),
+      el("h3", "role-name", lead.isBlend ? lead.label : primary.name),
+      el("p", "mark role-basis", `${LABELS.basis} · ${primary.basis}`),
+      el("p", "role-statement", COPY.notATypeStatement),
+    );
+
+    // Why, described without exposing any mechanism.
+    const why = data.assessment.whyTemplates;
+    const reasons = [];
+    reasons.push(
+      lead.isBlend
+        ? why.blend.replace("{roles}", lead.label)
+        : why.single.replace("{role}", primary.name),
+    );
+    const supported = primary.facetFloor >= primary.score - 0.6;
+    reasons.push(supported ? why.supported : why.uneven);
+    left.appendChild(el("p", "role-why", reasons.join(" ")));
+
+    const right = el("div");
+    if (art) {
+      const dial = art.instrumentDial(primary.normalised, primary.colour, primary.name);
+      dial.style.setProperty("--trace", primary.colour);
+      right.appendChild(dial);
+    }
+    const instrument = data.assessment.instruments[primary.domain];
+    right.append(
+      el("p", "mark", `${LABELS.instrument} · ${instrument.name.toUpperCase()}`),
+      el("p", "mark", instrument.reads),
+    );
+
+    lede.append(left, right);
+    body.appendChild(lede);
+
+    const lines = el("div", "role-lines");
+    [
+      [LABELS.missionFunction, primary.missionFunction],
+      [LABELS.brings, primary.brings],
+      [LABELS.watchFor, primary.watchFor],
+      [LABELS.action, `${primary.actionTitle} — ${primary.action}`],
+    ].forEach(([label, copy]) => {
+      const line = el("div", "role-line");
+      line.append(el("p", "mark", label), el("p", "", copy));
+      lines.appendChild(line);
     });
+    body.appendChild(lines);
+
+    return node;
   }
 
-  function viewCopy(id) {
-    return data.results.views.find((view) => view.id === id);
-  }
+  /* ------------------------------------------------- II: what the night moved */
 
-  function colourFor(role) {
-    return role.colour;
-  }
+  const PLOT_SIZE = 420;
+  const PLOT_CENTRE = PLOT_SIZE / 2;
+  const PLOT_RADIUS = 132;
+  const PLOT_TRAVEL = 640;
 
-  /* --------------------------------------------------------------- charts */
-
-  /*
-   * One five-axis radar on a fixed 1-to-5 scale, with three selectable states.
-   * The axes never move and never reorder: only the distance along each axis
-   * changes, so a shift reads as a contribution becoming more or less
-   * available rather than a personality turning into a different one.
-   */
-  const RADAR_SIZE = 420;
-  const RADAR_CENTRE = RADAR_SIZE / 2;
-  const RADAR_RADIUS = 132;
-  const RADAR_DURATION = 620;
-
-  function radarPoint(index, count, ratio) {
+  function plotPoint(index, count, ratio) {
     const angle = (Math.PI * 2 * index) / count - Math.PI / 2;
     return {
-      x: RADAR_CENTRE + Math.cos(angle) * RADAR_RADIUS * ratio,
-      y: RADAR_CENTRE + Math.sin(angle) * RADAR_RADIUS * ratio,
+      x: PLOT_CENTRE + Math.cos(angle) * PLOT_RADIUS * ratio,
+      y: PLOT_CENTRE + Math.sin(angle) * PLOT_RADIUS * ratio,
     };
   }
 
-  function radarPoints(ratios) {
+  function plotPoints(ratios) {
     return ratios
       .map((ratio, index) => {
-        const point = radarPoint(index, ratios.length, ratio);
+        const point = plotPoint(index, ratios.length, ratio);
         return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
       })
       .join(" ");
   }
 
-  function buildRoleRadar() {
+  /*
+   * The movement instrument. Five fixed axes, one fixed 1-to-5 scale, three
+   * readings of the same night. Only the distance along each axis changes, so
+   * a vertex can never travel anywhere but its own spoke.
+   */
+  function buildInstrument() {
     const ns = "http://www.w3.org/2000/svg";
-    const copy = data.results.radar;
+    const copy = COPY.radar;
     const order = data.assessment.roleOrder;
-    const stable = data.assessment.suitability.stableChange;
+    const steady = data.assessment.suitability.stableChange;
 
-    // One entry per selectable state, in story order.
-    const states = copy.states.map((state) => {
-      const phase = profile.phases.find((entry) => entry.id === state.phase);
-      const roles = order.map((id) => phase.roles.find((role) => role.id === id));
-      return { ...state, phase, roles };
+    const states = copy.states.map((entry) => {
+      const phase = profile.phases.find((candidate) => candidate.id === entry.phase);
+      return { ...entry, roles: order.map((id) => phase.roles.find((role) => role.id === id)) };
     });
 
-    const wrap = element("div", "radar-wrap");
+    const wrap = el("div", "instrument");
 
-    /* ---- the switcher ---- */
-    const switcher = element("div", "radar-states");
+    const switcher = el("div", "instrument-states");
     switcher.setAttribute("role", "tablist");
     switcher.setAttribute("aria-label", copy.heading);
 
-    const svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", `-34 -20 ${RADAR_SIZE + 68} ${RADAR_SIZE + 44}`);
-    svg.classList.add("role-radar");
-    svg.setAttribute("role", "img");
+    const plot = document.createElementNS(ns, "svg");
+    plot.setAttribute("viewBox", `-30 -16 ${PLOT_SIZE + 60} ${PLOT_SIZE + 36}`);
+    plot.setAttribute("class", "plot");
+    plot.setAttribute("role", "img");
 
-    // Scale rings at every whole score from 2 to 5. Value 1 is the centre, so
-    // the chart can never imply a zero origin.
+    // Rings are whole scale points; the centre is a reading of one, not zero.
     [2, 3, 4, 5].forEach((value) => {
       const ratio = (value - core.MIN_RESPONSE) / (core.MAX_RESPONSE - core.MIN_RESPONSE);
       const ring = document.createElementNS(ns, "polygon");
-      ring.setAttribute("points", radarPoints(order.map(() => ratio)));
-      ring.setAttribute("class", value === core.MAX_RESPONSE ? "radar-ring radar-ring-outer" : "radar-ring");
-      svg.appendChild(ring);
+      ring.setAttribute("points", plotPoints(order.map(() => ratio)));
+      ring.setAttribute("class", value === core.MAX_RESPONSE ? "plot-ring plot-ring-outer" : "plot-ring");
+      plot.appendChild(ring);
 
       const tick = document.createElementNS(ns, "text");
-      const top = radarPoint(0, order.length, ratio);
-      tick.setAttribute("x", (top.x + 6).toFixed(1));
+      const top = plotPoint(0, order.length, ratio);
+      tick.setAttribute("x", (top.x + 5).toFixed(1));
       tick.setAttribute("y", (top.y + 4).toFixed(1));
-      tick.setAttribute("class", "radar-tick");
+      tick.setAttribute("class", "plot-scale");
       tick.textContent = String(value);
-      svg.appendChild(tick);
+      plot.appendChild(tick);
     });
 
     order.forEach((id, index) => {
-      const outer = radarPoint(index, order.length, 1);
+      const outer = plotPoint(index, order.length, 1);
       const spoke = document.createElementNS(ns, "line");
-      spoke.setAttribute("x1", String(RADAR_CENTRE));
-      spoke.setAttribute("y1", String(RADAR_CENTRE));
+      spoke.setAttribute("x1", String(PLOT_CENTRE));
+      spoke.setAttribute("y1", String(PLOT_CENTRE));
       spoke.setAttribute("x2", outer.x.toFixed(1));
       spoke.setAttribute("y2", outer.y.toFixed(1));
-      spoke.setAttribute("class", "radar-spoke");
-      spoke.style.setProperty("--role-colour", data.assessment.roles[id].colour);
-      svg.appendChild(spoke);
+      spoke.setAttribute("class", "plot-spoke");
+      plot.appendChild(spoke);
     });
 
-    // The previous state, kept as a thin translucent outline.
     const ghost = document.createElementNS(ns, "polygon");
-    ghost.setAttribute("class", "radar-ghost");
-    ghost.setAttribute("points", radarPoints(order.map(() => 0)));
-    ghost.setAttribute("aria-hidden", "true");
-    svg.appendChild(ghost);
+    ghost.setAttribute("class", "plot-ghost");
+    ghost.setAttribute("points", plotPoints(order.map(() => 0)));
+    plot.appendChild(ghost);
 
     const shape = document.createElementNS(ns, "polygon");
-    shape.setAttribute("class", "radar-shape");
-    svg.appendChild(shape);
+    shape.setAttribute("class", "plot-shape");
+    plot.appendChild(shape);
 
-    const dots = order.map((id, index) => {
+    const nodes = order.map((id, index) => {
       const dot = document.createElementNS(ns, "circle");
-      dot.setAttribute("r", "6");
-      dot.setAttribute("class", "radar-dot");
+      dot.setAttribute("r", "5.5");
+      dot.setAttribute("class", "plot-node");
       dot.setAttribute("fill", data.assessment.roles[id].colour);
-      svg.appendChild(dot);
+      plot.appendChild(dot);
       return { id, index, node: dot };
     });
 
     order.forEach((id, index) => {
       const label = document.createElementNS(ns, "text");
-      const anchor = radarPoint(index, order.length, 1.2);
+      const anchor = plotPoint(index, order.length, 1.2);
       label.setAttribute("x", anchor.x.toFixed(1));
       label.setAttribute("y", anchor.y.toFixed(1));
-      label.setAttribute("class", "radar-label");
+      label.setAttribute("class", "plot-label");
       label.setAttribute(
         "text-anchor",
-        Math.abs(anchor.x - RADAR_CENTRE) < 12
-          ? "middle"
-          : anchor.x > RADAR_CENTRE
-            ? "start"
-            : "end",
+        Math.abs(anchor.x - PLOT_CENTRE) < 12 ? "middle" : anchor.x > PLOT_CENTRE ? "start" : "end",
       );
       label.textContent = data.assessment.roles[id].shortName;
-      svg.appendChild(label);
+      plot.appendChild(label);
     });
 
-    /* ---- axis cards: exact score and signed change on hover or focus ---- */
-    const cards = element("div", "radar-axes");
-    const cardsById = {};
+    /* The readings, which are also the accessible table of the instrument. */
+    const list = el("ul", "reading-list");
+    const rows = {};
     order.forEach((id) => {
       const role = data.assessment.roles[id];
-      const card = element("button", "radar-axis");
-      card.type = "button";
-      card.style.setProperty("--role-colour", role.colour);
-      const tooltipId = `radar-tip-${id}`;
-      card.setAttribute("aria-describedby", tooltipId);
+      const item = el("li");
+      const row = el("button", "reading");
+      row.type = "button";
+      const tipId = `reading-${id}`;
+      row.setAttribute("aria-describedby", tipId);
 
-      const swatch = element("span", "role-swatch");
+      const swatch = el("span", "reading-swatch");
       swatch.setAttribute("aria-hidden", "true");
-      const name = element("span", "radar-axis-name", role.shortName);
-      const score = element("span", "radar-axis-score", "—");
-      const delta = element("span", "radar-axis-delta", "");
-      const tooltip = element("span", "radar-tooltip");
-      tooltip.id = tooltipId;
-      tooltip.setAttribute("role", "tooltip");
+      swatch.style.setProperty("--trace", role.colour);
+      const name = el("span", "reading-name", role.shortName);
+      const value = el("span", "reading-value", "—");
+      const change = el("span", "reading-change", "");
+      const tip = el("span", "reading-tip");
+      tip.id = tipId;
+      tip.setAttribute("role", "tooltip");
 
-      card.append(swatch, name, score, delta, tooltip);
-      cards.appendChild(card);
-      cardsById[id] = { card, score, delta, tooltip };
+      row.append(swatch, name, value, change, tip);
+      item.appendChild(row);
+      list.appendChild(item);
+      rows[id] = { value, change, tip };
     });
 
-    /* ---- the score and change table ---- */
-    const table = element("table", "radar-table");
-    table.appendChild(element("caption", "", copy.tableCaption));
-    const head = element("thead");
-    const headRow = element("tr");
-    headRow.append(
-      element("th", "", copy.columns.role),
-      element("th", "", copy.columns.previous),
-      element("th", "", copy.columns.score),
-      element("th", "", copy.columns.change),
-    );
-    head.appendChild(headRow);
-    const tbody = element("tbody");
-    const rowsById = {};
-    order.forEach((id) => {
-      const role = data.assessment.roles[id];
-      const row = element("tr");
-      const nameCell = element("td");
-      const name = element("span", "role-name");
-      const swatch = element("span", "role-swatch");
-      swatch.setAttribute("aria-hidden", "true");
-      swatch.style.setProperty("--role-colour", role.colour);
-      name.append(swatch, role.shortName);
-      nameCell.appendChild(name);
-      const previous = element("td", "numeric");
-      const current = element("td", "numeric role-score");
-      const change = element("td", "numeric");
-      row.append(nameCell, previous, current, change);
-      tbody.appendChild(row);
-      rowsById[id] = { previous, current, change };
-    });
-    table.append(head, tbody);
+    let active = 0;
+    let frame = 0;
+    let current = states[0].roles.map((role) => role.normalised);
 
-    /* ---- state handling ---- */
-    let activeIndex = 0;
-    let animation = 0;
-    let currentRatios = states[0].roles.map((role) => role.normalised);
-
-    const describeChange = (delta) => {
+    const describe = (delta) => {
       if (delta === null) {
-        return { text: "—", label: "no previous state", stable: true };
+        return { text: "—", spoken: "first reading", steady: true };
       }
-      if (Math.abs(delta) < stable) {
-        return { text: copy.stableLabel, label: copy.stableLabel, stable: true };
+      if (Math.abs(delta) < steady) {
+        return { text: copy.stableLabel, spoken: copy.stableLabel, steady: true };
       }
-      const text = `${delta > 0 ? "+" : "−"}${Math.abs(delta).toFixed(2)}`;
-      return { text, label: `${delta > 0 ? "up" : "down"} ${Math.abs(delta).toFixed(2)}`, stable: false };
+      return {
+        text: signed(delta),
+        spoken: `${delta > 0 ? "up" : "down"} ${Math.abs(delta).toFixed(2)}`,
+        steady: false,
+      };
     };
 
     const paint = (ratios) => {
-      shape.setAttribute("points", radarPoints(ratios));
-      dots.forEach((dot, index) => {
-        const point = radarPoint(index, ratios.length, ratios[index]);
-        dot.node.setAttribute("cx", point.x.toFixed(1));
-        dot.node.setAttribute("cy", point.y.toFixed(1));
+      shape.setAttribute("points", plotPoints(ratios));
+      nodes.forEach((entry, index) => {
+        const point = plotPoint(index, ratios.length, ratios[index]);
+        entry.node.setAttribute("cx", point.x.toFixed(1));
+        entry.node.setAttribute("cy", point.y.toFixed(1));
       });
     };
 
-    // Each vertex travels along its own axis only: the radius is interpolated,
-    // the angle never is.
-    const animateTo = (target) => {
-      window.cancelAnimationFrame(animation);
-      if (prefersReducedMotion()) {
-        currentRatios = target.slice();
-        paint(currentRatios);
+    const travel = (target) => {
+      window.cancelAnimationFrame(frame);
+      if (stillMotion()) {
+        current = target.slice();
+        paint(current);
         return;
       }
-      const from = currentRatios.slice();
-      const started = performance.now();
+      const from = current.slice();
+      const began = performance.now();
       const step = (now) => {
-        const progress = Math.min(1, (now - started) / RADAR_DURATION);
+        const progress = Math.min(1, (now - began) / PLOT_TRAVEL);
         const eased = 1 - Math.pow(1 - progress, 3);
-        currentRatios = from.map((value, index) => value + (target[index] - value) * eased);
-        paint(currentRatios);
+        current = from.map((value, index) => value + (target[index] - value) * eased);
+        paint(current);
         if (progress < 1) {
-          animation = window.requestAnimationFrame(step);
+          frame = window.requestAnimationFrame(step);
         }
       };
-      animation = window.requestAnimationFrame(step);
+      frame = window.requestAnimationFrame(step);
     };
 
-    const setState = (index, options) => {
+    const show = (index, options) => {
       const settings = options || {};
-      activeIndex = Math.max(0, Math.min(index, states.length - 1));
-      const state = states[activeIndex];
-      const earlier = activeIndex > 0 ? states[activeIndex - 1] : null;
+      active = Math.max(0, Math.min(index, states.length - 1));
+      const stateAt = states[active];
+      const earlier = active > 0 ? states[active - 1] : null;
 
-      switcher.querySelectorAll(".radar-state").forEach((button, position) => {
-        const selected = position === activeIndex;
+      switcher.querySelectorAll(".instrument-state").forEach((button, position) => {
+        const selected = position === active;
         button.setAttribute("aria-selected", String(selected));
         button.tabIndex = selected ? 0 : -1;
-        button.classList.toggle("is-selected", selected);
       });
 
       ghost.setAttribute(
         "points",
-        earlier ? radarPoints(earlier.roles.map((role) => role.normalised)) : radarPoints(state.roles.map(() => 0)),
+        earlier
+          ? plotPoints(earlier.roles.map((role) => role.normalised))
+          : plotPoints(stateAt.roles.map(() => 0)),
       );
       ghost.style.opacity = earlier ? "1" : "0";
 
-      state.roles.forEach((role, index) => {
+      stateAt.roles.forEach((role, index) => {
         const before = earlier ? earlier.roles[index].score : null;
         const delta = before === null ? null : role.score - before;
-        const change = describeChange(delta);
-        const entry = cardsById[role.id];
-        entry.score.textContent = outOfFive(role.score);
-        entry.delta.textContent = change.text;
-        entry.delta.dataset.stable = String(change.stable);
-        entry.tooltip.textContent = earlier
-          ? `${role.name}: ${scoreText(role.score)} of ${core.MAX_RESPONSE}, ${change.label} from ${earlier.label} (${scoreText(before)}).`
-          : `${role.name}: ${scoreText(role.score)} of ${core.MAX_RESPONSE} at ${state.label}.`;
-
-        const row = rowsById[role.id];
-        row.previous.textContent = before === null ? "—" : scoreText(before);
-        row.current.textContent = outOfFive(role.score);
+        const change = describe(delta);
+        const row = rows[role.id];
+        row.value.textContent = outOf(role.score);
         row.change.textContent = change.text;
-        row.change.dataset.stable = String(change.stable);
+        row.change.dataset.steady = String(change.steady);
+        row.tip.textContent = earlier
+          ? `${role.name}: ${reading(role.score)} of ${core.MAX_RESPONSE}, ${change.spoken} from ${earlier.label} (${reading(before)}).`
+          : `${role.name}: ${reading(role.score)} of ${core.MAX_RESPONSE} at ${stateAt.label}.`;
       });
 
-      svg.setAttribute(
+      plot.setAttribute(
         "aria-label",
-        `${copy.heading}. ${state.label}. Each role is scored from one to five. ${state.roles
-          .map((role) => `${role.shortName} ${scoreText(role.score)}`)
+        `${copy.heading}. ${stateAt.label}. Each contribution reads from one to five. ${stateAt.roles
+          .map((role) => `${role.shortName} ${reading(role.score)}`)
           .join(". ")}.`,
       );
 
-      animateTo(state.roles.map((role) => role.normalised));
+      travel(stateAt.roles.map((role) => role.normalised));
       if (settings.announce) {
-        announce(`${state.label}. ${state.roles.map((role) => `${role.shortName} ${scoreText(role.score)}`).join(", ")}.`);
+        say(`${stateAt.label}. ${stateAt.roles.map((role) => `${role.shortName} ${reading(role.score)}`).join(", ")}.`);
       }
     };
 
-    states.forEach((state, index) => {
-      const button = element("button", "radar-state", state.label);
+    states.forEach((entry, index) => {
+      const button = el("button", "instrument-state", entry.label);
       button.type = "button";
       button.setAttribute("role", "tab");
       button.setAttribute("aria-selected", String(index === 0));
       button.tabIndex = index === 0 ? 0 : -1;
-      button.addEventListener("click", () => setState(index, { announce: true }));
+      button.addEventListener("click", () => show(index, { announce: true }));
       button.addEventListener("keydown", (event) => {
         const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
         if (!step) {
@@ -399,559 +423,182 @@
         }
         event.preventDefault();
         const next = (index + step + states.length) % states.length;
-        setState(next, { announce: true });
-        switcher.querySelectorAll(".radar-state")[next].focus();
+        show(next, { announce: true });
+        switcher.querySelectorAll(".instrument-state")[next].focus();
       });
       switcher.appendChild(button);
     });
 
-    wrap.append(
-      switcher,
-      element("p", "view-intro", copy.intro),
-      svg,
-      cards,
-      table,
-      element("p", "radar-note", copy.note),
-    );
+    const plotWrap = el("div", "instrument-plot");
+    plotWrap.append(plot, list);
+    wrap.append(switcher, plotWrap, el("p", "mark", copy.note));
 
-    paint(currentRatios);
-    setState(0);
+    paint(current);
+    show(0);
     return wrap;
   }
 
-  function roleTable(roles, caption) {
-    const copy = viewCopy("roles");
-    const table = element("table", "role-table");
-    table.appendChild(element("caption", "", caption));
+  function buildShiftChapter() {
+    const { node, body } = section("shift");
+    body.appendChild(el("p", "chapter-intro", COPY.shiftIntro));
+    body.appendChild(buildInstrument());
 
-    const head = element("thead");
-    const headRow = element("tr");
-    headRow.append(
-      element("th", "", "Role"),
-      element("th", "", `Score / ${core.MAX_RESPONSE}`),
-      element("th", "", copy.facetFloorLabel),
-      element("th", "", copy.suitabilityLabel),
-    );
-    head.appendChild(headRow);
+    // The observations worth keeping: what rose, what fell, what held.
+    const baseline = profile.phases[0];
+    const pressure = profile.phases[1];
+    const recovery = profile.phases[2];
+    const intoPressure = core.compareRoles(data, baseline, pressure);
+    const outOfPressure = core.compareRoles(data, pressure, recovery);
 
-    const body = element("tbody");
-    roles.forEach((role) => {
-      const row = element("tr");
-      const nameCell = element("td");
-      const name = element("span", "role-name");
-      const swatch = element("span", "role-swatch");
-      swatch.style.setProperty("--role-colour", colourFor(role));
-      swatch.setAttribute("aria-hidden", "true");
-      name.append(swatch, role.shortName);
-      nameCell.append(name, element("span", "role-meaning", role.contribution));
-      row.append(
-        nameCell,
-        element("td", "numeric role-score", outOfFive(role.score)),
-        element("td", "numeric", scoreText(role.facetFloor)),
-        element("td", "numeric role-score", scoreText(role.profileSuitability)),
+    const notes = el("div", "chapter-body");
+    notes.appendChild(el("p", "mark", LABELS.observations));
+
+    const observations = [];
+    if (intoPressure.stable && outOfPressure.stable) {
+      observations.push(COPY.shiftStableCopy);
+    } else {
+      observations.push(summary.adaptation);
+    }
+    const returned = core.describeReturn(data, profile);
+    if (returned) {
+      observations.push(
+        returned === "returned"
+          ? "By the closing Acts the pattern had come back towards the one you began with."
+          : returned === "retained"
+            ? "By the closing Acts the pattern still sat nearer the pressure reading than the one you began with."
+            : "By the closing Acts the pattern had settled somewhere that matches neither the opening nor the worst of it.",
       );
+    }
+    observations.forEach((copy) => {
+      notes.appendChild(el("p", "chapter-intro", copy));
+    });
+    body.appendChild(notes);
+
+    return node;
+  }
+
+  /* -------------------------------------------------- III: the five currents */
+
+  function buildCurrentsChapter() {
+    const { node, body } = section("currents");
+    body.appendChild(el("p", "chapter-intro", COPY.currentsIntro));
+
+    profile.domains.forEach((domain) => {
+      const role = profile.roles.find((entry) => entry.domain === domain.code);
+      const row = el("article", "spectrum");
+      row.style.setProperty("--trace", role.colour);
+
+      const left = el("div");
+      left.append(
+        el("h3", "spectrum-name", domain.name),
+        el("p", "spectrum-reading", outOf(domain.score)),
+        el("p", "mark", domain.bandLabel),
+      );
+
+      const right = el("div");
+      const track = el("div", "spectrum-track");
+      track.setAttribute("role", "img");
+      track.setAttribute(
+        "aria-label",
+        `${domain.name}: ${reading(domain.score)} out of ${core.MAX_RESPONSE}, ${domain.bandLabel}`,
+      );
+      track.appendChild(el("span", "spectrum-centre"));
+      const marker = el("span", "spectrum-node");
+      marker.style.left = `${domain.normalised * 100}%`;
+      track.appendChild(marker);
+
+      const poles = el("div", "spectrum-poles");
+      poles.append(
+        el("p", "mark", data.assessment.instruments[domain.code].reads),
+        el("p", "mark", `${role.shortName} · ${outOf(role.score)}`),
+      );
+
+      right.append(track, poles, el("p", "spectrum-copy", domain.interpretation));
+      row.append(left, right);
       body.appendChild(row);
     });
 
-    table.append(head, body);
-    return table;
+    return node;
   }
 
-  /* Paired bars for two phases of the same role, on one fixed 1-5 scale. */
-  function roleComparison(earlier, later, earlierLabel, laterLabel) {
-    const laterById = Object.fromEntries(later.map((role) => [role.id, role]));
-    const rows = element("div", "role-rows");
+  /* ------------------------------------------------ IV: reading each current */
 
-    earlier.forEach((role) => {
-      const partner = laterById[role.id];
-      const row = element("section", "role-row");
-      row.style.setProperty("--role-colour", colourFor(role));
-
-      const name = element("div", "role-row-name");
-      const swatch = element("span", "role-swatch");
-      swatch.setAttribute("aria-hidden", "true");
-      swatch.style.setProperty("--role-colour", colourFor(role));
-      name.append(swatch, role.name);
-
-      const bars = element("div", "role-bars");
-      [
-        { phase: "earlier", label: earlierLabel, entry: role },
-        { phase: "later", label: laterLabel, entry: partner },
-      ].forEach(({ phase, label, entry }) => {
-        const bar = element("div", "role-bar");
-        bar.dataset.phase = phase;
-        const track = element("div", "role-track");
-        track.setAttribute("role", "img");
-        track.setAttribute(
-          "aria-label",
-          `${role.name}, ${label}: ${scoreText(entry?.score)} out of ${core.MAX_RESPONSE}`,
-        );
-        const fill = element("span", "role-fill");
-        fill.style.width = `${Math.max(2, (entry?.normalised ?? 0) * 100)}%`;
-        track.appendChild(fill);
-        bar.append(
-          element("span", "role-bar-label", label),
-          track,
-          element("span", "role-bar-value", scoreText(entry?.score)),
-        );
-        bars.appendChild(bar);
-      });
-
-      row.append(name, bars);
-      rows.appendChild(row);
-    });
-
-    return rows;
-  }
-
-  function phaseCard(phase, lead, roleLabel) {
-    const card = element("article", "phase-card");
-    card.append(
-      element("p", "meta", roleLabel),
-      element("h3", "", phase.label),
-      element("p", "phase-window", phase.window),
-      element("p", "phase-lead", lead.label),
-      element("p", "phase-desc", phase.description),
-    );
-    return card;
-  }
-
-  function shiftList(shifts) {
-    const list = element("ul", "shift-list");
-    shifts.forEach((shift) => {
-      const item = element("li", "shift-item");
-      const name = element("span", "role-name");
-      const swatch = element("span", "role-swatch");
-      swatch.setAttribute("aria-hidden", "true");
-      swatch.style.setProperty("--role-colour", colourFor(shift));
-      name.append(swatch, shift.name);
-      item.append(
-        name,
-        element("span", "shift-delta", signed(shift.delta)),
-        element("span", "shift-size", `${shift.size} ${shift.direction}`),
-      );
-      list.appendChild(item);
-    });
-    return list;
-  }
-
-  /* ---------------------------------------------------------- the six views */
-
-  function viewHeading(copy) {
-    const header = element("header", "view-heading");
-    header.append(
-      element("p", "meta", copy.label.toUpperCase()),
-      element("h2", "view-title", copy.title),
-    );
-    if (copy.intro) {
-      header.appendChild(element("p", "view-intro", copy.intro));
-    }
-    return header;
-  }
-
-  function buildCompleteView() {
-    const copy = viewCopy("complete");
-    const view = element("section", "results-view completion-view");
-    view.append(
-      element("p", "meta", `${profile.playerName} · ${completionDate()}`),
-      element("h2", "view-title", copy.title),
-      element("p", "completion-bridge", copy.bridge),
-      element("p", "completion-body", copy.body),
-      element("p", "completion-disclaimer", copy.disclaimer),
-    );
-    return view;
-  }
-
-  function buildRolesView() {
-    const copy = viewCopy("roles");
-    const view = element("section", "results-view");
-    view.appendChild(viewHeading(copy));
-
-    view.appendChild(buildRoleRadar());
-
-    const layout = element("div", "roles-layout");
-    const side = element("div");
-    const lead = element("div", "role-lead");
-    lead.append(
-      element("p", "meta", copy.overallLabel),
-      element("p", "role-lead-name", summary.overall.label),
-      element(
-        "p",
-        "role-lead-copy",
-        summary.overall.blended
-          .map((role) => `${role.name}: ${role.reading}`)
-          .join(". ") + ".",
-      ),
-    );
-    if (summary.overall.isBlend) {
-      lead.appendChild(element("p", "meta", copy.blendNote));
-    } else if (summary.overall.secondary) {
-      lead.appendChild(
-        element(
-          "p",
-          "meta",
-          `${copy.secondaryLabel}: ${summary.overall.secondary.shortName}`,
-        ),
-      );
-    }
-    lead.appendChild(element("p", "meta", copy.recommendedNote));
-    side.appendChild(lead);
-    layout.append(side, roleTable(profile.roles, copy.tableCaption));
-
-    view.append(layout, element("p", "view-intro", data.assessment.roleNote));
-    return view;
-  }
-
-  function buildPressureView() {
-    const copy = viewCopy("pressure");
-    const baseline = profile.phases[0];
-    const pressure = profile.phases[1];
-    const comparison = core.compareRoles(data, baseline, pressure);
-
-    const view = element("section", "results-view");
-    view.appendChild(viewHeading(copy));
-
-    const cards = element("div", "phase-compare");
-    cards.append(
-      phaseCard(baseline, summary.starting, "Starting role"),
-      phaseCard(pressure, summary.pressure, "Pressure role"),
-    );
-    view.appendChild(cards);
-
-    view.appendChild(
-      roleComparison(baseline.roles, pressure.roles, baseline.shortLabel, pressure.shortLabel),
-    );
-
-    const body = element("div", "view-body");
-    if (comparison.stable) {
-      body.appendChild(element("p", "", copy.stableCopy));
-    } else {
-      view.appendChild(shiftList(comparison.shifts));
-      const rose = comparison.shifts.find((shift) => shift.delta > 0);
-      const fell = comparison.shifts.find((shift) => shift.delta < 0);
-      if (rose) {
-        body.appendChild(
-          element(
-            "p",
-            "",
-            copy.shiftLeadIn
-              .replace("{role}", rose.name)
-              .replace("{reading}", rose.reading),
-          ),
-        );
-      }
-      if (fell) {
-        body.appendChild(
-          element("p", "", copy.shiftDropLeadIn.replace("{role}", fell.name)),
-        );
-      }
-    }
-    body.appendChild(element("p", "view-intro", data.assessment.phaseNote));
-    view.appendChild(body);
-    return view;
-  }
-
-  function buildRecoveryView() {
-    const copy = viewCopy("recovery");
-    const pressure = profile.phases[1];
-    const recovery = profile.phases[2];
-    const comparison = core.compareRoles(data, pressure, recovery);
-    const returnKind = core.describeReturn(data, profile);
-
-    const view = element("section", "results-view");
-    view.appendChild(viewHeading(copy));
-
-    const cards = element("div", "phase-compare");
-    cards.append(
-      phaseCard(pressure, summary.pressure, "Pressure role"),
-      phaseCard(recovery, summary.recovery, "Recovery role"),
-    );
-    view.appendChild(cards);
-
-    view.appendChild(
-      roleComparison(pressure.roles, recovery.roles, pressure.shortLabel, recovery.shortLabel),
-    );
-
-    const body = element("div", "view-body");
-    if (comparison.stable) {
-      body.appendChild(element("p", "", copy.stableCopy));
-    } else {
-      view.appendChild(shiftList(comparison.shifts));
-      const rose = comparison.shifts.find((shift) => shift.delta > 0);
-      if (rose) {
-        body.appendChild(
-          element(
-            "p",
-            "",
-            copy.shiftLeadIn
-              .replace("{role}", rose.name)
-              .replace("{reading}", rose.reading),
-          ),
-        );
-      }
-    }
-    body.appendChild(
-      element(
-        "p",
-        "",
-        returnKind === "returned"
-          ? copy.returnedCopy
-          : returnKind === "retained"
-            ? copy.retainedCopy
-            : copy.newBalanceCopy,
-      ),
-    );
-    body.appendChild(element("p", "view-intro", data.assessment.phaseNote));
-    view.appendChild(body);
-    return view;
-  }
-
-  function buildDetailView() {
-    const copy = viewCopy("detail");
-    const view = element("section", "results-view");
-    view.appendChild(viewHeading(copy));
+  function buildDetailChapter() {
+    const { node, body } = section("detail");
+    body.appendChild(el("p", "chapter-intro", COPY.detailIntro));
 
     profile.domains.forEach((domain) => {
-      const panel = element("article", "domain-panel");
-      panel.style.setProperty("--domain-colour", domain.colour);
+      const role = profile.roles.find((entry) => entry.domain === domain.code);
+      const instrument = data.assessment.instruments[domain.code];
+      const guidance = data.assessment.domains[domain.code].guidance[domain.band];
 
-      const side = element("div");
-      const heading = element("div", "domain-panel-heading");
-      const name = element("h3");
-      const marker = element("span", "domain-marker");
-      marker.setAttribute("aria-hidden", "true");
-      name.append(marker, domain.name);
-      heading.append(name, element("strong", "domain-panel-score", outOfFive(domain.score)));
-      side.append(
-        heading,
-        element("p", "meta domain-panel-band", domain.bandLabel),
-        element("p", "domain-panel-focus", domain.focus),
-        element("p", "domain-panel-copy", domain.interpretation),
+      const current = el("article", "current");
+      current.style.setProperty("--trace", role.colour);
+
+      const head = el("div", "current-head");
+      const title = el("div");
+      title.append(
+        el("h3", "current-title", domain.name),
+        el("p", "mark", `${domain.focus}`),
       );
+      const dial = el("div", "current-instrument");
+      if (art) {
+        const face = art.instrumentDial(domain.normalised, role.colour, domain.name);
+        face.style.setProperty("--trace", role.colour);
+        dial.appendChild(face);
+      }
+      dial.append(
+        el("p", "mark", instrument.name.toUpperCase()),
+        el("p", "mark", outOf(domain.score)),
+      );
+      head.append(title, dial);
+      current.appendChild(head);
 
-      const facets = element("div", "facet-rows");
+      const facets = el("div");
+      facets.appendChild(el("p", "mark", LABELS.facets));
       domain.facets.forEach((facet) => {
-        const row = element("section", "facet-row");
-        const label = element("div", "facet-row-label");
-        label.append(
-          element("h4", "", facet.name),
-          element("p", "facet-meaning", facet.meaning),
+        const row = el("div", "facet-row");
+        row.append(
+          el("p", "reading-name", facet.name),
+          el("p", "facet-value", outOf(facet.score)),
+          el("p", "", facet.meaning),
         );
-        const value = element("div", "facet-row-value");
-        value.appendChild(element("strong", "facet-score", outOfFive(facet.score)));
-        const track = element("div", "facet-track");
-        track.setAttribute("role", "img");
-        track.setAttribute(
-          "aria-label",
-          `${facet.name}: ${scoreText(facet.score)} out of ${core.MAX_RESPONSE}`,
-        );
-        const fill = element("span", "facet-fill");
-        fill.style.width = `${Math.max(2, facet.normalised * 100)}%`;
-        track.appendChild(fill);
-        value.appendChild(track);
-        row.append(label, value);
         facets.appendChild(row);
       });
+      current.appendChild(facets);
 
-      panel.append(side, facets);
-      view.appendChild(panel);
+      const blocks = el("div", "guidance");
+      [
+        [LABELS.advantage, guidance.advantage],
+        [LABELS.overextension, guidance.overextension],
+        [LABELS.reflection, guidance.reflection],
+      ].forEach(([label, copy]) => {
+        const block = el("div", "guidance-block");
+        block.append(el("p", "mark", label), el("p", "", copy));
+        blocks.appendChild(block);
+      });
+      current.appendChild(blocks);
+
+      body.appendChild(current);
     });
 
-    const notes = element("div", "detail-notes");
-    notes.append(
-      element("p", "", copy.higherNote),
-      element("p", "", copy.negativeEmotionalityNote),
-      element("p", "", copy.aegisNote),
-    );
-    view.appendChild(notes);
-    return view;
+    return node;
   }
 
-  function buildSummaryView() {
-    const copy = viewCopy("summary");
-    const view = element("section", "results-view");
-    view.appendChild(viewHeading(copy));
-
-    const cards = element("div", "summary-roles");
-    [
-      ["Across the watch", summary.overall],
-      ["Starting", summary.starting],
-      ["Under pressure", summary.pressure],
-      ["After pressure", summary.recovery],
-    ].forEach(([label, lead]) => {
-      const card = element("article", "summary-role-card");
-      const value = element("span", "summary-role-value");
-      const swatch = element("span", "role-swatch");
-      swatch.setAttribute("aria-hidden", "true");
-      swatch.style.setProperty("--role-colour", colourFor(lead.primary));
-      value.append(swatch, lead.label);
-      card.append(element("p", "meta", label), value);
-      cards.appendChild(card);
-    });
-    view.appendChild(cards);
-
-    const paragraphs = element("div", "summary-paragraphs");
-    [
-      ["Consistency", summary.consistency],
-      ["Adaptation", summary.adaptation],
-      ["In a group", summary.contribution],
-    ].forEach(([label, text]) => {
-      const block = element("section");
-      block.append(element("h3", "", label), element("p", "", text));
-      paragraphs.appendChild(block);
-    });
-    view.appendChild(paragraphs);
-
-    const reflection = element("div", "reflection-question");
-    reflection.append(
-      element("p", "meta", copy.reflectionLabel),
-      element("p", "", summary.reflection),
-    );
-    view.appendChild(reflection);
-    return view;
-  }
-
-  /* ------------------------------------------------------------ navigation */
-
-  function showView(index, options) {
-    const settings = options || {};
-    const next = Math.max(0, Math.min(index, views.length - 1));
-    activeIndex = next;
-
-    views.forEach((view, position) => {
-      view.node.hidden = position !== next;
-    });
-
-    const dots = shell.querySelectorAll(".results-dot");
-    dots.forEach((dot, position) => {
-      dot.setAttribute("aria-current", String(position === next));
-    });
-
-    const label = shell.querySelector(".page-label");
-    label.textContent = data.results.pageLabelTemplate
-      .replace("{current}", String(next + 1).padStart(2, "0"))
-      .replace("{total}", String(views.length).padStart(2, "0"));
-
-    shell.querySelector(".pager-previous").disabled = next === 0;
-    shell.querySelector(".pager-next").disabled = next === views.length - 1;
-
-    if (settings.updateHash !== false) {
-      const hash = `#${views[next].copy.hash}`;
-      if (window.location.hash !== hash) {
-        window.history.pushState(null, "", hash);
-      }
-    }
-
-    if (settings.announce !== false) {
-      announce(`${views[next].copy.label}. Page ${next + 1} of ${views.length}.`);
-    }
-    if (settings.focus) {
-      views[next].node.focus?.({ preventScroll: true });
-    }
-  }
-
-  function indexForHash(hash) {
-    const id = String(hash || "").replace(/^#/, "");
-    const found = views.findIndex((view) => view.copy.hash === id);
-    return found === -1 ? 0 : found;
-  }
-
-  function buildNavigation() {
-    const nav = element("nav", "results-nav");
-    nav.setAttribute("aria-label", "Profile pages");
-
-    const dots = element("ol", "results-dots");
-    views.forEach((view, index) => {
-      const item = element("li");
-      const dot = element("button", "results-dot", view.copy.shortLabel);
-      dot.type = "button";
-      dot.setAttribute("aria-current", String(index === 0));
-      dot.addEventListener("click", () => showView(index, { focus: true }));
-      item.appendChild(dot);
-      dots.appendChild(item);
-    });
-
-    const pager = element("div", "results-pager");
-    const previous = element("button", "secondary-action pager-previous", data.results.previous);
-    previous.type = "button";
-    previous.addEventListener("click", () => showView(activeIndex - 1, { focus: true }));
-
-    const label = element("p", "meta page-label", "01 / 06");
-    label.setAttribute("aria-live", "off");
-
-    const next = element("button", "secondary-action pager-next", data.results.next);
-    next.type = "button";
-    next.addEventListener("click", () => showView(activeIndex + 1, { focus: true }));
-
-    pager.append(previous, label, next);
-    nav.append(dots, pager);
-    return nav;
-  }
-
-  function bindNavigation() {
-    document.addEventListener("keydown", (event) => {
-      if (event.metaKey || event.ctrlKey || event.altKey) {
-        return;
-      }
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
-      ) {
-        return;
-      }
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        showView(activeIndex - 1, { focus: true });
-      } else if (event.key === "ArrowRight") {
-        event.preventDefault();
-        showView(activeIndex + 1, { focus: true });
-      }
-    });
-
-    window.addEventListener("popstate", () => {
-      showView(indexForHash(window.location.hash), { updateHash: false });
-    });
-
-    // Swipe is an addition to the buttons, never the only way through.
-    let startX = 0;
-    let startY = 0;
-    shell.addEventListener(
-      "touchstart",
-      (event) => {
-        startX = event.changedTouches[0].clientX;
-        startY = event.changedTouches[0].clientY;
-      },
-      { passive: true },
-    );
-    shell.addEventListener(
-      "touchend",
-      (event) => {
-        const deltaX = event.changedTouches[0].clientX - startX;
-        const deltaY = event.changedTouches[0].clientY - startY;
-        if (Math.abs(deltaX) < SWIPE_DISTANCE || Math.abs(deltaY) > SWIPE_SLOPE) {
-          return;
-        }
-        showView(activeIndex + (deltaX < 0 ? 1 : -1));
-      },
-      { passive: true },
-    );
-  }
-
-  /* ---------------------------------------------------------- chrome parts */
+  /* ------------------------------------------------------------- V: closing */
 
   function exportButton(label, className, run) {
-    const button = element("button", className, label);
+    const button = el("button", className, label);
     button.type = "button";
     button.addEventListener("click", async () => {
       const original = button.textContent;
       button.disabled = true;
-      button.textContent = "Preparing…";
+      button.textContent = "Preparing";
       try {
         await run();
-        announce(`${label} complete.`);
+        say(`${label} complete.`);
       } catch {
-        announce(`${label} could not be created.`);
+        say(`${label} could not be prepared.`);
       } finally {
         button.textContent = original;
         button.disabled = false;
@@ -960,104 +607,99 @@
     return button;
   }
 
-  function profilePdfButton(className) {
-    return exportButton(data.results.actions.profilePdf, className, () =>
-      pdfExporter.downloadProfile(
-        data,
-        state,
-        core,
-        `Aurora_Station_Profile_${fileSafeName(profile.playerName)}.pdf`,
-      ),
-    );
-  }
+  function buildCloseChapter() {
+    const { node, body } = section("close");
 
-  function storyPdfButton(className) {
-    return exportButton(data.results.actions.storyPdf, className, () =>
-      pdfExporter.downloadStory(
-        data,
-        state,
-        core,
-        `Aurora_Station_Story_${fileSafeName(profile.playerName)}.pdf`,
-      ),
-    );
-  }
+    [summary.consistency, summary.contribution].forEach((copy) => {
+      body.appendChild(el("p", "chapter-intro", copy));
+    });
 
-  function exitLink(className, label) {
-    const link = element("a", className, label);
-    link.href = "./index.html";
-    return link;
-  }
+    const reflection = el("div", "role-statement");
+    reflection.append(el("p", "mark", LABELS.reflection), el("p", "", summary.reflection));
+    body.appendChild(reflection);
 
-  function restartButton(className) {
-    const button = element("button", className, data.results.actions.restart);
-    button.type = "button";
-    button.addEventListener("click", () => {
-      if (!window.confirm(data.results.restartConfirm)) {
+    const actions = el("div", "close-actions");
+    if (pdf) {
+      actions.append(
+        exportButton(COPY.actions.profilePdf, "action", () =>
+          pdf.downloadProfile(
+            data,
+            state,
+            core,
+            `Aurora_Station_Report_${fileName(profile.playerName)}.pdf`,
+          ),
+        ),
+        exportButton(COPY.actions.storyPdf, "action action-quiet", () =>
+          pdf.downloadStory(
+            data,
+            state,
+            core,
+            `Aurora_Station_Record_${fileName(profile.playerName)}.pdf`,
+          ),
+        ),
+      );
+    }
+    const back = el("a", "action action-quiet", COPY.actions.returnToStory);
+    back.href = "./index.html";
+    actions.appendChild(back);
+
+    const restart = el("button", "action action-quiet", COPY.actions.restart);
+    restart.type = "button";
+    restart.addEventListener("click", () => {
+      if (!window.confirm(COPY.restartConfirm)) {
         return;
       }
       core.clearJourney(storage);
       window.location.replace("./index.html");
     });
-    return button;
-  }
+    actions.appendChild(restart);
+    body.appendChild(actions);
 
-  function buildMasthead() {
-    const masthead = element("header", "results-masthead");
-    const identity = element("div", "results-identity");
-    identity.append(
-      element("p", "meta", data.results.eyebrow),
-      element("h1", "", data.results.heading),
-      element("p", "results-owner", profile.playerName),
-    );
+    const colophon = el("div", "colophon");
+    [
+      COPY.disclaimer,
+      `${data.instrument.status}. ${data.instrument.statusNote}`,
+      data.instrument.attribution,
+      data.instrument.permission,
+      data.assessment.bandNote,
+      data.assessment.phaseNote,
+      COPY.privacy,
+    ].forEach((line) => colophon.appendChild(el("p", "", line)));
 
-    // Download and exit stay available from every view.
-    const utilities = element("div", "results-utilities");
-    if (pdfExporter) {
-      utilities.append(profilePdfButton("primary-action"), storyPdfButton("secondary-action"));
-    }
-    utilities.appendChild(exitLink("secondary-action", data.results.actions.returnToStory));
-
-    masthead.append(identity, utilities);
-    return masthead;
-  }
-
-  function buildFooter() {
-    const footer = element("footer", "results-footer");
-
-    const actions = element("div", "results-footer-actions");
-    if (pdfExporter) {
-      actions.append(profilePdfButton("primary-action"), storyPdfButton("secondary-action"));
-    }
-    actions.append(
-      exitLink("secondary-action", "Return to Completed Story"),
-      restartButton("secondary-action"),
-    );
-
-    const fine = element("div", "results-fine");
-    fine.append(
-      element("p", "", `${data.instrument.status}. ${data.instrument.statusNote}`),
-      element("p", "", data.instrument.attribution),
-      element("p", "", data.instrument.permission),
-      element("p", "", data.assessment.bandNote),
-      element("p", "", data.results.privacy),
-    );
-    const link = element("a", "", "The BFI-2 at the Colby Personality Lab");
+    const link = el("a", "", "The BFI-2 at the Colby Personality Lab");
     link.href = data.instrument.reference;
     link.rel = "noopener noreferrer";
     link.target = "_blank";
-    fine.appendChild(link);
+    colophon.appendChild(link);
+    body.appendChild(colophon);
 
-    footer.append(actions, fine);
-    return footer;
+    return node;
+  }
+
+  /* ---------------------------------------------------------- the masthead */
+
+  function buildMasthead() {
+    const masthead = el("header", "report-masthead");
+    const meta = el("div", "report-meta");
+    meta.append(
+      el("p", "mark", COPY.eyebrow),
+      el("p", "mark", `RECORDED ${completedOn()}`),
+      el("p", "mark", COPY.classification),
+    );
+    masthead.append(
+      meta,
+      el("h1", "report-title", COPY.heading),
+      el("p", "report-owner", profile.playerName),
+      el("p", "report-standfirst", COPY.openingBody),
+    );
+    return masthead;
   }
 
   /* ----------------------------------------------------------------- boot */
 
   function boot() {
     if (!data || !core) {
-      shell.replaceChildren(
-        element("p", "loading-copy", "Aurora Station could not load its data."),
-      );
+      shell.replaceChildren(el("p", "loading-note", "Aurora Station could not load its record."));
       return;
     }
 
@@ -1069,37 +711,21 @@
     }
     summary = core.summariseProfile(data, profile);
 
-    const builders = {
-      complete: buildCompleteView,
-      roles: buildRolesView,
-      pressure: buildPressureView,
-      recovery: buildRecoveryView,
-      detail: buildDetailView,
-      summary: buildSummaryView,
-    };
-
-    views = data.results.views.map((copy) => {
-      const node = builders[copy.id]();
-      node.id = `view-${copy.id}`;
-      node.tabIndex = -1;
-      node.setAttribute("aria-label", copy.label);
-      node.hidden = true;
-      return { copy, node };
-    });
-
-    const viewport = element("div", "results-views");
-    views.forEach((view) => viewport.appendChild(view.node));
-
-    shell.replaceChildren(buildMasthead(), buildNavigation(), viewport, buildFooter());
-    bindNavigation();
-
-    if (prefersReducedMotion()) {
-      document.body.classList.add("reduced-motion");
+    if (art) {
+      document.body.appendChild(art.grainOverlay());
     }
 
-    showView(indexForHash(window.location.hash), { updateHash: false, announce: false });
-    document.title = `${profile.playerName} — Watchkeeper Profile`;
-    announce("Your Watchkeeper Profile is ready.");
+    shell.replaceChildren(
+      buildMasthead(),
+      buildRoleChapter(),
+      buildShiftChapter(),
+      buildCurrentsChapter(),
+      buildDetailChapter(),
+      buildCloseChapter(),
+    );
+
+    document.title = `${profile.playerName} — Observation Report`;
+    say("The observation report is ready.");
   }
 
   boot();

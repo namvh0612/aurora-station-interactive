@@ -1,39 +1,44 @@
 /*
- * Aurora Station — Journey page.
+ * Aurora Station — the watch.
  *
- * One cumulative document. core.js derives the story as an ordered node
- * stream; this module appends those nodes to #story and never rewrites what is
- * already there. The only element that changes in place is each Act's single
- * reflection panel, which carries that Act's five statements and is then
- * locked into a compact completed state.
+ * One cumulative document. core.js derives the story as an ordered node stream;
+ * this module appends those nodes and never rewrites what is already on the
+ * page. The composition changes as the night degrades — the reading column
+ * tightens, the drawings gain density, the aurora arrives — but the way a
+ * response is given never changes.
  */
-(function startAuroraStation() {
+(function runAuroraStation() {
   "use strict";
 
   const data = window.AURORA_STATION_DATA;
   const core = window.AuroraCore;
+  const art = window.AuroraArtwork;
   const audio = window.AuroraAudio;
-  const pdfExporter = window.AuroraPdf;
+  const pdf = window.AuroraPdf;
 
-  const story = document.getElementById("story");
-  const progressFill = document.getElementById("progress-fill");
-  const progressBar = document.querySelector(".reader-progress");
-  const progressLabel = document.getElementById("progress-label");
+  const watch = document.getElementById("watch");
+  const stationMark = document.getElementById("station-mark");
+  const actMark = document.getElementById("act-mark");
+  const sequence = document.getElementById("sequence");
+  const sequenceLabel = document.getElementById("sequence-label");
+  const sequenceTicks = document.getElementById("sequence-ticks");
+  const paceToggle = document.getElementById("pace-toggle");
+  const paceNow = document.getElementById("pace-now");
+  const paceControl = document.getElementById("pace-control");
   const soundToggle = document.getElementById("sound-toggle");
-  const playbackToggle = document.getElementById("playback-toggle");
-  const showNowButton = document.getElementById("playback-show-now");
-  const speedControl = document.getElementById("speed-control");
-  const newPassageButton = document.getElementById("new-passage");
-  const liveRegion = document.getElementById("screen-reader-status");
+  const newPassage = document.getElementById("new-passage");
+  const announcer = document.getElementById("announcer");
+  const auroraLayer = document.getElementById("env-aurora");
 
-  const NEAR_BOTTOM_MARGIN = 260;
-  const SELECTED_STATE_DELAY = 300;
-  const FOLLOW_TAIL_MARGIN = 96;
-  const USER_SCROLL_QUIET = 900;
-  const SCROLL_SAVE_DELAY = 250;
+  const NEAR_BOTTOM = 260;
+  const SELECTED_HOLD = 300;
+  const FOLLOW_TAIL = 120;
+  const QUIET_AFTER_SCROLL = 900;
+  const SCROLL_SAVE = 250;
 
-  const RESPONSE_LABELS = core.responseLabels(data);
-  const TOTAL_ITEMS = core.ITEM_COUNT;
+  const LABELS = core.responseLabels(data);
+  const TOTAL = core.ITEM_COUNT;
+  const OBS = data.observation;
 
   const storage = (() => {
     try {
@@ -46,22 +51,22 @@
   })();
 
   let state = core.loadState(data, storage);
-  let preferences = core.loadPreferences(storage);
+  let prefs = core.loadPreferences(storage);
   let nodes = core.buildNodes(data, state);
-  let revealed = clampRevealed(state.narrative.revealedBeatCount.stream);
+  let revealed = clamp(state.narrative.revealedBeatCount.stream);
 
-  let renderedCount = 0;
-  let nodesBuiltFor = core.answeredCount(state);
+  let rendered = 0;
+  let builtFor = core.answeredCount(state);
   let revealTimer = 0;
-  let scrollSaveTimer = 0;
+  let scrollTimer = 0;
   let userScrollTimer = 0;
   let userScrolling = false;
-  let selectionLocked = false;
+  let locked = false;
   let restoring = false;
-  let entryDialog = null;
-  const actPanels = new Map();
+  let entry = null;
+  const panels = new Map();
 
-  function clampRevealed(value) {
+  function clamp(value) {
     const count = Number(value);
     if (!Number.isFinite(count) || count < 0) {
       return 0;
@@ -71,12 +76,12 @@
 
   /* ------------------------------------------------------------- helpers */
 
-  function prefersReducedMotion() {
+  function stillMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
-  function element(tagName, className, text) {
-    const node = document.createElement(tagName);
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
     if (className) {
       node.className = className;
     }
@@ -86,17 +91,21 @@
     return node;
   }
 
-  function announce(message) {
-    if (!liveRegion || !message) {
+  function say(message) {
+    if (!announcer || !message) {
       return;
     }
-    liveRegion.textContent = "";
+    announcer.textContent = "";
     window.setTimeout(() => {
-      liveRegion.textContent = message;
+      announcer.textContent = message;
     }, 30);
   }
 
-  function fileSafeName(value) {
+  function pad(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function fileName(value) {
     const safe = String(value || "Watchkeeper")
       .normalize("NFKD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -106,39 +115,47 @@
     return safe || "Watchkeeper";
   }
 
-  function persist() {
-    state.narrative.revealedBeatCount = { stream: revealed };
-    state.narrative.paused = preferences.paused === true;
-    core.saveState(data, state, storage);
+  function actFor(number) {
+    return data.story.acts.find((act) => act.number === number);
   }
 
-  function persistPreferences() {
-    core.savePreferences(preferences, storage);
+  /* The behavioural trace an item belongs to, used only as a hairline. */
+  function traceForItem(itemId) {
+    const item = core.flattenItems(data).find((entry) => entry.id === itemId);
+    if (!item) {
+      return "var(--signal)";
+    }
+    const roleId = data.assessment.roleOrder.find(
+      (id) => data.assessment.roles[id].domain === item.domain,
+    );
+    return roleId ? data.assessment.roles[roleId].colour : "var(--signal)";
+  }
+
+  function persist() {
+    state.narrative.revealedBeatCount = { stream: revealed };
+    state.narrative.paused = prefs.paused === true;
+    core.saveState(data, state, storage);
   }
 
   /* --------------------------------------------------------- scroll rules */
 
-  function isNearBottom() {
+  function nearBottom() {
     return (
       window.scrollY + window.innerHeight >=
-      document.documentElement.scrollHeight - NEAR_BOTTOM_MARGIN
+      document.documentElement.scrollHeight - NEAR_BOTTOM
     );
   }
 
-  function markUserScrolling() {
+  function markScrolling() {
     userScrolling = true;
     window.clearTimeout(userScrollTimer);
     userScrollTimer = window.setTimeout(() => {
       userScrolling = false;
-    }, USER_SCROLL_QUIET);
+    }, QUIET_AFTER_SCROLL);
   }
 
-  /*
-   * A small, gentle follow that keeps the newest beat in view. It never jumps
-   * to the absolute bottom, and it stands down entirely while the reader is
-   * scrolling for themselves.
-   */
-  function followNewPassage(node) {
+  /* A short, gentle follow. Never a jump to the bottom of the document. */
+  function follow(node) {
     if (!node || userScrolling) {
       return;
     }
@@ -146,285 +163,305 @@
     const target = Math.max(
       0,
       Math.min(
-        bottom - window.innerHeight + FOLLOW_TAIL_MARGIN,
+        bottom - window.innerHeight + FOLLOW_TAIL,
         document.documentElement.scrollHeight - window.innerHeight,
       ),
     );
     if (target <= window.scrollY) {
       return;
     }
-    window.scrollTo({
-      top: target,
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
-    });
+    window.scrollTo({ top: target, behavior: stillMotion() ? "auto" : "smooth" });
   }
 
-  function settleAfterAppend(wasNearBottom, node) {
+  function settle(wasNear, node) {
     if (restoring) {
       return;
     }
-    if (wasNearBottom && !userScrolling) {
-      newPassageButton.hidden = true;
-      followNewPassage(node);
+    if (wasNear && !userScrolling) {
+      newPassage.hidden = true;
+      follow(node);
     } else {
-      newPassageButton.hidden = false;
+      newPassage.hidden = false;
     }
   }
 
   function rememberScroll() {
-    window.clearTimeout(scrollSaveTimer);
-    scrollSaveTimer = window.setTimeout(() => {
+    window.clearTimeout(scrollTimer);
+    scrollTimer = window.setTimeout(() => {
       state.scrollY = Math.round(window.scrollY);
       persist();
-    }, SCROLL_SAVE_DELAY);
+    }, SCROLL_SAVE);
   }
 
-  /* ---------------------------------------------------------- node markup */
+  /* ------------------------------------------------------------- drawing */
 
-  function appendParagraph(node) {
+  function appendPassage(node) {
     const classes = ["passage", `passage-${node.type}`];
-    if (node.band) {
-      classes.push(`passage-band-${node.band}`);
-    }
-    const paragraph = element("p", classes.join(" "), node.text);
+    const paragraph = el("p", classes.join(" "), node.text);
     if (node.type === "selected") {
-      paragraph.dataset.responseBand = node.band || "";
+      // A recorded response carries the trace of the current it belongs to.
+      paragraph.style.setProperty("--trace", traceForItem(node.itemId));
+      paragraph.dataset.band = node.band || "";
     }
-    story.appendChild(paragraph);
+    watch.appendChild(paragraph);
     return paragraph;
   }
 
-  function appendActHeading(node) {
-    const heading = element("header", "act-heading");
-    heading.id = `act-${node.actNumber}`;
-    heading.append(
-      element(
-        "p",
-        "meta act-kicker",
-        `ACT ${String(node.actNumber).padStart(2, "0")} / ${core.ACT_COUNT} · ${node.time}`,
-      ),
-      element("h2", "act-title", node.title),
-    );
-    story.appendChild(heading);
-    if (!restoring) {
-      announce(`Act ${node.actNumber} of ${core.ACT_COUNT}. ${node.title}.`);
+  /*
+   * The full-bleed Act opening: an oversized number, the operational
+   * timestamp, and the drawing behind them.
+   */
+  function appendActPlate(node) {
+    const act = actFor(node.actNumber);
+    const plate = el("section", "act-plate");
+    plate.id = `act-${node.actNumber}`;
+    plate.dataset.phase = act.contextPhase;
+
+    const figure = el("div", "act-plate-figure");
+    if (art) {
+      figure.appendChild(
+        art.actPlate(node.actNumber, act.contextPhase, {
+          window: act.contextPhase !== "baseline",
+        }),
+      );
     }
-    return heading;
-  }
+    plate.appendChild(figure);
 
-  function appendInterludeHeading(node) {
-    const heading = element("header", "interlude-heading");
-    heading.append(
-      element("p", "meta", node.eyebrow),
-      element("h2", "interlude-title", node.title),
+    plate.appendChild(el("p", "act-plate-index", pad(node.actNumber)));
+    const meta = el("div", "act-plate-meta");
+    meta.append(
+      el("p", "mark", `${OBS.actLabel} ${pad(node.actNumber)} ${OBS.ofLabel} ${core.ACT_COUNT}`),
+      el("p", "mark", node.time),
+      el("p", "mark", OBS.phaseLabels[act.contextPhase]),
     );
-    story.appendChild(heading);
-    return heading;
+    plate.append(meta, el("h2", "act-plate-title", node.title));
+
+    watch.appendChild(plate);
+    if (!restoring) {
+      say(`Act ${node.actNumber} of ${core.ACT_COUNT}. ${node.title}.`);
+    }
+    return plate;
   }
 
-  function appendPrologueHeading(node) {
-    const heading = element("header", "prologue-heading");
-    heading.append(
-      element("p", "meta", node.eyebrow),
-      element("h1", "story-title", data.title),
-      element("p", "prologue-subtitle", node.title),
+  function appendInterlude(node) {
+    const section = el("section", "interlude");
+    section.append(el("p", "mark", node.eyebrow), el("h2", "interlude-title", node.title));
+    watch.appendChild(section);
+    return section;
+  }
+
+  function appendPrologue(node) {
+    const section = el("section", "prologue");
+    section.append(
+      el("p", "mark prologue-mark", `${OBS.stationLabel} · ${OBS.watchLabel}`),
+      el("h1", "prologue-title", data.title),
+      el("p", "prologue-sub", node.title),
     );
-    story.appendChild(heading);
-    return heading;
+    watch.appendChild(section);
+    return section;
   }
 
-  /* ------------------------------------------------------ reflection panel */
+  /* -------------------------------------------------- the observation panel */
 
-  function actByNumber(actNumber) {
-    return data.story.acts.find((act) => act.number === actNumber);
-  }
-
-  function buildActPanel(actNumber) {
-    const panel = element("section", "reflection-panel");
+  function buildPanel(actNumber) {
+    const panel = el("section", "observation");
     panel.dataset.act = String(actNumber);
     panel.tabIndex = -1;
-    panel.setAttribute("aria-label", `Watchkeeper reflection for Act ${actNumber}`);
+    panel.setAttribute("aria-label", `Observation panel, Act ${actNumber}`);
 
-    const kicker = element("p", "meta reflection-kicker", "WATCHKEEPER REFLECTION");
-    const counter = element("p", "meta reflection-counter", "");
-    const statementNumber = element("p", "meta reflection-statement-number", "");
-    const statement = element("h3", "reflection-statement", "");
-    statement.id = `statement-act-${actNumber}`;
+    const head = el("div", "observation-head");
+    const kicker = el("p", "mark", OBS.label);
+    const counter = el("p", "mark", "");
+    head.append(kicker, counter);
 
-    const anchors = element("div", "scale-anchors");
+    const statement = el("h3", "observation-statement", "");
+    statement.id = `observation-${actNumber}`;
+
+    const anchors = el("div", "scale-anchors");
     anchors.setAttribute("aria-hidden", "true");
     anchors.append(
-      element("span", "", data.assessment.spectrum.leftAnchor),
-      element("span", "", data.assessment.spectrum.rightAnchor),
+      el("p", "mark", data.assessment.spectrum.leftAnchor),
+      el("p", "mark", data.assessment.spectrum.rightAnchor),
     );
 
-    const choices = element("div", "response-choices");
-    choices.setAttribute("role", "group");
-    choices.setAttribute("aria-labelledby", statement.id);
+    const responses = el("div", "responses");
+    responses.style.setProperty("--response-count", String(LABELS.length));
+    responses.setAttribute("role", "group");
+    responses.setAttribute("aria-labelledby", statement.id);
 
-    const buttons = RESPONSE_LABELS.map((label, index) => {
-      const raw = index + 1;
-      const button = element("button", "response-choice", String(raw));
+    const buttons = LABELS.map((label, index) => {
+      const value = index + 1;
+      const button = el("button", "response", String(value));
       button.type = "button";
-      button.dataset.level = String(raw);
-      button.setAttribute("aria-label", `${raw}. ${label}`);
-      button.addEventListener("click", () => selectResponse(actNumber, raw));
+      button.dataset.value = String(value);
+      button.setAttribute("aria-pressed", "false");
+      button.setAttribute("aria-label", `${value}. ${label}`);
+      button.addEventListener("click", () => record(actNumber, value));
       button.addEventListener("keydown", (event) => {
-        const step =
-          event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+        const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
         if (!step) {
           return;
         }
         event.preventDefault();
         buttons[(index + step + buttons.length) % buttons.length].focus();
       });
-      choices.appendChild(button);
+      responses.appendChild(button);
       return button;
     });
 
-    const signalLabel = element("p", "meta response-signal-label", "RESPONSE SIGNAL");
-    const readout = element("p", "response-readout", "");
-
-    const footer = element("div", "reflection-footer");
-    const back = element("button", "back-button", "← Back");
+    const readout = el("p", "mark mark-live observation-readout", "");
+    const foot = el("div", "observation-foot");
+    const back = el("button", "control", "Back");
     back.type = "button";
     back.hidden = true;
     back.addEventListener("click", stepBack);
-    footer.appendChild(back);
+    foot.appendChild(back);
 
-    panel.append(
-      kicker,
-      counter,
-      statementNumber,
-      statement,
-      anchors,
-      choices,
-      signalLabel,
-      readout,
-      footer,
-    );
-    panel.refs = {
-      kicker,
-      counter,
-      statementNumber,
-      statement,
-      anchors,
-      choices,
-      buttons,
-      signalLabel,
-      readout,
-      footer,
-      back,
-    };
+    panel.append(head, statement, anchors, responses, readout, foot);
+    panel.refs = { kicker, counter, statement, anchors, responses, buttons, readout, foot, back };
     return panel;
   }
 
-  function ensureActPanel(actNumber) {
-    if (actPanels.has(actNumber)) {
-      return actPanels.get(actNumber);
+  function panelFor(actNumber) {
+    if (panels.has(actNumber)) {
+      return panels.get(actNumber);
     }
-    const wasNearBottom = isNearBottom();
-    const panel = buildActPanel(actNumber);
-    story.appendChild(panel);
-    actPanels.set(actNumber, panel);
-    settleAfterAppend(wasNearBottom, panel);
+    const wasNear = nearBottom();
+    const panel = buildPanel(actNumber);
+    watch.appendChild(panel);
+    panels.set(actNumber, panel);
+    settle(wasNear, panel);
     return panel;
   }
 
   function showQuestion(node) {
-    const panel = ensureActPanel(node.actNumber);
+    const panel = panelFor(node.actNumber);
     const refs = panel.refs;
     const item = node.item;
 
-    panel.classList.remove("is-locked");
-    refs.counter.textContent = `${String(item.positionInAct).padStart(2, "0")} / ${String(core.ITEMS_PER_ACT).padStart(2, "0")}`;
-    refs.statementNumber.textContent = `STATEMENT ${String(item.bfiItem).padStart(2, "0")} / ${TOTAL_ITEMS}`;
+    panel.classList.remove("is-closed");
+    refs.kicker.textContent = OBS.label;
+    refs.counter.textContent = `${OBS.unitLabel} ${pad(item.bfiItem)} ${OBS.ofLabel} ${TOTAL} · ${pad(item.positionInAct)} ${OBS.ofLabel} ${pad(core.ITEMS_PER_ACT)}`;
     refs.statement.textContent = item.statement;
-    refs.readout.textContent = "";
+    refs.statement.hidden = false;
     refs.anchors.hidden = false;
-    refs.choices.hidden = false;
-    refs.signalLabel.hidden = false;
+    refs.readout.textContent = "";
     refs.readout.hidden = false;
 
     refs.buttons.forEach((button) => {
-      button.classList.remove("is-selected");
       button.setAttribute("aria-pressed", "false");
       button.disabled = false;
-      button.removeAttribute("aria-disabled");
     });
-
     refs.back.hidden = !core.canGoBack(data, state);
-    panel.dataset.statement = String(item.bfiItem);
   }
 
-  function lockActPanel(actNumber) {
-    const panel = actPanels.get(actNumber);
-    if (!panel || panel.classList.contains("is-locked")) {
+  function closePanel(actNumber) {
+    const panel = panels.get(actNumber);
+    if (!panel || panel.classList.contains("is-closed")) {
       return;
     }
     const refs = panel.refs;
     if (panel.contains(document.activeElement)) {
       panel.focus({ preventScroll: true });
     }
-
-    panel.classList.add("is-locked");
-    refs.counter.textContent = `${core.ITEMS_PER_ACT} responses recorded`;
-    refs.statementNumber.hidden = true;
+    panel.classList.add("is-closed");
+    refs.counter.textContent = `${core.ITEMS_PER_ACT} ${OBS.unitLabel} RECORDED`;
     refs.statement.hidden = true;
     refs.anchors.hidden = true;
-    refs.choices.hidden = true;
-    refs.signalLabel.hidden = true;
     refs.readout.hidden = true;
     refs.back.hidden = true;
     refs.buttons.forEach((button) => {
       button.disabled = true;
-      button.setAttribute("aria-disabled", "true");
     });
   }
 
-  /* ------------------------------------------------------ materialisation */
+  /* ---------------------------------------------------------- completion */
 
-  function materialise(node) {
+  function appendCompletion() {
+    const results = data.results;
+    const panel = el("section", "completion");
+    panel.id = "completion";
+    panel.tabIndex = -1;
+    panel.append(
+      el("p", "mark", OBS.completeLabel),
+      el("h2", "completion-title", results.openingTitle),
+      el("p", "completion-line", results.openingBridge),
+    );
+
+    const actions = el("div", "completion-actions");
+    const open = el("a", "action", results.actions.profilePdf ? "Open the report" : "Open");
+    open.href = "./results.html";
+    actions.appendChild(open);
+
+    if (pdf) {
+      const story = el("button", "action action-quiet", results.actions.storyPdf);
+      story.type = "button";
+      story.addEventListener("click", async () => {
+        story.disabled = true;
+        const original = story.textContent;
+        story.textContent = "Preparing";
+        try {
+          await pdf.downloadStory(
+            data,
+            state,
+            core,
+            `Aurora_Station_Record_${fileName(state.participant.name)}.pdf`,
+          );
+          say("The night's record has been downloaded.");
+        } catch {
+          say("The record could not be prepared.");
+        } finally {
+          story.textContent = original;
+          story.disabled = false;
+        }
+      });
+      actions.appendChild(story);
+    }
+
+    panel.appendChild(actions);
+    watch.appendChild(panel);
+    say("The watch is complete. The observation report is ready.");
+    return panel;
+  }
+
+  /* ------------------------------------------------------- materialisation */
+
+  function place(node) {
     switch (node.type) {
       case "prologue-heading":
-        return appendPrologueHeading(node);
+        return appendPrologue(node);
       case "act-heading":
-        return appendActHeading(node);
+        return appendActPlate(node);
       case "interlude-heading":
-        return appendInterludeHeading(node);
+        return appendInterlude(node);
       case "question": {
-        ensureActPanel(node.actNumber);
+        panelFor(node.actNumber);
         if (node.item.positionInAct === core.ITEMS_PER_ACT) {
-          lockActPanel(node.actNumber);
+          closePanel(node.actNumber);
         }
         return null;
       }
       case "completion":
-        return appendCompletionPanel();
+        return appendCompletion();
       default:
-        return appendParagraph(node);
+        return appendPassage(node);
     }
   }
 
-  function renderRevealedNodes() {
-    while (renderedCount < revealed && renderedCount < nodes.length) {
-      materialise(nodes[renderedCount]);
-      renderedCount += 1;
+  function catchUp() {
+    while (rendered < revealed && rendered < nodes.length) {
+      place(nodes[rendered]);
+      rendered += 1;
     }
   }
 
   /* ---------------------------------------------------------- reveal loop */
 
-  /*
-   * Playback rests only when the reader is being asked something. An already
-   * answered question node still has to be consumed — on a restored journey it
-   * is what rebuilds and locks that Act's panel.
-   */
   function isGate(node) {
     return Boolean(node) && node.type === "question" && !node.answered;
   }
 
-  function playbackIdle() {
+  function idle() {
     const node = nodes[revealed];
     return !node || isGate(node);
   }
@@ -434,72 +471,58 @@
     if (!node || isGate(node)) {
       return null;
     }
-    const wasNearBottom = isNearBottom();
+    const wasNear = nearBottom();
     revealed += 1;
-    const rendered = materialise(node);
-    renderedCount = revealed;
+    const placed = place(node);
+    rendered = revealed;
     persist();
-    settleAfterAppend(wasNearBottom, rendered);
-    return rendered;
+    settle(wasNear, placed);
+    return placed;
   }
 
-  /* Reveal everything already available in the active Act, with no delay. */
-  function revealAllAvailable() {
-    const wasNearBottom = isNearBottom();
+  function revealAvailable() {
+    const wasNear = nearBottom();
     restoring = true;
     let last = null;
-    while (!playbackIdle()) {
+    while (!idle()) {
       revealed += 1;
-      last = materialise(nodes[revealed - 1]) || last;
-      renderedCount = revealed;
+      last = place(nodes[revealed - 1]) || last;
+      rendered = revealed;
     }
     restoring = false;
     persist();
-    return { wasNearBottom, last };
+    return { wasNear, last };
   }
 
-  function scheduleReveal() {
+  function schedule() {
     window.clearTimeout(revealTimer);
-    if (preferences.paused || playbackIdle() || prefersReducedMotion()) {
-      updatePlaybackControls();
+    if (prefs.paused || idle() || stillMotion()) {
+      updateControls();
       return;
     }
-    // A recorded response is not a passage, so it costs no reading time.
-    const delay =
-      nodes[revealed].type === "question" ? 0 : core.revealDelay(preferences, false);
+    const delay = nodes[revealed].type === "question" ? 0 : core.revealDelay(prefs, false);
     revealTimer = window.setTimeout(() => {
       revealOne();
       advance();
     }, delay);
-    updatePlaybackControls();
+    updateControls();
   }
 
-  function showEverythingAvailable() {
-    window.clearTimeout(revealTimer);
-    const result = revealAllAvailable();
-    settleAfterAppend(result.wasNearBottom, result.last);
-    advance();
-  }
-
-  function refreshNodes() {
+  function refresh() {
     nodes = core.buildNodes(data, state);
-    nodesBuiltFor = core.answeredCount(state);
+    builtFor = core.answeredCount(state);
     revealed = Math.min(revealed, nodes.length);
   }
 
-  /*
-   * The single place that reconciles the recorded responses with what the
-   * document shows.
-   */
   function advance() {
-    if (nodesBuiltFor !== core.answeredCount(state)) {
-      refreshNodes();
+    if (builtFor !== core.answeredCount(state)) {
+      refresh();
     }
-    renderRevealedNodes();
+    catchUp();
 
-    if (!preferences.paused && prefersReducedMotion()) {
-      const result = revealAllAvailable();
-      settleAfterAppend(result.wasNearBottom, result.last);
+    if (!prefs.paused && stillMotion()) {
+      const result = revealAvailable();
+      settle(result.wasNear, result.last);
     }
 
     const pending = core.pendingQuestion(nodes, revealed);
@@ -507,15 +530,15 @@
       showQuestion(pending);
     }
 
-    updateProgress();
-    updateAtmosphere();
-    scheduleReveal();
+    updateSequence();
+    updateEnvironment();
+    schedule();
   }
 
   /* ---------------------------------------------------------- interaction */
 
-  function selectResponse(actNumber, raw) {
-    if (selectionLocked) {
+  function record(actNumber, value) {
+    if (locked) {
       return;
     }
     const pending = core.pendingQuestion(nodes, revealed);
@@ -523,43 +546,39 @@
       return;
     }
 
-    selectionLocked = true;
-    const refs = actPanels.get(actNumber).refs;
+    locked = true;
+    const refs = panels.get(actNumber).refs;
     refs.buttons.forEach((button) => {
-      const selected = Number(button.dataset.level) === raw;
-      button.classList.toggle("is-selected", selected);
-      button.setAttribute("aria-pressed", String(selected));
+      button.setAttribute("aria-pressed", String(Number(button.dataset.value) === value));
     });
-    refs.readout.textContent = `${raw} · ${RESPONSE_LABELS[raw - 1]}`;
+    refs.readout.textContent = `${value} · ${LABELS[value - 1]}`;
     refs.back.hidden = true;
 
-    state = core.recordResponse(data, state, pending.item.id, raw);
+    state = core.recordResponse(data, state, pending.item.id, value);
     revealed += 1;
     persist();
 
     const answered = core.answeredCount(state);
-    announce(
-      `${raw}, ${RESPONSE_LABELS[raw - 1]}. ${answered} of ${TOTAL_ITEMS} recorded.`,
-    );
+    say(`${value}, ${LABELS[value - 1]}. ${answered} of ${TOTAL} recorded.`);
 
     window.setTimeout(
       () => {
-        selectionLocked = false;
+        locked = false;
         advance();
         const next = core.pendingQuestion(nodes, revealed);
         if (next) {
-          announce(next.item.statement);
+          say(next.item.statement);
         }
         if (audio) {
           audio.sync(data, state, core);
         }
       },
-      prefersReducedMotion() ? 0 : SELECTED_STATE_DELAY,
+      stillMotion() ? 0 : SELECTED_HOLD,
     );
   }
 
   function stepBack() {
-    if (selectionLocked || !core.canGoBack(data, state)) {
+    if (locked || !core.canGoBack(data, state)) {
       return;
     }
     const previous = core.previousResponse(data, state);
@@ -572,37 +591,32 @@
     if (!pending) {
       return;
     }
-    // Restore the previous selection so the reader can see it before changing it.
-    const refs = actPanels.get(pending.actNumber).refs;
+    const refs = panels.get(pending.actNumber).refs;
     const chosen = refs.buttons[previous - 1];
     refs.buttons.forEach((button) => {
-      const selected = button === chosen;
-      button.classList.toggle("is-selected", selected);
-      button.setAttribute("aria-pressed", String(selected));
+      button.setAttribute("aria-pressed", String(button === chosen));
     });
-    refs.readout.textContent = `${previous} · ${RESPONSE_LABELS[previous - 1]}`;
+    refs.readout.textContent = `${previous} · ${LABELS[previous - 1]}`;
     chosen?.focus({ preventScroll: true });
-    announce(`Back to statement ${pending.item.bfiItem}. ${pending.item.statement}`);
+    say(`Back to observation ${pending.item.bfiItem}. ${pending.item.statement}`);
   }
 
-  function handleShortcut(event) {
+  function shortcut(event) {
     if (event.metaKey || event.ctrlKey || event.altKey) {
       return;
     }
     const target = event.target;
     if (
       target instanceof HTMLElement &&
-      (target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable)
+      (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
     ) {
       return;
     }
     if (document.querySelector("dialog[open]")) {
       return;
     }
-    const raw = Number(event.key);
-    if (!Number.isInteger(raw) || raw < core.MIN_RESPONSE || raw > core.MAX_RESPONSE) {
+    const value = Number(event.key);
+    if (!Number.isInteger(value) || value < core.MIN_RESPONSE || value > core.MAX_RESPONSE) {
       return;
     }
     const pending = core.pendingQuestion(nodes, revealed);
@@ -610,365 +624,313 @@
       return;
     }
     event.preventDefault();
-    selectResponse(pending.actNumber, raw);
+    record(pending.actNumber, value);
   }
 
-  /* ------------------------------------------------------ header controls */
+  /* ------------------------------------------------------------ the shell */
 
-  function updateProgress() {
+  /* Progress reads as a sequence of observations, not a filling bar. */
+  function updateSequence() {
     const answered = core.answeredCount(state);
-    progressFill.style.transform = `scaleX(${answered / TOTAL_ITEMS})`;
-    progressBar.setAttribute("aria-valuenow", String(answered));
-    progressLabel.textContent = answered
-      ? answered === TOTAL_ITEMS
-        ? "Watch complete"
-        : `${answered} of ${TOTAL_ITEMS}`
-      : "The final watch";
-  }
-
-  function updatePlaybackControls() {
-    playbackToggle.querySelector(".tool-label").textContent = preferences.paused
-      ? "Resume"
-      : "Pause";
-    playbackToggle.setAttribute("aria-pressed", String(Boolean(preferences.paused)));
-    playbackToggle.setAttribute(
-      "aria-label",
-      preferences.paused ? "Resume revealing the story" : "Pause revealing the story",
-    );
-    showNowButton.disabled = playbackIdle();
-    document.body.classList.toggle("playback-paused", Boolean(preferences.paused));
-    speedControl.querySelectorAll(".speed-choice").forEach((choice) => {
-      const active = choice.dataset.speed === preferences.textSpeed;
-      choice.classList.toggle("is-selected", active);
-      choice.setAttribute("aria-checked", String(active));
-      choice.tabIndex = active ? 0 : -1;
-    });
-  }
-
-  function setTextSpeed(speed) {
-    preferences = { ...core.sanitisePreferences({ ...preferences, textSpeed: speed }), paused: preferences.paused };
-    persistPreferences();
-    scheduleReveal();
-    announce(`Text speed ${preferences.textSpeed}.`);
-  }
-
-  function togglePlayback() {
-    preferences.paused = !preferences.paused;
-    persist();
-    if (preferences.paused) {
-      window.clearTimeout(revealTimer);
-      updatePlaybackControls();
-      announce("Story paused.");
-    } else {
-      scheduleReveal();
-      announce("Story resumed.");
+    if (!sequenceTicks.childElementCount) {
+      for (let index = 0; index < core.ACT_COUNT; index += 1) {
+        sequenceTicks.appendChild(el("span", "sequence-tick"));
+      }
     }
+    const currentAct = Math.min(core.ACT_COUNT, Math.floor(answered / core.ITEMS_PER_ACT) + 1);
+    [...sequenceTicks.children].forEach((tick, index) => {
+      const act = index + 1;
+      tick.dataset.state =
+        act < currentAct || answered === TOTAL
+          ? "recorded"
+          : act === currentAct
+            ? "active"
+            : "pending";
+    });
+
+    sequenceLabel.textContent =
+      answered === TOTAL
+        ? OBS.completeLabel
+        : `${OBS.unitLabel} ${pad(answered)} ${OBS.ofLabel} ${TOTAL}`;
+    sequence.setAttribute(
+      "aria-label",
+      answered === TOTAL
+        ? "Observation sequence complete"
+        : `Observation sequence, ${answered} of ${TOTAL} recorded`,
+    );
+
+    const act = actFor(currentAct);
+    actMark.textContent = state.participant.name
+      ? `${OBS.actLabel} ${pad(currentAct)} · ${OBS.phaseLabels[act.contextPhase]}`
+      : OBS.watchLabel;
+    stationMark.textContent = state.participant.name
+      ? state.participant.name.toUpperCase()
+      : OBS.stationLabel;
   }
 
   /*
-   * The sky is driven by where the reader is in the story, not by scroll
-   * position or answer count. The ribbon exists only inside the Act where it
-   * erupts, and it is off again before the rescue team arrives.
+   * The environment answers the story: the reading column tightens with the
+   * phase, and the aurora enters only at its Act and deepens from there.
    */
-  function updateAtmosphere() {
-    document.body.dataset.aurora = core.auroraStateFor(data, state, nodes, revealed);
-    document.body.dataset.contextPhase = core.contextPhaseFor(data, state);
+  function updateEnvironment() {
+    const phase = core.contextPhaseFor(data, state);
+    watch.dataset.phase = phase;
+
+    const aurora = core.auroraStateFor(data, state, nodes, revealed);
+    document.body.dataset.aurora = aurora.state;
+    document.body.style.setProperty("--aurora-intensity", String(aurora.intensity));
+
+    if (aurora.state === "present" && art && !auroraLayer.childElementCount) {
+      auroraLayer.appendChild(art.auroraRibbons(4));
+    }
   }
 
-  /* ----------------------------------------------------------- the prelude */
-
-  function buildStationEntry() {
-    if (entryDialog) {
-      return entryDialog;
-    }
-
-    const [identity, calibration, orientation] = data.prelude.steps;
-    const dialog = element("dialog", "station-entry");
-    dialog.setAttribute("aria-labelledby", "station-entry-heading");
-
-    const frame = element("div", "station-entry-frame");
-    const label = element("p", "meta entry-label", identity.label);
-    const heading = element("h1", "entry-heading", identity.heading);
-    heading.id = "station-entry-heading";
-    const intro = element("p", "entry-intro", identity.intro);
-    frame.append(label, heading, intro);
-
-    /* --- stage 1: identity --- */
-    const identityPanel = element("section", "entry-panel");
-    const form = element("form", "identity-form");
-    form.noValidate = true;
-
-    const nameLabel = element("label", "meta entry-field-label", identity.fieldLabel);
-    nameLabel.htmlFor = "player-name";
-    const nameInput = element("input", "entry-name-input");
-    nameInput.id = "player-name";
-    nameInput.name = "playerName";
-    nameInput.type = "text";
-    nameInput.autocomplete = "name";
-    nameInput.maxLength = core.MAX_NAME_LENGTH;
-    nameInput.required = true;
-    nameInput.placeholder = identity.placeholder;
-
-    const nameError = element("p", "entry-field-error", identity.error);
-    nameError.id = "player-name-error";
-    nameError.hidden = true;
-
-    const identityPrimary = element("button", "entry-primary", identity.primary);
-    identityPrimary.type = "submit";
-
-    form.append(
-      nameLabel,
-      nameInput,
-      element("p", "entry-field-note", identity.note),
-      nameError,
-      identityPrimary,
+  function updateControls() {
+    paceToggle.textContent = prefs.paused ? "Resume" : "Pause";
+    paceToggle.setAttribute("aria-pressed", String(Boolean(prefs.paused)));
+    paceToggle.setAttribute(
+      "aria-label",
+      prefs.paused ? "Resume revealing the watch" : "Pause revealing the watch",
     );
+    paceNow.disabled = idle();
+    paceControl.querySelectorAll("[data-pace]").forEach((button) => {
+      const active = button.dataset.pace === prefs.textSpeed;
+      button.setAttribute("aria-checked", String(active));
+      button.setAttribute("aria-pressed", String(active));
+      button.tabIndex = active ? 0 : -1;
+    });
+  }
+
+  function setPace(pace) {
+    prefs = { ...core.sanitisePreferences({ ...prefs, textSpeed: pace }), paused: prefs.paused };
+    core.savePreferences(prefs, storage);
+    schedule();
+    say(`Reading pace ${prefs.textSpeed}.`);
+  }
+
+  function togglePause() {
+    prefs.paused = !prefs.paused;
+    persist();
+    if (prefs.paused) {
+      window.clearTimeout(revealTimer);
+      updateControls();
+      say("The watch is paused.");
+    } else {
+      schedule();
+      say("The watch resumes.");
+    }
+  }
+
+  /* ------------------------------------------------------------ the entry */
+
+  function buildEntry() {
+    if (entry) {
+      return entry;
+    }
+    const [identity, calibration, orientation] = data.prelude.steps;
+    const dialog = el("dialog", "entry");
+    dialog.setAttribute("aria-labelledby", "entry-title");
+
+    const frame = el("div", "entry-frame");
+    const head = el("div", "entry-head");
+    const label = el("p", "mark", identity.label);
+    const station = el("p", "mark", OBS.stationLabel);
+    head.append(label, station);
+
+    const title = el("h1", "entry-title", identity.heading);
+    title.id = "entry-title";
+    const body = el("p", "entry-body", identity.intro);
+    frame.append(head, title, body);
+
+    /* --- the watchkeeper --- */
+    const identityPanel = el("section");
+    const form = el("form");
+    form.noValidate = true;
+    const field = el("label", "mark entry-field", identity.fieldLabel);
+    field.htmlFor = "watchkeeper";
+    const input = el("input", "entry-input");
+    input.id = "watchkeeper";
+    input.type = "text";
+    input.autocomplete = "name";
+    input.maxLength = core.MAX_NAME_LENGTH;
+    input.required = true;
+    input.placeholder = identity.placeholder;
+    const error = el("p", "entry-error", identity.error);
+    error.id = "watchkeeper-error";
+    error.hidden = true;
+    const identityNext = el("button", "action", identity.primary);
+    identityNext.type = "submit";
+    const identityFoot = el("div", "entry-foot");
+    identityFoot.appendChild(identityNext);
+    form.append(field, input, el("p", "entry-note", identity.note), error, identityFoot);
     identityPanel.appendChild(form);
 
-    /* --- stage 2: one unscored calibration response --- */
-    const calibrationPanel = element("section", "entry-panel");
+    /* --- one calibration reading, not scored --- */
+    const calibrationPanel = el("section");
     calibrationPanel.hidden = true;
-    calibrationPanel.appendChild(element("p", "entry-intro", calibration.intro));
-    calibrationPanel.appendChild(
-      element("p", "calibration-statement", calibration.statement),
+    calibrationPanel.append(
+      el("p", "entry-body", calibration.intro),
+      el("p", "entry-statement", calibration.statement),
     );
-
-    const calibrationAnchors = element("div", "scale-anchors");
+    const calibrationAnchors = el("div", "scale-anchors");
     calibrationAnchors.setAttribute("aria-hidden", "true");
     calibrationAnchors.append(
-      element("span", "", data.assessment.spectrum.leftAnchor),
-      element("span", "", data.assessment.spectrum.rightAnchor),
+      el("p", "mark", data.assessment.spectrum.leftAnchor),
+      el("p", "mark", data.assessment.spectrum.rightAnchor),
     );
-    calibrationPanel.appendChild(calibrationAnchors);
+    const calibrationScale = el("div", "responses");
+    calibrationScale.style.setProperty("--response-count", String(LABELS.length));
+    calibrationScale.setAttribute("role", "group");
+    calibrationScale.setAttribute("aria-label", calibration.statement);
+    const calibrationNext = el("button", "action", calibration.primary);
+    calibrationNext.type = "button";
+    calibrationNext.disabled = true;
+    const calibrationRead = el("p", "mark mark-live observation-readout", "");
 
-    const calibrationChoices = element("div", "response-choices");
-    calibrationChoices.setAttribute("role", "group");
-    calibrationChoices.setAttribute("aria-label", calibration.statement);
-    const calibrationReadout = element("p", "response-readout", "");
-    const calibrationPrimary = element("button", "entry-primary", calibration.primary);
-    calibrationPrimary.type = "button";
-    calibrationPrimary.disabled = true;
-
-    const calibrationButtons = RESPONSE_LABELS.map((labelText, index) => {
-      const raw = index + 1;
-      const button = element("button", "response-choice", String(raw));
+    const calibrationButtons = LABELS.map((labelText, index) => {
+      const value = index + 1;
+      const button = el("button", "response", String(value));
       button.type = "button";
-      button.dataset.level = String(raw);
-      button.setAttribute("aria-label", `${raw}. ${labelText}`);
       button.setAttribute("aria-pressed", "false");
+      button.setAttribute("aria-label", `${value}. ${labelText}`);
       button.addEventListener("click", () => {
-        calibrationButtons.forEach((item) => {
-          const selected = item === button;
-          item.classList.toggle("is-selected", selected);
-          item.setAttribute("aria-pressed", String(selected));
-        });
-        calibrationReadout.textContent = `${raw} · ${labelText}`;
-        calibrationPrimary.disabled = false;
+        calibrationButtons.forEach((other) =>
+          other.setAttribute("aria-pressed", String(other === button)),
+        );
+        calibrationRead.textContent = `${value} · ${labelText}`;
+        calibrationNext.disabled = false;
       });
-      calibrationChoices.appendChild(button);
+      calibrationScale.appendChild(button);
       return button;
     });
 
-    const calibrationBack = element("button", "entry-secondary", calibration.back);
+    const calibrationBack = el("button", "control", calibration.back);
     calibrationBack.type = "button";
-    const calibrationFooter = element("footer", "entry-footer");
-    calibrationFooter.append(calibrationBack, calibrationPrimary);
+    const calibrationFoot = el("div", "entry-foot");
+    calibrationFoot.append(calibrationBack, calibrationNext);
     calibrationPanel.append(
-      calibrationChoices,
-      calibrationReadout,
-      element("p", "entry-field-note", calibration.note),
-      calibrationFooter,
+      calibrationAnchors,
+      calibrationScale,
+      calibrationRead,
+      el("p", "entry-note", calibration.note),
+      calibrationFoot,
     );
 
-    /* --- stage 3: orientation --- */
-    const orientationPanel = element("section", "entry-panel");
+    /* --- how to answer, shown once --- */
+    const orientationPanel = el("section");
     orientationPanel.hidden = true;
-    orientationPanel.appendChild(element("p", "entry-intro", orientation.intro));
-
-    const guidance = element("ul", "orientation-guidance");
-    orientation.guidance.forEach((line) => {
-      guidance.appendChild(element("li", "", line));
-    });
-    orientationPanel.append(
-      guidance,
-      element("p", "orientation-disclaimer", orientation.disclaimer),
-    );
-
-    const orientationBack = element("button", "entry-secondary", orientation.back);
+    orientationPanel.appendChild(el("p", "entry-body", orientation.intro));
+    const list = el("ul", "entry-list");
+    orientation.guidance.forEach((line) => list.appendChild(el("li", "", line)));
+    orientationPanel.append(list, el("p", "entry-statement", orientation.disclaimer));
+    const orientationBack = el("button", "control", orientation.back);
     orientationBack.type = "button";
-    const beginButton = element("button", "entry-primary", orientation.primary);
-    beginButton.type = "button";
-    const orientationFooter = element("footer", "entry-footer");
-    orientationFooter.append(orientationBack, beginButton);
-    orientationPanel.appendChild(orientationFooter);
+    const begin = el("button", "action", orientation.primary);
+    begin.type = "button";
+    const orientationFoot = el("div", "entry-foot");
+    orientationFoot.append(orientationBack, begin);
+    orientationPanel.appendChild(orientationFoot);
 
     frame.append(identityPanel, calibrationPanel, orientationPanel);
     dialog.appendChild(frame);
 
     const stages = {
-      identity: { panel: identityPanel, copy: identity, focus: () => nameInput },
-      calibration: {
-        panel: calibrationPanel,
-        copy: calibration,
-        focus: () => calibrationButtons[0],
-      },
-      orientation: {
-        panel: orientationPanel,
-        copy: orientation,
-        focus: () => beginButton,
-      },
+      identity: { panel: identityPanel, copy: identity, focus: () => input },
+      calibration: { panel: calibrationPanel, copy: calibration, focus: () => calibrationButtons[0] },
+      orientation: { panel: orientationPanel, copy: orientation, focus: () => begin },
     };
 
-    function showStage(name) {
-      const stage = stages[name];
-      Object.entries(stages).forEach(([key, entry]) => {
-        entry.panel.hidden = key !== name;
+    function stage(name) {
+      const current = stages[name];
+      Object.entries(stages).forEach(([key, value]) => {
+        value.panel.hidden = key !== name;
       });
-      label.textContent = stage.copy.label;
-      heading.textContent = stage.copy.heading;
-      intro.hidden = name !== "identity";
-      window.requestAnimationFrame(() => stage.focus()?.focus());
+      label.textContent = current.copy.label;
+      title.textContent = current.copy.heading;
+      body.hidden = name !== "identity";
+      window.requestAnimationFrame(() => current.focus()?.focus());
     }
 
-    dialog.prepareEntry = () => {
-      nameInput.value = state.participant.name || "";
-      nameError.hidden = true;
-      nameInput.removeAttribute("aria-invalid");
-      delete dialog.dataset.pendingName;
-      calibrationButtons.forEach((button) => {
-        button.classList.remove("is-selected");
-        button.setAttribute("aria-pressed", "false");
-      });
-      calibrationReadout.textContent = "";
-      calibrationPrimary.disabled = true;
-      showStage("identity");
+    dialog.prepare = () => {
+      input.value = state.participant.name || "";
+      error.hidden = true;
+      input.removeAttribute("aria-invalid");
+      calibrationButtons.forEach((button) => button.setAttribute("aria-pressed", "false"));
+      calibrationRead.textContent = "";
+      calibrationNext.disabled = true;
+      stage("identity");
     };
 
-    // Enter submits the identity stage.
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      const playerName = core.normalisePlayerName(nameInput.value);
-      if (!playerName) {
-        nameError.hidden = false;
-        nameInput.setAttribute("aria-invalid", "true");
-        nameInput.setAttribute("aria-describedby", nameError.id);
-        nameInput.focus();
+      const name = core.normalisePlayerName(input.value);
+      if (!name) {
+        error.hidden = false;
+        input.setAttribute("aria-invalid", "true");
+        input.setAttribute("aria-describedby", error.id);
+        input.focus();
         return;
       }
-      nameError.hidden = true;
-      nameInput.removeAttribute("aria-invalid");
-      nameInput.removeAttribute("aria-describedby");
-      nameInput.value = playerName;
-      dialog.dataset.pendingName = playerName;
-      // The name is saved as soon as it is given.
-      state = core.setPlayerName(data, state, playerName);
+      error.hidden = true;
+      input.removeAttribute("aria-invalid");
+      input.value = name;
+      state = core.setPlayerName(data, state, name);
       persist();
-      showStage("calibration");
+      stage("calibration");
     });
 
-    nameInput.addEventListener("input", () => {
-      if (nameInput.value.trim()) {
-        nameError.hidden = true;
-        nameInput.removeAttribute("aria-invalid");
+    input.addEventListener("input", () => {
+      if (input.value.trim()) {
+        error.hidden = true;
+        input.removeAttribute("aria-invalid");
       }
     });
 
-    calibrationBack.addEventListener("click", () => showStage("identity"));
-    calibrationPrimary.addEventListener("click", () => showStage("orientation"));
-    orientationBack.addEventListener("click", () => showStage("calibration"));
-    beginButton.addEventListener("click", () => {
-      state = core.setPlayerName(
-        data,
-        state,
-        dialog.dataset.pendingName || nameInput.value,
-      );
+    calibrationBack.addEventListener("click", () => stage("identity"));
+    calibrationNext.addEventListener("click", () => stage("orientation"));
+    orientationBack.addEventListener("click", () => stage("calibration"));
+    begin.addEventListener("click", () => {
+      state = core.setPlayerName(data, state, input.value);
       persist();
-      closeStationEntry();
+      closeEntry();
     });
 
+    // The watch cannot begin until the instructions have been seen.
     dialog.addEventListener("cancel", (event) => event.preventDefault());
     document.body.appendChild(dialog);
-    entryDialog = dialog;
+    entry = dialog;
     return dialog;
   }
 
-  function openStationEntry() {
+  function openEntry() {
     if (state.participant.name) {
       return;
     }
-    const dialog = buildStationEntry();
-    dialog.prepareEntry();
-    document.body.classList.add("onboarding-open");
+    const dialog = buildEntry();
+    dialog.prepare();
+    document.body.classList.add("is-sealed");
     if (!dialog.open) {
       dialog.showModal();
     }
   }
 
-  function closeStationEntry() {
-    document.body.classList.remove("onboarding-open");
-    if (entryDialog?.open) {
-      entryDialog.close();
+  function closeEntry() {
+    document.body.classList.remove("is-sealed");
+    if (entry?.open) {
+      entry.close();
     }
-    announce(`Welcome to the final watch, ${state.participant.name}.`);
+    say(`The watch is yours, ${state.participant.name}.`);
     advance();
-  }
-
-  /* ------------------------------------------------------ completion panel */
-
-  function appendCompletionPanel() {
-    const copy = data.completion;
-    const panel = element("section", "completion-panel");
-    panel.id = "completion";
-    panel.tabIndex = -1;
-    panel.appendChild(element("h2", "completion-heading", copy.heading));
-    copy.lines.forEach((line) => {
-      panel.appendChild(element("p", "completion-line", line));
-    });
-
-    const actions = element("div", "completion-actions");
-    const profileLink = element("a", "primary-action", copy.profileAction);
-    profileLink.href = "./results.html";
-    actions.appendChild(profileLink);
-
-    if (pdfExporter) {
-      const storyButton = element("button", "secondary-action", copy.storyAction);
-      storyButton.type = "button";
-      storyButton.addEventListener("click", async () => {
-        storyButton.disabled = true;
-        const original = storyButton.textContent;
-        storyButton.textContent = "Preparing…";
-        try {
-          await pdfExporter.downloadStory(
-            data,
-            state,
-            core,
-            `Aurora_Station_Story_${fileSafeName(state.participant.name)}.pdf`,
-          );
-          announce("Your story PDF has been downloaded.");
-        } catch {
-          announce("The story PDF could not be created.");
-        } finally {
-          storyButton.textContent = original;
-          storyButton.disabled = false;
-        }
-      });
-      actions.appendChild(storyButton);
-    }
-
-    panel.appendChild(actions);
-    story.appendChild(panel);
-    announce("The watch is complete. Your profile is ready.");
-    return panel;
   }
 
   /* ----------------------------------------------------------------- boot */
 
-  function restoreDocument() {
+  function restore() {
     restoring = true;
-    story.replaceChildren();
-    renderedCount = 0;
-    actPanels.clear();
-    renderRevealedNodes();
+    watch.replaceChildren();
+    rendered = 0;
+    panels.clear();
+    catchUp();
     const pending = core.pendingQuestion(nodes, revealed);
     if (pending) {
       showQuestion(pending);
@@ -976,16 +938,21 @@
     restoring = false;
   }
 
-  function bindControls() {
-    playbackToggle.addEventListener("click", togglePlayback);
-    showNowButton.addEventListener("click", showEverythingAvailable);
-    speedControl.addEventListener("click", (event) => {
-      const choice = event.target.closest(".speed-choice");
-      if (choice) {
-        setTextSpeed(choice.dataset.speed);
+  function bind() {
+    paceToggle.addEventListener("click", togglePause);
+    paceNow.addEventListener("click", () => {
+      window.clearTimeout(revealTimer);
+      const result = revealAvailable();
+      settle(result.wasNear, result.last);
+      advance();
+    });
+    paceControl.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-pace]");
+      if (button) {
+        setPace(button.dataset.pace);
       }
     });
-    speedControl.addEventListener("keydown", (event) => {
+    paceControl.addEventListener("keydown", (event) => {
       const step =
         event.key === "ArrowRight" || event.key === "ArrowDown"
           ? 1
@@ -997,41 +964,31 @@
       }
       event.preventDefault();
       const order = ["slow", "normal", "fast"];
-      const next = order[(order.indexOf(preferences.textSpeed) + step + order.length) % order.length];
-      setTextSpeed(next);
-      speedControl.querySelector(`[data-speed="${next}"]`).focus();
+      const next = order[(order.indexOf(prefs.textSpeed) + step + order.length) % order.length];
+      setPace(next);
+      paceControl.querySelector(`[data-pace="${next}"]`).focus();
     });
 
-    newPassageButton.addEventListener("click", () => {
-      newPassageButton.hidden = true;
+    newPassage.addEventListener("click", () => {
+      newPassage.hidden = true;
       userScrolling = false;
-      const last = story.lastElementChild;
-      if (last) {
-        followNewPassage(last);
-      }
+      follow(watch.lastElementChild);
     });
 
-    document.addEventListener("keydown", handleShortcut);
-
-    // Any reader-initiated scrolling suspends auto-follow.
+    document.addEventListener("keydown", shortcut);
     ["wheel", "touchmove", "pointerdown"].forEach((type) => {
-      window.addEventListener(type, markUserScrolling, { passive: true });
+      window.addEventListener(type, markScrolling, { passive: true });
     });
     window.addEventListener("keydown", (event) => {
-      if (
-        ["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(
-          event.key,
-        )
-      ) {
-        markUserScrolling();
+      if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) {
+        markScrolling();
       }
     });
-
     window.addEventListener(
       "scroll",
       () => {
-        if (isNearBottom()) {
-          newPassageButton.hidden = true;
+        if (nearBottom()) {
+          newPassage.hidden = true;
         }
         rememberScroll();
       },
@@ -1041,9 +998,7 @@
 
   function boot() {
     if (!data || !core) {
-      story.replaceChildren(
-        element("p", "loading-copy", "Aurora Station could not load its story data."),
-      );
+      watch.replaceChildren(el("p", "loading-note", "Aurora Station could not load its record."));
       return;
     }
 
@@ -1052,13 +1007,16 @@
       console.error("[Aurora Station] content validation failed", validation.problems);
     }
 
-    preferences.paused = state.narrative.paused === true;
+    if (art) {
+      document.body.appendChild(art.grainOverlay());
+    }
 
-    bindControls();
-    restoreDocument();
-    updateProgress();
-    updateAtmosphere();
-    updatePlaybackControls();
+    prefs.paused = state.narrative.paused === true;
+    bind();
+    restore();
+    updateSequence();
+    updateEnvironment();
+    updateControls();
 
     if (audio) {
       audio.init({ toggleButton: soundToggle });
@@ -1066,7 +1024,7 @@
     }
 
     if (!state.participant.name) {
-      openStationEntry();
+      openEntry();
     } else {
       window.scrollTo({ top: state.scrollY, left: 0, behavior: "auto" });
       advance();

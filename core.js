@@ -962,43 +962,43 @@
   /* --------------------------------------------------------- aurora state */
 
   /*
-   * The aurora is a narrative event, not a background. It is off everywhere
-   * except the Act where the sky opens, where it bursts and then fades, and it
-   * is gone well before the rescue team arrives.
+   * The aurora is a narrative event. It is absent through onboarding and the
+   * whole early and middle watch. It enters at the Act where the sky opens and
+   * deepens through the rest of the night, and it is gone by the debrief —
+   * dawn is not a version of the night with the lights turned down.
    */
   function auroraStateFor(data, state, nodes, revealed) {
     const auroraAct = data.story.auroraAct;
     const safe = sanitiseState(data, state);
     if (!safe.participant.name) {
-      return "off";
+      return { state: "off", intensity: 0 };
     }
 
     const stream = Array.isArray(nodes) ? nodes : buildNodes(data, safe);
-    const seen = stream.slice(0, Math.max(0, Math.min(revealed ?? stream.length, stream.length)));
-    const actNodes = seen.filter((node) => node.actNumber === auroraAct || node.actId === actIdFor(data, auroraAct));
-    if (!actNodes.length) {
-      return "off";
+    const limit = Math.max(0, Math.min(revealed ?? stream.length, stream.length));
+    const seen = stream.slice(0, limit);
+
+    // Once the record closes, the station is in daylight.
+    if (seen.some((node) => node.type === "completion")) {
+      return { state: "off", intensity: 0 };
     }
 
-    const total = stream.filter(
-      (node) => node.actNumber === auroraAct || node.actId === actIdFor(data, auroraAct),
-    ).length;
-    const later = seen.some(
-      (node) =>
-        (node.actNumber && node.actNumber > auroraAct) ||
-        (node.actId && actNumberFor(data, node.actId) > auroraAct),
-    );
+    let reached = 0;
+    seen.forEach((node) => {
+      const number = node.actNumber || actNumberFor(data, node.actId);
+      if (number) {
+        reached = Math.max(reached, number);
+      }
+    });
 
-    if (later) {
-      return "off";
+    if (reached < auroraAct) {
+      return { state: "off", intensity: 0 };
     }
-    // The last quarter of the Act is the fade.
-    return total > 0 && actNodes.length / total > 0.75 ? "fading" : "burst";
-  }
 
-  function actIdFor(data, actNumber) {
-    const act = data.story.acts.find((entry) => entry.number === actNumber);
-    return act ? act.id : null;
+    // Intensity rises across the remaining Acts rather than switching on.
+    const remaining = Math.max(1, ACT_COUNT - auroraAct);
+    const progress = Math.min(1, (reached - auroraAct) / remaining);
+    return { state: "present", intensity: Number(progress.toFixed(3)) };
   }
 
   function actNumberFor(data, actId) {
@@ -1082,8 +1082,7 @@
       consistency,
       adaptation,
       contribution,
-      reflection: data.results.views.find((view) => view.id === "summary")
-        .reflectionTemplate,
+      reflection: data.results.reflectionPrompt,
     };
   }
 

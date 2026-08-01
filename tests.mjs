@@ -670,20 +670,10 @@ check("the summary describes patterns, never a type or a verdict", () => {
 
 /* ---------------------------------------------------------- aurora state */
 
-check("the aurora is off everywhere except its own act", () => {
+check("the aurora enters at its act and deepens to the end of the watch", () => {
   assert.equal(data.story.auroraAct, 9);
   const complete = answerFirst(60);
   const nodes = core.buildNodes(data, complete);
-  const states = new Map();
-  for (let revealed = 0; revealed <= nodes.length; revealed += 1) {
-    const value = core.auroraStateFor(data, complete, nodes, revealed);
-    if (!states.has(value)) {
-      states.set(value, []);
-    }
-    states.get(value).push(revealed);
-  }
-
-  assert.deepEqual([...states.keys()].sort(), ["burst", "fading", "off"]);
 
   const actAt = (revealed) => {
     let act = 0;
@@ -695,21 +685,43 @@ check("the aurora is off everywhere except its own act", () => {
     return act;
   };
 
-  states.get("burst").forEach((revealed) => {
-    assert.equal(actAt(revealed), 9, `burst outside act 9 at ${revealed}`);
-  });
-  states.get("fading").forEach((revealed) => {
-    assert.equal(actAt(revealed), 9, `fading outside act 9 at ${revealed}`);
-  });
-  // The fade comes after the burst and the sky is dark again by the rescue.
-  assert.ok(Math.min(...states.get("fading")) > Math.max(...states.get("burst")));
-  assert.equal(core.auroraStateFor(data, complete, nodes, nodes.length), "off");
+  let peak = 0;
+  let sawPresent = false;
+  for (let revealed = 0; revealed <= nodes.length; revealed += 1) {
+    const aurora = core.auroraStateFor(data, complete, nodes, revealed);
+    const act = actAt(revealed);
+    const closed = nodes.slice(0, revealed).some((node) => node.type === "completion");
+
+    if (act < 9 || closed) {
+      assert.equal(aurora.state, "off", `aurora visible at act ${act} (closed ${closed})`);
+      assert.equal(aurora.intensity, 0);
+    } else {
+      assert.equal(aurora.state, "present", `aurora missing at act ${act}`);
+      sawPresent = true;
+      // Intensity only ever rises while the night runs.
+      assert.ok(aurora.intensity >= peak - 1e-9, `intensity fell at act ${act}`);
+      peak = Math.max(peak, aurora.intensity);
+    }
+  }
+  assert.equal(sawPresent, true);
+  assert.equal(peak, 1, "the aurora reaches full intensity by the last act");
+
+  // Gone once the record closes — dawn is not a dimmed night.
+  const ended = core.auroraStateFor(data, complete, nodes, nodes.length);
+  assert.deepEqual(ended, { state: "off", intensity: 0 });
 });
 
-check("the aurora is off through the prelude and an unstarted watch", () => {
-  assert.equal(core.auroraStateFor(data, core.emptyState(), null, 0), "off");
-  assert.equal(core.auroraStateFor(data, answerFirst(0), null, 0), "off");
-  assert.equal(core.auroraStateFor(data, answerFirst(20), null, 200), "off");
+check("the aurora is absent through onboarding and the early watch", () => {
+  assert.deepEqual(core.auroraStateFor(data, core.emptyState(), null, 0), {
+    state: "off",
+    intensity: 0,
+  });
+  assert.deepEqual(core.auroraStateFor(data, answerFirst(0), null, 0), {
+    state: "off",
+    intensity: 0,
+  });
+  // Forty answers is Act 9, but nothing of it has been revealed yet.
+  assert.equal(core.auroraStateFor(data, answerFirst(20), null, 0).state, "off");
 });
 
 check("the reader's context phase tracks the story", () => {
@@ -919,7 +931,7 @@ check("the story PDF carries exactly the on-screen branches", () => {
   const fromNodes = core
     .buildNodes(data, state)
     .filter((node) => node.type === "selected")
-    .map((node) => node.text.replace(/[‐-—]/g, "-"));
+    .map((node) => node.text.replace(/[\u2010-\u2014]/g, "-"));
   const fromBlocks = pdf
     .buildStoryBlocks(data, state, core)
     .filter((block) => block.type === "chosen")
@@ -958,6 +970,7 @@ check("the soundtrack follows the act and stops at the debrief", () => {
 /* --------------------------------------------------------------- sources */
 
 const read = (file) => fs.readFileSync(file, "utf8");
+const artworkSource = read("./artwork.js");
 const appSource = read("./app.js");
 const coreSource = read("./core.js");
 const resultsSource = read("./results.js");
@@ -966,10 +979,11 @@ const resultsHtml = read("./results.html");
 const stylesSource = read("./styles.css");
 const pdfSource = read("./pdf-export.js");
 
-check("both pages load the specified modules", () => {
+check("both pages load the modules they need and nothing else", () => {
   [
     "./content/Aurora_Station_Content.js",
     "./core.js",
+    "./artwork.js",
     "./pdf-export.js",
     "./audio.js",
     "./app.js",
@@ -979,13 +993,15 @@ check("both pages load the specified modules", () => {
   [
     "./content/Aurora_Station_Content.js",
     "./core.js",
+    "./artwork.js",
     "./pdf-export.js",
-    "./audio.js",
     "./results.js",
   ].forEach((module) => assert.ok(resultsHtml.includes(module), `results ${module}`));
   assert.equal(resultsHtml.includes("./app.js"), false);
-  assert.match(indexSource, /id="story"/);
-  assert.match(resultsHtml, /id="results"/);
+  // The report is silent; the station soundtrack belongs to the night.
+  assert.equal(resultsHtml.includes("./audio.js"), false);
+  assert.match(indexSource, /id="watch"/);
+  assert.match(resultsHtml, /id="report"/);
 });
 
 check("no hidden runtime, payload loader or dynamic evaluation remains", () => {
@@ -1007,211 +1023,247 @@ check("no hidden runtime, payload loader or dynamic evaluation remains", () => {
 });
 
 check("the renderer appends and never force-scrolls", () => {
-  assert.match(appSource, /function isNearBottom/);
-  assert.match(appSource, /NEAR_BOTTOM_MARGIN = 260/);
-  assert.match(appSource, /function followNewPassage/);
-  assert.match(appSource, /function markUserScrolling/);
-  assert.match(appSource, /story\.appendChild/);
+  assert.match(appSource, /function nearBottom/);
+  assert.match(appSource, /NEAR_BOTTOM = 260/);
+  assert.match(appSource, /function follow/);
+  assert.match(appSource, /function markScrolling/);
+  assert.match(appSource, /watch\.appendChild/);
   assert.doesNotMatch(appSource, /scrollIntoView/);
-  // The story document is cleared only on boot.
-  assert.equal((appSource.match(/story\.replaceChildren\(\)/g) || []).length, 1);
+  // The watch is cleared only on boot.
+  assert.equal((appSource.match(/watch\.replaceChildren\(\)/g) || []).length, 1);
 });
 
-check("no continue, submit or next control sits between items", () => {
-  const panelSource = appSource.slice(
-    appSource.indexOf("function buildActPanel"),
-    appSource.indexOf("function ensureActPanel"),
+check("no continue, submit or next control sits between observations", () => {
+  const panel = appSource.slice(
+    appSource.indexOf("function buildPanel"),
+    appSource.indexOf("function panelFor"),
   );
-  assert.match(panelSource, /response-choice/);
-  assert.match(panelSource, /back-button/);
-  assert.doesNotMatch(panelSource, /["'`](Continue|Submit|Confirm|Next)/);
-  assert.equal(appSource.includes("SELECTED_STATE_DELAY = 300"), true);
+  assert.match(panel, /class="response"|"response"/);
+  assert.match(panel, /"Back"/);
+  assert.doesNotMatch(panel, /["'`](Continue|Submit|Confirm|Next)/);
+  assert.match(appSource, /SELECTED_HOLD = 300/);
 });
 
-check("the response scale keeps five buttons on one row with no connector", () => {
-  assert.match(stylesSource, /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
+check("the response scale is one row of equal cells with no colour ramp", () => {
+  assert.match(stylesSource, /grid-template-columns: repeat\(var\(--response-count, 5\), minmax\(0, 1fr\)\)/);
   const block = stylesSource.slice(
-    stylesSource.indexOf(".response-choices {"),
-    stylesSource.indexOf(".response-signal-label"),
+    stylesSource.indexOf(".response {"),
+    stylesSource.indexOf(".observation-readout"),
   );
+  // No connector, no gradient, no per-level colour.
   assert.doesNotMatch(block, /::before|::after/);
-  assert.match(stylesSource, /--response-height: 3\.375rem/);
+  assert.doesNotMatch(block, /gradient/);
+  assert.doesNotMatch(stylesSource, /coral|#ff6|signal-cyan/i);
+  // Selected state is a single inversion, identical for every value.
+  assert.match(block, /\[aria-pressed="true"\]/);
 });
 
-check("exactly two font families are used, and no monospace", () => {
-  assert.match(stylesSource, /--font-serif:/);
-  assert.match(stylesSource, /--font-sans:/);
-  // No third family, and nothing falls back to a monospace stack.
-  [stylesSource, pdfSource].forEach((source) => {
-    assert.doesNotMatch(source, /monospace/i, "monospace stack");
-    assert.doesNotMatch(source, /ui-monospace|Courier|Cascadia|IBM Plex Mono|SF Mono/i);
+check("the previous visual system is gone", () => {
+  const sources = [stylesSource, appSource, resultsSource, indexSource, resultsHtml, pdfSource];
+  sources.forEach((source) => {
+    assert.doesNotMatch(source, /Georgia/, "Georgia");
+    assert.doesNotMatch(source, /Courier New/, "Courier New");
+    assert.doesNotMatch(source, /--signal-cyan|--signal-aurora|--dawn-ink|--night-line/, "old tokens");
+    assert.doesNotMatch(source, /aurora-background|aurora-surge|aurora-rescue/, "old aurora hooks");
+    assert.doesNotMatch(source, /result-slide|result-deck|results-dot|results-view/, "old result deck");
   });
+  // No hairline rule across the top of the viewport.
+  assert.doesNotMatch(stylesSource, /body::before/);
+});
+
+check("exactly two families carry the whole design", () => {
+  assert.match(stylesSource, /--type-display:/);
+  assert.match(stylesSource, /--type-operational:/);
   const families = [...stylesSource.matchAll(/font-family:\s*([^;]+);/g)].map((match) =>
     match[1].trim(),
   );
   assert.ok(families.length > 0);
   families.forEach((value) => {
     assert.ok(
-      /var\(--font-serif\)|var\(--font-sans\)/.test(value),
+      /var\(--type-display\)|var\(--type-operational\)|inherit/.test(value),
       `unexpected font-family: ${value}`,
     );
   });
 });
 
-check("the typography scale matches the specified hierarchy", () => {
-  assert.match(stylesSource, /--text-hero: clamp\(2\.5rem, 6vw, 5rem\)/);
-  assert.match(stylesSource, /--text-act: clamp\(2rem, 4vw, 3\.5rem\)/);
-  assert.match(stylesSource, /--text-section: clamp\(1\.5rem, 3vw, 2\.25rem\)/);
-  assert.match(stylesSource, /--text-body: clamp\(/);
-  assert.match(stylesSource, /--text-ui: clamp\(/);
-  assert.match(stylesSource, /--text-meta: clamp\(/);
-  // Metadata is the sans in uppercase with tracking and tabular numerals.
-  const metaBlock = stylesSource.slice(
-    stylesSource.indexOf(".meta {"),
-    stylesSource.indexOf(".numeric {"),
+check("the type scale is the art-directed hierarchy", () => {
+  ["--step-plate", "--step-display", "--step-chapter", "--step-section", "--step-body", "--step-mark"].forEach(
+    (token) => assert.match(stylesSource, new RegExp(`${token}: clamp\\(`), token),
   );
-  assert.match(metaBlock, /font-family: var\(--font-sans\)/);
-  assert.match(metaBlock, /text-transform: uppercase/);
-  assert.match(metaBlock, /letter-spacing: var\(--tracking-meta\)/);
-  assert.match(metaBlock, /font-variant-numeric: tabular-nums/);
+  // Station-printed marks: operational family, uppercase, tracked, tabular.
+  const mark = stylesSource.slice(stylesSource.indexOf(".mark {"), stylesSource.indexOf(".mark-live"));
+  assert.match(mark, /font-family: var\(--type-operational\)/);
+  assert.match(mark, /text-transform: uppercase/);
+  assert.match(mark, /letter-spacing: var\(--track-mark\)/);
+  assert.match(mark, /font-variant-numeric: tabular-nums/);
 });
 
-check("the stylesheet honours the layout and accessibility rules", () => {
-  assert.match(stylesSource, /--page-max: 1180px/);
-  // Narrative measure sits in the 720-820px band.
-  const measure = Number(stylesSource.match(/--measure: (\d+)px/)[1]);
-  assert.ok(measure >= 720 && measure <= 820, `measure is ${measure}px`);
+check("the layout is editorial rather than a grid of cards", () => {
+  assert.match(stylesSource, /--measure: \d+rem/);
   assert.match(stylesSource, /--tap: 3rem/);
   assert.match(stylesSource, /:focus-visible/);
   assert.match(stylesSource, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(stylesSource, /@media \(prefers-contrast: more\)/);
   assert.match(stylesSource, /\.skip-link/);
-  // Bars use one colour per domain or role, never a red-to-green gradient.
-  assert.match(stylesSource, /background: var\(--domain-colour, var\(--dawn-ink\)\)/);
-  assert.match(stylesSource, /background: var\(--role-colour, var\(--dawn-ink\)\)/);
-  assert.doesNotMatch(stylesSource, /linear-gradient\([^)]*red[^)]*green/i);
+  // Full-bleed act plates with oversized numbering.
+  assert.match(stylesSource, /\.act-plate \{/);
+  assert.match(stylesSource, /\.act-plate-index/);
+  assert.match(stylesSource, /min-height: 9\d+svh|min-height: 100svh/);
+  // No card shell language.
+  assert.doesNotMatch(stylesSource, /box-shadow:\s*0 \d+px \d+px[^;]*rgba\(0, 0, 0, 0\.[3-9]/);
 });
 
-check("the aurora is a state, not a permanent background", () => {
-  assert.match(stylesSource, /\.sky-ribbon \{/);
-  // Hidden by default; only the burst and fade states reveal it.
-  const ribbon = stylesSource.slice(
-    stylesSource.indexOf(".sky-ribbon {"),
-    stylesSource.indexOf(".sky-ribbon::before"),
+check("the aurora is a narrative event with an intensity", () => {
+  assert.match(stylesSource, /\.env-aurora \{/);
+  const layer = stylesSource.slice(
+    stylesSource.indexOf(".env-aurora {"),
+    stylesSource.indexOf('body[data-aurora="present"]'),
   );
-  assert.match(ribbon, /opacity: 0;/);
-  assert.match(ribbon, /visibility: hidden;/);
-  assert.match(stylesSource, /body\[data-aurora="burst"\] \.sky-ribbon/);
-  assert.match(stylesSource, /body\[data-aurora="fading"\] \.sky-ribbon/);
-  assert.doesNotMatch(stylesSource, /aurora-surge-active|aurora-rescue/);
-  // Reduced motion swaps movement for opacity rather than removing the state.
-  const reduced = stylesSource.slice(
-    stylesSource.indexOf("@media (prefers-reduced-motion: reduce)"),
-  );
-  assert.match(reduced, /\.sky-ribbon \{\s*transition: opacity/);
-  assert.match(appSource, /data-aurora|dataset\.aurora/);
+  assert.match(layer, /opacity: 0;/);
+  assert.match(layer, /visibility: hidden;/);
+  assert.match(stylesSource, /body\[data-aurora="present"\] \.env-aurora/);
+  assert.match(stylesSource, /--aurora-intensity/);
   assert.match(appSource, /core\.auroraStateFor/);
+  assert.match(appSource, /dataset\.aurora/);
+  // Reduced motion holds the state and drops the movement.
+  const reduced = stylesSource.slice(stylesSource.indexOf("@media (prefers-reduced-motion: reduce)"));
+  assert.match(reduced, /\.art-aurora-band/);
+  assert.match(reduced, /animation: none/);
 });
 
-check("the results page offers six navigable views", () => {
-  assert.equal(data.results.views.length, 6);
-  assert.deepEqual(
-    data.results.views.map((view) => view.id),
-    ["complete", "roles", "pressure", "recovery", "detail", "summary"],
+check("the artwork is drawn in the project, not fetched", () => {
+  assert.match(artworkSource, /createElementNS/);
+  ["actPlate", "auroraRibbons", "instrumentDial", "coreColumn", "fieldContours", "recorderTrace"].forEach(
+    (name) => assert.match(artworkSource, new RegExp(`function ${name}`), name),
   );
-  data.results.views.forEach((view) => {
-    assert.ok(view.hash, `${view.id} hash`);
-    assert.ok(view.label, `${view.id} label`);
-    assert.ok(view.shortLabel, `${view.id} short label`);
+  // Deterministic: the same seed always draws the same figure.
+  assert.match(artworkSource, /function sequence/);
+  assert.doesNotMatch(artworkSource, /Math\.random/);
+  // No raster assets and no remote fetches anywhere.
+  [artworkSource, appSource, resultsSource, stylesSource, indexSource, resultsHtml].forEach((source) => {
+    assert.doesNotMatch(source, /\.(png|jpg|jpeg|webp|avif|gif)\b/i, "raster asset");
+    assert.doesNotMatch(source, /https?:\/\/(?!www\.w3\.org|localhost)/, "remote reference");
   });
-  assert.match(resultsSource, /function showView/);
-  assert.match(resultsSource, /ArrowLeft/);
-  assert.match(resultsSource, /ArrowRight/);
-  assert.match(resultsSource, /popstate/);
-  assert.match(resultsSource, /touchstart/);
-  assert.match(resultsSource, /pageLabelTemplate/);
-  assert.match(resultsSource, /results-dot/);
-  // Navigation is never automatic.
-  assert.doesNotMatch(resultsSource, /setInterval/);
-  // Transition sits in the 220-300ms band and drops out under reduced motion.
-  const duration = Number(stylesSource.match(/--transition-view: (\d+)ms/)[1]);
-  assert.ok(duration >= 220 && duration <= 300, `transition is ${duration}ms`);
-  assert.match(stylesSource.slice(stylesSource.indexOf("@media (prefers-reduced-motion")), /\.results-view \{?[\s\S]{0,80}animation: none/);
 });
 
-check("the radar offers three states on a fixed scale with fixed axes", () => {
-  const radar = data.results.radar;
+check("the debrief is one continuous report, not a carousel", () => {
+  assert.equal(data.results.chapters.length, 5);
   assert.deepEqual(
-    radar.states.map((state) => state.label),
-    ["Starting", "Under Pressure", "After Pressure"],
+    data.results.chapters.map((entry) => entry.id),
+    ["role", "shift", "currents", "detail", "close"],
   );
+  // Every chapter is built and appended in one pass.
+  assert.match(resultsSource, /shell\.replaceChildren\(/);
+  ["buildRoleChapter", "buildShiftChapter", "buildCurrentsChapter", "buildDetailChapter", "buildCloseChapter"].forEach(
+    (name) => assert.match(resultsSource, new RegExp(name), name),
+  );
+  // No paging, no slides, no auto-advance.
+  assert.doesNotMatch(resultsSource, /pageLabel|showView|activeIndex|setInterval/);
+  assert.doesNotMatch(resultsSource, /popstate/);
+});
+
+check("the report carries every required piece of the record", () => {
+  const labels = data.results.labels;
+  ["missionFunction", "brings", "watchFor", "action", "why", "basis", "advantage", "overextension", "reflection"].forEach(
+    (key) => assert.ok(labels[key], `label ${key}`),
+  );
+  assert.match(data.results.notATypeStatement, /not a fixed personality type/i);
+  assert.ok(data.results.disclaimer);
+
+  // Role copy for all five contributions.
+  data.assessment.roleOrder.forEach((id) => {
+    const role = data.assessment.roles[id];
+    ["missionFunction", "brings", "watchFor", "actionTitle", "action"].forEach((key) =>
+      assert.ok(role[key], `${id} ${key}`),
+    );
+  });
+
+  // Advantage, overextension and reflection for every band of every current.
+  core.DOMAIN_ORDER.forEach((code) => {
+    const guidance = data.assessment.domains[code].guidance;
+    ["higher", "balanced", "lower"].forEach((band) => {
+      ["advantage", "overextension", "reflection"].forEach((key) => {
+        assert.ok(guidance[band][key], `${code} ${band} ${key}`);
+      });
+    });
+    assert.ok(data.assessment.instruments[code].name, `${code} instrument`);
+  });
+});
+
+check("no scoring mechanics are exposed anywhere in the experience", () => {
+  const surfaces = [resultsSource, appSource, indexSource, resultsHtml, pdfSource];
+  surfaces.forEach((source) => {
+    assert.doesNotMatch(source, /0\.60 \*|0\.25 \*|0\.15 \*/, "weights");
+    assert.doesNotMatch(source, /profileSuitability\s*[:=]\s*[^;]*0\./, "suitability formula");
+  });
+  // The report reads meaning, never mechanism.
+  assert.doesNotMatch(resultsSource, /facetFloorLabel|suitabilityLabel/);
+  const copy = JSON.stringify(data.results);
+  assert.doesNotMatch(copy, /facet floor/i);
+  assert.doesNotMatch(copy, /profile suitability/i);
+  assert.doesNotMatch(copy, /0\.60|0\.25 \*|weight/i);
+});
+
+check("the movement instrument keeps fixed axes and a fixed scale", () => {
+  const radar = data.results.radar;
   assert.deepEqual(
     radar.states.map((state) => state.phase),
     ["baseline", "pressure", "recovery"],
   );
   assert.equal(data.assessment.suitability.stableChange, 0.25);
-
-  // Fixed positions: the axis order comes straight from the role order and is
-  // never sorted or rotated at render time.
   assert.match(resultsSource, /const order = data\.assessment\.roleOrder/);
-  assert.doesNotMatch(resultsSource, /order\.slice\(\)\.sort|order\.sort\(/);
+  assert.doesNotMatch(resultsSource, /order\.sort\(|\.sort\(\)/);
   assert.doesNotMatch(resultsSource, /rotate/);
-
-  // Rings are whole scale points, so the chart cannot imply a zero origin.
   assert.match(resultsSource, /\[2, 3, 4, 5\]\.forEach/);
-  assert.match(resultsSource, /core\.MIN_RESPONSE\) \/ \(core\.MAX_RESPONSE - core\.MIN_RESPONSE\)/);
-
-  // Only the radius is interpolated, so a vertex can only move along its axis.
+  // Only the radius travels, so a vertex stays on its own spoke.
   assert.match(resultsSource, /value \+ \(target\[index\] - value\) \* eased/);
-  assert.match(resultsSource, /radar-ghost/);
-  assert.match(resultsSource, /prefersReducedMotion\(\)/);
-  assert.match(resultsSource, /radar-tooltip/);
-  assert.match(resultsSource, /radar-table/);
-  assert.match(resultsSource, /stableLabel/);
-  // No percentages anywhere in the radar copy.
+  assert.match(resultsSource, /plot-ghost/);
+  assert.match(resultsSource, /stillMotion\(\)/);
+  assert.match(resultsSource, /reading-tip/);
   assert.doesNotMatch(JSON.stringify(radar), /%|percent/i);
-  assert.match(radar.note, /does not show your personality changing/i);
 });
 
-check("the results copy stays neutral and non-diagnostic", () => {
-  const copy = JSON.stringify(data.results);
+check("the report copy stays neutral and non-diagnostic", () => {
+  const copy = JSON.stringify(data.results) + JSON.stringify(data.assessment.roles);
   [
     /\bbest role\b/i,
     /\bwinner\b/i,
     /\byou are a\b/i,
-    /\bpersonality type\b/i,
     /\bstrengths? and weakness/i,
     /\bpercentile\b/i,
   ].forEach((pattern) => assert.doesNotMatch(copy, pattern, String(pattern)));
 
-  // "Diagnosis" may appear only where the copy is denying one.
-  [...copy.matchAll(/.{0,24}diagnos/gi)].forEach((match) => {
-    assert.match(match[0], /\bnot\b[^.]*$/i, `unqualified diagnostic claim: ${match[0]}`);
+  // "Diagnosis" and "personality type" may appear only where they are denied.
+  [/.{0,24}diagnos/gi, /.{0,24}personality type/gi].forEach((pattern) => {
+    [...copy.matchAll(pattern)].forEach((match) => {
+      assert.match(match[0], /\bnot\b[^.]*$/i, `unqualified claim: ${match[0]}`);
+    });
   });
-  assert.match(
-    data.results.views.find((view) => view.id === "complete").disclaimer,
-    /not a diagnosis/i,
-  );
-  // Conditional voice, not verdicts.
-  const pressure = data.results.views.find((view) => view.id === "pressure");
-  assert.match(pressure.shiftLeadIn, /your responses suggest/i);
-  assert.match(pressure.stableCopy, /suggests/i);
+  assert.match(data.results.disclaimer, /not a diagnosis/i);
+  assert.match(data.results.notATypeStatement, /not a fixed personality type/i);
 });
 
-check("the results page recalculates and refuses incomplete journeys", () => {
+check("the report recalculates and refuses an incomplete watch", () => {
   assert.match(resultsSource, /core\.scoreProfile\(data, state\)/);
   assert.match(resultsSource, /window\.location\.replace\("\.\/index\.html"\)/);
-  // Nothing about the reader goes in the URL.
   assert.doesNotMatch(resultsSource, /location\.search/);
   assert.doesNotMatch(resultsSource, /URLSearchParams/);
-  assert.match(resultsSource, /outOfFive/);
   assert.match(resultsSource, /restartConfirm/);
   assert.match(resultsSource, /core\.clearJourney/);
 });
 
-check("scores are shown out of five on both surfaces", () => {
-  assert.match(resultsSource, /\$\{scoreText\(value\)\} \/ \$\{core\.MAX_RESPONSE\}/);
-  assert.match(pdfSource, /domain\.score\.toFixed\(1\)\} \/ \$\{profile\.scaleMax\}/);
+check("progress reads as an observation sequence, not a percentage", () => {
+  assert.match(appSource, /function updateSequence/);
+  assert.match(appSource, /sequence-tick/);
+  assert.doesNotMatch(appSource, /scaleX\(|percent|%`/);
+  assert.ok(data.observation.label);
+  assert.ok(data.observation.unitLabel);
+  assert.match(stylesSource, /\.sequence-tick/);
+});
+
+check("readings are shown out of five on both surfaces", () => {
+  assert.match(resultsSource, /\$\{reading\(value\)\} \/ \$\{core\.MAX_RESPONSE\}/);
+  assert.match(pdfSource, /role\.score\.toFixed\(1\)\} \/ \$\{profile\.scaleMax\}/);
   assert.match(pdfSource, /facet\.score\.toFixed\(1\)\} \/ \$\{profile\.scaleMax\}/);
 });
 

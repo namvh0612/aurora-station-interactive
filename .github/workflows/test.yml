@@ -20,6 +20,7 @@ jobs:
         run: |
           node --check content/Aurora_Station_Content.js
           node --check core.js
+          node --check artwork.js
           node --check pdf-export.js
           node --check audio.js
           node --check app.js

@@ -1,7 +1,7 @@
 /* Edit this data file to update the story; no rebuild is required. */
 window.AURORA_STATION_DATA = {
   "schemaVersion": "1.0.0",
-  "contentVersion": "8.0.0-aurora-roles-suitability",
+  "contentVersion": "9.0.0-polar-observatory",
   "id": "aurora-station",
   "title": "Aurora Station",
   "subtitle": "The Final Watch",
@@ -104,6 +104,23 @@ window.AURORA_STATION_DATA = {
           "higher": "Your responses suggest a generally higher tendency toward social engagement, expression and active energy.",
           "balanced": "Your responses suggest that social engagement, expression and energy varied with the situation rather than holding at one level.",
           "lower": "Your responses suggest a generally lower tendency toward social engagement, with influence expressed more quietly and energy held in reserve."
+        },
+        "guidance": {
+          "higher": {
+            "advantage": "You put energy into a room and make your engagement legible. People can tell where you are and what you think, which is worth a great deal at three in the morning.",
+            "overextension": "Visible energy fills space. The quieter reading in the room may never be offered, and you may not notice it was there.",
+            "reflection": "In the last difficult conversation you were part of, who did not speak, and would you have noticed if they had wanted to?"
+          },
+          "balanced": {
+            "advantage": "You move between speaking and listening according to what the moment needs rather than by habit.",
+            "overextension": "A flexible setting can become an unclear one. In a room waiting for someone to commit, availability is not the same as direction.",
+            "reflection": "When you hold back, is it a reading of the room or a way of staying uncommitted?"
+          },
+          "lower": {
+            "advantage": "You conserve social energy and choose your moment, so what you do say tends to carry weight.",
+            "overextension": "Waiting for the right moment can mean the decision closes before your view enters it.",
+            "reflection": "What would have to be true for you to speak earlier than feels comfortable?"
+          }
         }
       },
       "agreeableness": {
@@ -120,6 +137,23 @@ window.AURORA_STATION_DATA = {
           "higher": "Your responses suggest a generally higher tendency toward compassion, respectful interaction and trust in others' intentions.",
           "balanced": "Your responses suggest that compassion, respectfulness and trust were extended selectively rather than uniformly.",
           "lower": "Your responses suggest a generally lower tendency toward accommodation, with more scepticism and more willingness to hold a position against others."
+        },
+        "guidance": {
+          "higher": {
+            "advantage": "You keep people in contact with one another and notice what a decision costs the person carrying it.",
+            "overextension": "Protecting the working relationship can postpone a disagreement that the situation actually needs.",
+            "reflection": "Which unspoken disagreement are you currently carrying on someone else's behalf?"
+          },
+          "balanced": {
+            "advantage": "You extend cooperation where it is earned rather than uniformly, which keeps trust meaningful.",
+            "overextension": "Selective warmth can read as inconsistency to people who do not know the rule you are using.",
+            "reflection": "Do the people around you know what earns your trust, or only that some have it?"
+          },
+          "lower": {
+            "advantage": "You hold a position against pressure and are willing to say the thing that makes a room uncomfortable.",
+            "overextension": "A room that has stopped volunteering information is harder to read, and you may be the reason it stopped.",
+            "reflection": "When did someone last change your mind, and what did they have to do to manage it?"
+          }
         }
       },
       "conscientiousness": {
@@ -136,6 +170,23 @@ window.AURORA_STATION_DATA = {
           "higher": "Your responses suggest a generally higher tendency toward structure, sustained effort and dependability.",
           "balanced": "Your responses suggest that structure and persistence were applied where they mattered and relaxed elsewhere.",
           "lower": "Your responses suggest a generally lower tendency toward formal structure, with more flexibility and less attachment to sequence."
+        },
+        "guidance": {
+          "higher": {
+            "advantage": "You turn intent into sequence and leave a record the next person can actually use.",
+            "overextension": "A sequence can outlive the situation it was designed for and become the thing being defended.",
+            "reflection": "Which of your current procedures would you keep if you were designing them again today?"
+          },
+          "balanced": {
+            "advantage": "You apply structure where it earns its cost and let it go where it does not.",
+            "overextension": "Judgement calls about when structure applies are hard to hand over. Others may not be able to predict you.",
+            "reflection": "Could someone else run your work from your notes, or only from you?"
+          },
+          "lower": {
+            "advantage": "You stay adaptable and are not held by a plan that has stopped describing the situation.",
+            "overextension": "Without a sequence, the slow and unglamorous parts are the ones that quietly go unrecorded.",
+            "reflection": "What is currently held only in your head, and what happens if you are not there tomorrow?"
+          }
         }
       },
       "negativeEmotionality": {
@@ -152,6 +203,23 @@ window.AURORA_STATION_DATA = {
           "higher": "Your responses suggest more frequent or more intense worry, low mood and emotional reactivity during the watch.",
           "balanced": "Your responses suggest that worry, low mood and reactivity arrived in some situations and not others.",
           "lower": "Your responses suggest less frequent or less intense worry, low mood and emotional reactivity during the watch."
+        },
+        "guidance": {
+          "higher": {
+            "advantage": "You register strain early. Discomfort is information, and you receive it before others do.",
+            "overextension": "Early signal is exhausting to carry. Sustained alertness costs something even when nothing arrives.",
+            "reflection": "Which of tonight's worries turned out to be signal, and which were the cost of watching?"
+          },
+          "balanced": {
+            "advantage": "Difficulty reaches you without taking the room over. You feel the pressure and can still work inside it.",
+            "overextension": "A moderate reading can be misread as indifference by people who need the strain named aloud.",
+            "reflection": "When you absorb pressure quietly, does the room read that as steadiness or as distance?"
+          },
+          "lower": {
+            "advantage": "Conditions can move a long way before your own state becomes part of the problem.",
+            "overextension": "Low reactivity can miss the point at which a situation genuinely has changed, and can leave others feeling unmet.",
+            "reflection": "Who around you was more affected than you were, and did you notice at the time?"
+          }
         }
       },
       "openMindedness": {
@@ -168,6 +236,23 @@ window.AURORA_STATION_DATA = {
           "higher": "Your responses suggest a generally higher tendency toward intellectual, aesthetic and imaginative engagement.",
           "balanced": "Your responses suggest that curiosity, aesthetic attention and invention appeared in some moments and were set aside in others.",
           "lower": "Your responses suggest a generally lower tendency to pursue abstraction, aesthetic detail or invention when a direct route was available."
+        },
+        "guidance": {
+          "higher": {
+            "advantage": "You keep more than one explanation alive and notice the pattern before it has a name.",
+            "overextension": "Exploration can delay closure, and a weak signal can be given more attention than the evidence supports.",
+            "reflection": "What evidence would be enough for you to stop looking and commit?"
+          },
+          "balanced": {
+            "advantage": "You open the frame when the situation is genuinely unclear and close it when it is not.",
+            "overextension": "The decision to explore or to close is made privately, so others may not see the reasoning that produced it.",
+            "reflection": "When you stop exploring, do you say so, or does the room simply notice you have moved on?"
+          },
+          "lower": {
+            "advantage": "You filter quickly toward evidence that can support a decision now, which protects attention under load.",
+            "overextension": "A fast filter removes the unfamiliar option early, sometimes before it had a chance to prove itself.",
+            "reflection": "Which possibility did you dismiss tonight without testing, and what would testing have cost?"
+          }
         }
       }
     },
@@ -306,7 +391,12 @@ window.AURORA_STATION_DATA = {
         "colour": "#42b4e6",
         "contribution": "Explores possibilities and reframes uncertainty.",
         "reading": "keeping more than one explanation alive and looking for the route that has not been tried",
-        "inGroup": "finds the option a group has not yet considered"
+        "inGroup": "finds the option a group has not yet considered",
+        "missionFunction": "Keep unexplored routes visible before the watch closes on one explanation.",
+        "brings": "Alternative readings of the same evidence, and the patience to hold them open while the data is still thin.",
+        "watchFor": "Exploration can outlast its usefulness. A watch that keeps reopening the question never reaches the point of acting on it.",
+        "actionTitle": "OPEN ONE MORE ROUTE",
+        "action": "Name one plausible explanation the room has not yet said aloud, then set the evidence that would close it."
       },
       "catalyst": {
         "id": "catalyst",
@@ -318,7 +408,12 @@ window.AURORA_STATION_DATA = {
         "colour": "#ef5b7a",
         "contribution": "Creates momentum and mobilises others.",
         "reading": "putting energy into the room and making your engagement visible to the people in it",
-        "inGroup": "raises the level of a room when the work needs momentum"
+        "inGroup": "raises the level of a room when the work needs momentum",
+        "missionFunction": "Turn a stalled room into a moving one and keep the work visible between people.",
+        "brings": "Momentum, and the willingness to be the first voice when the silence has stopped being useful.",
+        "watchFor": "Momentum can occupy the space other people needed in order to think. The room can end up moving at your pace rather than the problem's.",
+        "actionTitle": "MAKE ROOM AFTER MOVING",
+        "action": "Once the direction is set, leave a deliberate pause in which someone else can change it."
       },
       "steward": {
         "id": "steward",
@@ -330,7 +425,12 @@ window.AURORA_STATION_DATA = {
         "colour": "#3dcd58",
         "contribution": "Maintains trust, cooperation and human connection.",
         "reading": "keeping people in contact with one another and protecting the working relationship",
-        "inGroup": "holds a group together when the work starts to pull people apart"
+        "inGroup": "holds a group together when the work starts to pull people apart",
+        "missionFunction": "Keep the people in contact with each other while the work pulls them apart.",
+        "brings": "Attention to what a decision costs the person carrying it, and the conditions cooperation actually needs.",
+        "watchFor": "Protecting the relationship can delay a necessary disagreement. Some decisions cost trust in the short term and are still correct.",
+        "actionTitle": "NAME THE HUMAN COST",
+        "action": "Say plainly who carries the weight of the current plan, then ask whether they can."
       },
       "architect": {
         "id": "architect",
@@ -342,7 +442,12 @@ window.AURORA_STATION_DATA = {
         "colour": "#ff8a3d",
         "contribution": "Creates structure and dependable execution.",
         "reading": "holding sequence and finishing what the situation started",
-        "inGroup": "turns an intention into something that actually gets carried through"
+        "inGroup": "turns an intention into something that actually gets carried through",
+        "missionFunction": "Turn intent into a sequence that survives being handed to someone else.",
+        "brings": "Order, follow-through, and a record that means the next watch does not begin from nothing.",
+        "watchFor": "Structure can outlive the situation it was built for. A sequence held past its usefulness becomes the thing being defended.",
+        "actionTitle": "SET THE STOPPING RULE",
+        "action": "Define the condition that would tell you the current sequence is no longer the right one."
       },
       "sentinel": {
         "id": "sentinel",
@@ -354,7 +459,12 @@ window.AURORA_STATION_DATA = {
         "colour": "#9b51e0",
         "contribution": "Maintains calm, awareness and resilience under pressure.",
         "reading": "staying level while the situation moves and keeping your own state out of the problem",
-        "inGroup": "gives others something steady to work against when conditions are not steady"
+        "inGroup": "gives others something steady to work against when conditions are not steady",
+        "missionFunction": "Hold a steady reading while the conditions around it stop being steady.",
+        "brings": "Calm that other people can work against, and attention that stays on the instrument rather than the alarm.",
+        "watchFor": "Steadiness can read as distance. A room under strain sometimes needs the pressure acknowledged before it is absorbed.",
+        "actionTitle": "SAY WHAT IS UNRESOLVED",
+        "action": "Name the one risk still open and the evidence that would show it is controlled."
       }
     },
     "roleOrder": [
@@ -391,6 +501,34 @@ window.AURORA_STATION_DATA = {
       "recommendedNote": "Profile suitability describes the fit your own responses support. A recommended role also depends on what the team already has and what the mission needs, neither of which a solo journey can know.",
       "tieTolerance": 0.15,
       "stableChange": 0.25
+    },
+    "whyTemplates": {
+      "single": "{role} is the contribution your responses supported most consistently: strongly across the watch as a whole, and still present in the hours when the station was least predictable.",
+      "blend": "{roles} sat close enough together that the record does not separate them. Read them as one contribution with two hands rather than a first and second place.",
+      "supported": "It also held up underneath: the components behind it were present rather than carried by a single strong answer.",
+      "uneven": "One component behind it was noticeably thinner than the others, which is worth knowing before you lean on it."
+    },
+    "instruments": {
+      "extraversion": {
+        "name": "Room Meter",
+        "reads": "how much of you enters the room"
+      },
+      "agreeableness": {
+        "name": "Tether Gauge",
+        "reads": "what holds between people"
+      },
+      "conscientiousness": {
+        "name": "Sequence Recorder",
+        "reads": "whether the order holds"
+      },
+      "negativeEmotionality": {
+        "name": "Strain Trace",
+        "reads": "what the night costs you"
+      },
+      "openMindedness": {
+        "name": "Aperture Dial",
+        "reads": "how wide the frame stays"
+      }
     }
   },
   "story": {
@@ -1821,90 +1959,101 @@ window.AURORA_STATION_DATA = {
   },
   "results": {
     "eyebrow": "AURORA STATION",
-    "heading": "WATCHKEEPER PROFILE",
-    "pageLabelTemplate": "{current} / {total}",
-    "previous": "Previous",
-    "next": "Next",
-    "views": [
+    "heading": "OBSERVATION REPORT",
+    "classification": "WATCHKEEPER RECORD · NOT A CLINICAL INSTRUMENT",
+    "openingTitle": "The watch is complete",
+    "openingBridge": "The last signal settles into silence. What remains is not a verdict, but a record of how you moved through uncertainty.",
+    "openingBody": "Sixty observations were recorded across twelve hours of a station that stopped behaving predictably. What follows reads them back: what you reached for first, what changed when the situation stopped cooperating, and what returned once it was over.",
+    "disclaimer": "This describes self-reported tendencies within one story. It is not a diagnosis, a measure of ability, or a prediction of how you would act anywhere else, and it must not be used for selection or performance decisions.",
+    "chapters": [
       {
-        "id": "complete",
-        "hash": "complete",
-        "label": "The watch is complete",
-        "shortLabel": "Complete",
-        "title": "The Watch Is Complete",
-        "bridge": "The last signal settles into silence. What remains is not a verdict, but a record of how you moved through uncertainty.",
-        "body": "Sixty reflections were recorded across twelve hours of a station that stopped behaving predictably. The pages that follow describe patterns in those responses—how you tended to move at the start, under the worst of it, and once the pressure eased.",
-        "disclaimer": "This describes self-reported tendencies within one story. It is not a diagnosis, a measure of ability, or a judgement of how you would act anywhere else."
+        "id": "role",
+        "index": "I",
+        "title": "The contribution",
+        "eyebrow": "SECTION I · CONTRIBUTION"
       },
       {
-        "id": "roles",
-        "hash": "roles",
-        "label": "Your Aurora Roles",
-        "shortLabel": "Roles",
-        "title": "Your Aurora Roles",
-        "intro": "Five mission contributions drawn from your profile, each on the same one-to-five scale. They are read together, not ranked against one another.",
-        "tableCaption": "Aurora Role scores and profile suitability from all sixty responses",
-        "overallLabel": "Strongest profile fit",
-        "secondaryLabel": "Close alongside it",
-        "blendNote": "These two fall inside the tie tolerance, so they are shown as a blend rather than a single role.",
-        "suitabilityLabel": "Profile suitability",
-        "facetFloorLabel": "Facet floor",
-        "recommendedNote": "This is the role your own profile best supports. A recommended role would also weigh what the team already has and what the mission requires."
+        "id": "shift",
+        "index": "II",
+        "title": "What the night moved",
+        "eyebrow": "SECTION II · MOVEMENT"
       },
       {
-        "id": "pressure",
-        "hash": "pressure",
-        "label": "Under pressure",
-        "shortLabel": "Pressure",
-        "title": "Under Pressure",
-        "intro": "The same five roles, scored separately across the opening Acts and across the hours when the station was at its least predictable.",
-        "stableCopy": "Your pattern held. Across the two phases no role moved by 0.25 or more, which suggests that the way you responded early was much the same as the way you responded when conditions worsened.",
-        "shiftLeadIn": "When pressure rose, your responses suggest that you relied more heavily on {role}: {reading}.",
-        "shiftDropLeadIn": "At the same time {role} became less visible in your responses."
-      },
-      {
-        "id": "recovery",
-        "hash": "recovery",
-        "label": "After pressure",
-        "shortLabel": "After",
-        "title": "After Pressure",
-        "intro": "What changed once the storm broke and the situation became bounded again.",
-        "stableCopy": "Little moved. Your responses through the closing Acts stayed close to the pattern you carried through the pressure itself.",
-        "shiftLeadIn": "After the immediate strain eased, {role} returned more strongly to your profile, suggesting renewed attention to {reading}.",
-        "returnedCopy": "That brings you close to where you started, which may suggest the pressure pattern was a temporary adjustment rather than a lasting change.",
-        "retainedCopy": "That keeps you nearer the pressure pattern than the one you began with, which may suggest the adjustment outlasted the conditions that prompted it.",
-        "newBalanceCopy": "That settles into a pattern which matches neither the opening nor the worst of it, which may suggest a new balance rather than a return."
+        "id": "currents",
+        "index": "III",
+        "title": "The five currents",
+        "eyebrow": "SECTION III · SPECTRUMS"
       },
       {
         "id": "detail",
-        "hash": "detail",
-        "label": "Domains and facets",
-        "shortLabel": "Detail",
-        "title": "Domains and Facets",
-        "intro": "The BFI-2-aligned scoring in full: five domains, each from twelve items, and fifteen facets, each from four.",
-        "higherNote": "Higher is not automatically better. Each score describes how strongly you agreed that a set of statements described you, and every position on every scale has situations that suit it.",
-        "negativeEmotionalityNote": "A higher Negative Emotionality score means more frequent or more intense worry, low mood and emotional reactivity. It is reported as itself and never quietly inverted.",
-        "aegisNote": "Aegis is the inverse representation of that same domain, calculated as 6 - Negative Emotionality, so a higher Aegis describes greater steadiness."
+        "index": "IV",
+        "title": "Reading each current",
+        "eyebrow": "SECTION IV · DETAIL"
       },
       {
-        "id": "summary",
-        "hash": "summary",
-        "label": "Your Watchkeeper summary",
-        "shortLabel": "Summary",
-        "title": "Your Watchkeeper Summary",
-        "intro": "One reading of the whole watch.",
-        "reflectionLabel": "A question to sit with",
-        "reflectionTemplate": "When the next situation stops behaving predictably, which of these do you want to reach for first—and which one would you rather not lose while you do?"
+        "id": "close",
+        "index": "V",
+        "title": "Closing the record",
+        "eyebrow": "SECTION V · CLOSE"
       }
     ],
-    "actions": {
-      "profilePdf": "Download Profile PDF",
-      "storyPdf": "Download Story PDF",
-      "returnToStory": "Return to Story",
-      "restart": "Restart Journey"
+    "roleIntro": "One contribution the record supports most clearly. It is a reading of this night, not a fixed type.",
+    "notATypeStatement": "Your Aurora Role is the contribution your profile is best placed to make. It is not a fixed personality type, and it is not a limit on what you are able to do.",
+    "labels": {
+      "missionFunction": "Mission function",
+      "brings": "What you bring",
+      "watchFor": "Watch for",
+      "action": "Mission action",
+      "why": "Why this role",
+      "basis": "Behavioural current",
+      "advantage": "Potential advantage",
+      "overextension": "Possible overextension",
+      "reflection": "Reflection",
+      "instrument": "Instrument",
+      "facets": "Facets",
+      "observations": "Observations"
     },
-    "restartConfirm": "Restart Aurora Station?\n\nThis will remove your name, responses, story progress and results. Sound and reading-speed preferences will be retained.",
-    "privacy": "Your name and responses stay in this browser. Aurora Station has no backend and sends nothing anywhere.",
+    "shiftIntro": "The same five contributions, read separately across three stretches of the watch. The instrument holds one scale throughout; only the distance along each axis changes.",
+    "shiftStableCopy": "Little moved. Across the three stretches no contribution shifted far enough to read as a change, which suggests your approach was not especially sensitive to how difficult the night became.",
+    "currentsIntro": "Five behavioural currents, each a range rather than a score to win. Neither end is better, and the centre is a real position rather than a missing answer.",
+    "detailIntro": "Each current read in full: what it was doing, what it is likely to give you, what it can cost, and one question worth sitting with.",
+    "radar": {
+      "heading": "Contribution across the watch",
+      "states": [
+        {
+          "id": "baseline",
+          "label": "Routine",
+          "phase": "baseline"
+        },
+        {
+          "id": "pressure",
+          "label": "Degraded",
+          "phase": "pressure"
+        },
+        {
+          "id": "recovery",
+          "label": "Post-event",
+          "phase": "recovery"
+        }
+      ],
+      "tableCaption": "Contribution readings and change from the previous stretch",
+      "stableLabel": "steady",
+      "columns": {
+        "role": "Contribution",
+        "score": "Reading",
+        "change": "Change",
+        "previous": "Previous"
+      },
+      "note": "This records how the contributions available to you moved with the situation. It does not record a personality becoming a different one."
+    },
+    "actions": {
+      "profilePdf": "Download observation report",
+      "storyPdf": "Download the night's record",
+      "returnToStory": "Return to the watch",
+      "restart": "Begin a new watch"
+    },
+    "restartConfirm": "Begin a new watch?\n\nThis clears the watchkeeper name, every recorded observation, the story and this report. Sound and reading-pace settings are kept.",
+    "privacy": "Your name and your responses stay in this browser. Aurora Station has no backend and sends nothing anywhere.",
     "summaryTemplates": {
       "consistencyAnchored": "Across the watch your pattern stayed anchored in {overall}: {reading}. It was the tendency most available to you at the start and it did not give that position up, even as the conditions around it changed. That kind of consistency is not the same as rigidity. It suggests a way of working you return to by default, and which the rest of your responses arranged themselves around.",
       "consistencyMoved": "Across the watch the most available tendency changed hands. You opened anchored in {starting}, and by the hardest hours {pressure} had moved ahead of it. That does not mean one replaced the other. It suggests that what you reach for first is sensitive to what the situation is asking, and that more than one way of working was genuinely available to you.",
@@ -1915,36 +2064,21 @@ window.AURORA_STATION_DATA = {
       "recoveryNew": "Once the pressure eased, the pattern settled somewhere new.",
       "contribution": "In a group, a pattern like this tends to {contribution}. That is a contribution rather than a role you must occupy: it describes what other people are likely to be able to rely on from you, and it says nothing about what you are unable to do. The tendencies that sat lower here are not deficits, and they can be deliberately reached for when a situation calls for them."
     },
-    "radar": {
-      "heading": "How your contributions shift with context",
-      "intro": "One chart, three moments. The axes never move; only the distance along each axis changes.",
-      "states": [
-        {
-          "id": "baseline",
-          "label": "Starting",
-          "phase": "baseline"
-        },
-        {
-          "id": "pressure",
-          "label": "Under Pressure",
-          "phase": "pressure"
-        },
-        {
-          "id": "recovery",
-          "label": "After Pressure",
-          "phase": "recovery"
-        }
-      ],
-      "ghostLabel": "Previous state",
-      "tableCaption": "Aurora Role scores and change from the previous state",
-      "stableLabel": "stable",
-      "columns": {
-        "role": "Role",
-        "score": "Score",
-        "change": "Change",
-        "previous": "Previous"
-      },
-      "note": "This shows how the contributions available to you shift with context. It does not show your personality changing into another type."
+    "reflectionPrompt": "When the next situation stops behaving predictably, which of these do you want to reach for first, and which one would you rather not lose while you do?"
+  },
+  "observation": {
+    "label": "OBSERVATION SEQUENCE",
+    "unitLabel": "OBS",
+    "ofLabel": "OF",
+    "idleLabel": "SEQUENCE NOT STARTED",
+    "completeLabel": "SEQUENCE COMPLETE",
+    "actLabel": "ACT",
+    "stationLabel": "AURORA STATION",
+    "watchLabel": "FINAL WATCH",
+    "phaseLabels": {
+      "baseline": "ROUTINE",
+      "pressure": "DEGRADED",
+      "recovery": "POST-EVENT"
     }
   }
 };

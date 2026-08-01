@@ -3,77 +3,69 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Aurora Station — an interactive story with a BFI-2-aligned narrative self-reflection." />
+    <meta
+      name="description"
+      content="Aurora Station — a psychological hard-science-fiction night watch and behavioural self-reflection."
+    />
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#06131d" />
+    <meta name="theme-color" content="#05080b" />
     <title>Aurora Station — The Final Watch</title>
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./content/Aurora_Station_Content.js"></script>
     <script defer src="./core.js"></script>
+    <script defer src="./artwork.js"></script>
     <script defer src="./pdf-export.js"></script>
     <script defer src="./audio.js"></script>
     <script defer src="./app.js"></script>
   </head>
   <body>
-    <div class="sky" aria-hidden="true">
-      <div class="sky-base"></div>
-      <div class="sky-haze"></div>
-      <div class="sky-ribbon"></div>
-      <div class="sky-veil"></div>
+    <div class="environment" aria-hidden="true">
+      <div class="env-field"></div>
+      <div class="env-drift"></div>
+      <div class="env-aurora" id="env-aurora"></div>
     </div>
-    <a class="skip-link" href="#story">Skip to the story</a>
-    <header class="reader-bar">
-      <div class="reader-bar-primary">
-        <a class="reader-brand" href="#story">Aurora Station</a>
-        <div
-          class="reader-progress"
-          role="progressbar"
-          aria-label="Reflections recorded"
-          aria-valuemin="0"
-          aria-valuemax="60"
-          aria-valuenow="0"
-        >
-          <span id="progress-fill"></span>
-        </div>
-        <span id="progress-label" class="progress-label">The final watch</span>
+
+    <a class="skip-link" href="#watch">Skip to the watch</a>
+
+    <header class="masthead">
+      <div class="masthead-identity">
+        <p class="mark" id="station-mark">AURORA STATION</p>
+        <p class="mark" id="act-mark">FINAL WATCH</p>
       </div>
-      <div class="reader-bar-tools">
-        <div id="playback-controls" class="playback-controls" role="group" aria-label="Text playback">
-          <button id="playback-toggle" class="tool-button" type="button" aria-pressed="false">
-            <span class="tool-label">Pause</span>
-          </button>
-          <button id="playback-show-now" class="tool-button" type="button">
-            <span class="tool-label">Show now</span>
-          </button>
-          <div id="speed-control" class="speed-control" role="radiogroup" aria-label="Text speed">
-            <button class="speed-choice" type="button" role="radio" data-speed="slow" aria-checked="false">Slow</button>
-            <button class="speed-choice" type="button" role="radio" data-speed="normal" aria-checked="true">Normal</button>
-            <button class="speed-choice" type="button" role="radio" data-speed="fast" aria-checked="false">Fast</button>
-          </div>
+      <div class="masthead-controls">
+        <div class="sequence" id="sequence" role="img" aria-label="Observation sequence not started">
+          <span class="mark" id="sequence-label">OBS 00 / 60</span>
+          <span class="sequence-ticks" id="sequence-ticks" aria-hidden="true"></span>
+        </div>
+        <button class="control" id="pace-toggle" type="button" aria-pressed="false">Pause</button>
+        <button class="control" id="pace-now" type="button">Reveal</button>
+        <div class="sequence" role="radiogroup" aria-label="Reading pace" id="pace-control">
+          <button class="control" type="button" role="radio" data-pace="slow" aria-checked="false">Slow</button>
+          <button class="control" type="button" role="radio" data-pace="normal" aria-checked="true">Normal</button>
+          <button class="control" type="button" role="radio" data-pace="fast" aria-checked="false">Fast</button>
         </div>
         <button
+          class="control"
           id="sound-toggle"
-          class="tool-button sound-toggle"
           type="button"
           aria-pressed="true"
-          aria-label="Mute background soundtrack"
-          title="The soundtrack begins after your first interaction."
+          aria-label="Mute station sound"
         >
-          <span class="sound-meter" aria-hidden="true"><span></span><span></span><span></span></span>
-          <span class="tool-label sound-label">Sound on</span>
+          <span class="sound-label">Sound</span>
         </button>
       </div>
     </header>
-    <main id="story" class="story" tabindex="-1">
-      <p class="loading-copy">Receiving the final watch…</p>
+
+    <main class="watch" id="watch" tabindex="-1">
+      <p class="loading-note">Receiving the final watch…</p>
     </main>
-    <button id="new-passage" class="new-passage-button" type="button" hidden>
-      New passage below <span aria-hidden="true">↓</span>
-    </button>
-    <div id="screen-reader-status" class="sr-only" role="status" aria-live="polite"></div>
+
+    <button class="control" id="new-passage" type="button" hidden>New passage below</button>
+    <div class="sr-only" id="announcer" role="status" aria-live="polite"></div>
+
     <noscript>
-      <p class="noscript-message">
-        Aurora Station needs JavaScript enabled to remember your responses and build the story.
+      <p class="loading-note">
+        Aurora Station needs JavaScript enabled to record the watch and build the story.
       </p>
     </noscript>
   </body>

@@ -134,13 +134,22 @@ Your name and responses stay in the browser. Nothing is sent anywhere, and nothi
 
 | File | Responsibility |
 |---|---|
-| `content/Aurora_Station_Content.js` | Acts, items and narrative branches. Edit this to change the writing; no rebuild is required. |
+| `content/Aurora_Station_Content.js` | Acts, items, narrative branches and every piece of report copy. Edit this to change the writing; no rebuild is required. |
 | `core.js` | Scoring, state, validation and persistence. No DOM access. |
-| `app.js` | The Prelude and the cumulative `#story` renderer. |
-| `results.js` | Results calculation and the profile page. |
-| `pdf-export.js` | Story and profile PDF generation. |
-| `audio.js` | Sound and audio preferences. |
-| `styles.css` | Both page themes and every layout. |
+| `artwork.js` | All artwork, drawn as SVG at runtime — field contours, horizons, recorder traces, instrument dials, aurora ribbons. Deterministic, so a reload never reshuffles a figure. |
+| `app.js` | The prelude and the cumulative watch renderer. |
+| `results.js` | The dawn observation report. |
+| `pdf-export.js` | The night's record and the observation report as PDFs. |
+| `audio.js` | Station sound and its preference. |
+| `styles.css` | The night and dawn visual systems. |
+
+### Art direction
+
+The visual language is a **polar psychological observatory**: near-black polar night, cold mineral white, one restrained signal light, and colour used only where it means something — a recorded response, an active section, the aurora, a current named in the report. Dawn replaces that entire environment with warm paper and mineral ink.
+
+Two font families carry everything: an editorial display serif for narrative, act titles and the report, and a technical mono for labels, readings, timestamps and responses. There are no raster assets and no external font or script hosts; every figure is drawn in `artwork.js`.
+
+The aurora is a narrative event, not a background. It is absent through onboarding and the whole early and middle watch, enters at Act 09 when the storm breaks, deepens through the remaining acts, and is gone by the time the report opens.
 
 ### Checks
 
