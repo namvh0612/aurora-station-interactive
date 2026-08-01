@@ -128,7 +128,7 @@
 
     const left = el("div");
     left.append(
-      el("p", "mark", COPY.roleIntro),
+      el("p", "mark mark-sentence", COPY.roleIntro),
       el("h3", "role-name", lead.isBlend ? lead.label : primary.name),
       el("p", "mark role-basis", `${LABELS.basis} · ${primary.basis}`),
       el("p", "role-statement", COPY.notATypeStatement),
@@ -155,7 +155,7 @@
     const instrument = data.assessment.instruments[primary.domain];
     right.append(
       el("p", "mark", `${LABELS.instrument} · ${instrument.name.toUpperCase()}`),
-      el("p", "mark", instrument.reads),
+      el("p", "mark mark-sentence", instrument.reads),
     );
 
     lede.append(left, right);
@@ -431,7 +431,7 @@
 
     const plotWrap = el("div", "instrument-plot");
     plotWrap.append(plot, list);
-    wrap.append(switcher, plotWrap, el("p", "mark", copy.note));
+    wrap.append(switcher, plotWrap, el("p", "mark mark-sentence", copy.note));
 
     paint(current);
     show(0);
@@ -509,7 +509,7 @@
 
       const poles = el("div", "spectrum-poles");
       poles.append(
-        el("p", "mark", data.assessment.instruments[domain.code].reads),
+        el("p", "mark mark-sentence", data.assessment.instruments[domain.code].reads),
         el("p", "mark", `${role.shortName} · ${outOf(role.score)}`),
       );
 
@@ -539,7 +539,7 @@
       const title = el("div");
       title.append(
         el("h3", "current-title", domain.name),
-        el("p", "mark", `${domain.focus}`),
+        el("p", "mark mark-sentence", `${domain.focus}`),
       );
       const dial = el("div", "current-instrument");
       if (art) {

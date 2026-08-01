@@ -10,7 +10,8 @@
  * signal light. Colour is behavioural: it appears when a response registers,
  * when a section activates, when the aurora enters the story, and when the
  * report ties an observation to a current. Dawn replaces the whole environment
- * with warm paper and mineral ink.
+ * with cold mineral paper and near-black ink — the light after a polar night,
+ * not a warm one.
  */
 
 :root {
@@ -42,18 +43,20 @@
   --edge: #23323d;
   --mineral: #e4eaec;
   --mineral-dim: #97a7ae;
-  --mineral-faint: #5d6d76;
+  /* Faint against the darkest ground, but still 4.9:1 — station notes are set
+     small and must survive the night. */
+  --mineral-faint: #71828b;
   --signal: #cfe2e6;
   --signal-live: #f2fbfd;
 
   /* ---- dawn ---- */
-  --paper: #efe9dd;
-  --paper-raised: #f7f3ea;
-  --paper-line: #cdc4b3;
-  --ink: #191713;
-  --ink-dim: #55504a;
-  /* Faint, but still 5.2:1 on paper — station marks are small and must read. */
-  --ink-faint: #666055;
+  --paper: #e6eaeb;
+  --paper-raised: #f1f4f4;
+  --paper-line: #c1caca;
+  --ink: #14181a;
+  --ink-dim: #4b5457;
+  /* Faint, but still 4.9:1 on paper — station marks are small and must read. */
+  --ink-faint: #5c6568;
 
   /* ---- behavioural traces ---- */
   --trace-pathfinder: #42b4e6;
@@ -131,6 +134,17 @@ p {
 
 .mark-live {
   color: var(--signal-live);
+}
+
+/*
+ * Operational voice, sentence length. Uppercase is for the short labels that
+ * name a thing; a whole sentence set in capitals loses the word shapes a
+ * reader recognises, so these keep their case and their spacing.
+ */
+.mark-sentence {
+  letter-spacing: 0.01em;
+  line-height: 1.65;
+  text-transform: none;
 }
 
 /* ---------------------------------------------------------- environment */
@@ -436,14 +450,18 @@ body[data-aurora="present"] .env-aurora {
   outline-offset: 3px;
 }
 
+/*
+ * Shown while the station is still assembling, and when scripting is off. Both
+ * are sentences rather than labels, so they keep their case.
+ */
 .loading-note {
   padding: 40vh var(--gutter);
   color: var(--mineral-faint);
   font-family: var(--type-operational);
-  font-size: var(--step-mark);
-  letter-spacing: var(--track-mark);
+  font-size: var(--step-note);
+  letter-spacing: 0.01em;
+  line-height: 1.65;
   text-align: center;
-  text-transform: uppercase;
 }
 
 /* ----------------------------------------------------------------- story */
@@ -884,7 +902,8 @@ body.report {
   color: var(--ink);
 }
 
-body.report .mark {
+body.report .mark,
+body.report .loading-note {
   color: var(--ink-faint);
 }
 

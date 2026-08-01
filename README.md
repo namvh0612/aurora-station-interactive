@@ -145,7 +145,7 @@ Your name and responses stay in the browser. Nothing is sent anywhere, and nothi
 
 ### Art direction
 
-The visual language is a **polar psychological observatory**: near-black polar night, cold mineral white, one restrained signal light, and colour used only where it means something — a recorded response, an active section, the aurora, a current named in the report. Dawn replaces that entire environment with warm paper and mineral ink.
+The visual language is a **polar psychological observatory**: near-black polar night, cold mineral white, one restrained signal light, and colour used only where it means something — a recorded response, an active section, the aurora, a current named in the report. Dawn replaces that entire environment with cold mineral paper and near-black ink: the light after a polar night rather than a warm one.
 
 Two font families carry everything: an editorial display serif for narrative, act titles and the report, and a technical mono for labels, readings, timestamps and responses. There are no raster assets and no external font or script hosts; every figure is drawn in `artwork.js`.
 

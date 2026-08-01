@@ -1071,6 +1071,33 @@ check("the previous visual system is gone", () => {
   assert.doesNotMatch(stylesSource, /body::before/);
 });
 
+check("both exports stay inside the dawn palette", () => {
+  // Every page of both PDFs is read after the night, on paper.
+  const dawn = new Set([
+    "#e6eaeb", "#f1f4f4", "#d3dada", "#c1caca",
+    "#14181a", "#262b2d", "#4b5457", "#5c6568",
+    // The five behavioural traces, passed in as the accent for a named current.
+    "#42b4e6", "#ef5b7a", "#3dcd58", "#ff8a3d", "#9b51e0",
+  ]);
+  const used = new Set(pdfSource.match(/#[0-9a-f]{6}/gi) || []);
+  used.forEach((colour) => {
+    assert.ok(dawn.has(colour.toLowerCase()), `${colour} is not a dawn tone`);
+  });
+  // Washes are ink or paper, never a hue. Neutrals keep their channels close
+  // together; the teal and cyan the redesign removed do not.
+  (pdfSource.match(/rgba\([^)]*\)/g) || []).forEach((value) => {
+    const [red, green, blue] = value
+      .slice(5, -1)
+      .split(",")
+      .slice(0, 3)
+      .map((channel) => Number(channel.trim()));
+    const spread = Math.max(red, green, blue) - Math.min(red, green, blue);
+    assert.ok(spread <= 24, `${value} is a coloured wash`);
+  });
+  // The cover no longer paints an aurora over the title.
+  assert.doesNotMatch(pdfSource, /addColorStop\(0\.24|addColorStop\(0\.74/);
+});
+
 check("exactly two families carry the whole design", () => {
   assert.match(stylesSource, /--type-display:/);
   assert.match(stylesSource, /--type-operational:/);

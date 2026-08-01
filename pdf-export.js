@@ -30,8 +30,9 @@
   }
 
   /*
-   * Two families, matching the web hierarchy: a serif for narrative and
-   * reflective copy, a sans for every label, score and piece of metadata.
+   * Two families, matching the web hierarchy: an editorial serif for narrative
+   * and reflective copy, a technical mono for every label, reading, timestamp
+   * and piece of metadata. "sans" is the historic key for the operational face.
    */
   function setExportFont(context, size, family, weight, style) {
     const selectedFamily = family === "sans"
@@ -76,7 +77,7 @@
       options.weight || 400,
       options.style || "normal",
     );
-    context.fillStyle = options.colour || "#191713";
+    context.fillStyle = options.colour || "#14181a";
     context.textAlign = options.align || "left";
     context.textBaseline = "alphabetic";
     const lineHeight = options.lineHeight || Math.round((options.size || 38) * 1.38);
@@ -97,7 +98,7 @@
   }
 
   function drawExportRule(context, y, colour, width) {
-    context.strokeStyle = colour || "#cdc4b3";
+    context.strokeStyle = colour || "#c1caca";
     context.lineWidth = width || 2;
     context.beginPath();
     context.moveTo(EXPORT_MARGIN, y);
@@ -106,7 +107,7 @@
   }
 
   function drawExportPageBase(context, pageNumber, playerName, accent, pageCount) {
-    context.fillStyle = "#efe9dd";
+    context.fillStyle = "#e6eaeb";
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, EXPORT_PAGE_HEIGHT);
 
     const wash = context.createRadialGradient(
@@ -117,12 +118,12 @@
       190,
       620,
     );
-    wash.addColorStop(0, `${accent || "#6f98a8"}24`);
-    wash.addColorStop(1, "rgba(239,233,221,0)");
+    wash.addColorStop(0, `${accent || "#14181a"}24`);
+    wash.addColorStop(1, "rgba(230,234,235,0)");
     context.fillStyle = wash;
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, 1050);
 
-    context.fillStyle = accent || "#6f98a8";
+    context.fillStyle = accent || "#14181a";
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, 8);
 
     drawExportText(
@@ -131,7 +132,7 @@
       EXPORT_MARGIN,
       105,
       1500,
-      { size: 25, family: "sans", weight: 600, colour: "#857d71", lineHeight: 32 },
+      { size: 25, family: "sans", weight: 600, colour: "#5c6568", lineHeight: 32 },
     );
     drawExportText(
       context,
@@ -139,17 +140,17 @@
       EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
       105,
       360,
-      { size: 25, family: "sans", weight: 600, colour: "#857d71", align: "right", lineHeight: 32 },
+      { size: 25, family: "sans", weight: 600, colour: "#5c6568", align: "right", lineHeight: 32 },
     );
 
-    drawExportRule(context, EXPORT_PAGE_HEIGHT - 135, "#cdc4b3", 2);
+    drawExportRule(context, EXPORT_PAGE_HEIGHT - 135, "#c1caca", 2);
     drawExportText(
       context,
       "Aurora Station · Reflective profile · Non-commercial use",
       EXPORT_MARGIN,
       EXPORT_PAGE_HEIGHT - 76,
       1600,
-      { size: 23, family: "sans", colour: "#857d71", lineHeight: 30 },
+      { size: 23, family: "sans", colour: "#5c6568", lineHeight: 30 },
     );
   }
 
@@ -159,14 +160,14 @@
       size: 27,
       family: "sans",
       weight: 600,
-      colour: accent || "#55504a",
+      colour: accent || "#4b5457",
       lineHeight: 38,
     });
     y += 86;
     y = drawExportText(context, title, EXPORT_MARGIN, y, EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2, {
       size: 82,
       weight: 500,
-      colour: "#191713",
+      colour: "#14181a",
       lineHeight: 88,
       maxLines: 2,
     });
@@ -174,13 +175,13 @@
       y += 24;
       y = drawExportText(context, introduction, EXPORT_MARGIN, y, 1960, {
         size: 35,
-        colour: "#55504a",
+        colour: "#4b5457",
         lineHeight: 50,
         maxLines: 4,
       });
     }
     y += 32;
-    drawExportRule(context, y, "#cdc4b3", 2);
+    drawExportRule(context, y, "#c1caca", 2);
     return y + 54;
   }
 
@@ -189,14 +190,14 @@
       size: 25,
       family: "sans",
       weight: 600,
-      colour: colour || "#857d71",
+      colour: colour || "#5c6568",
       lineHeight: 34,
       maxLines: 2,
     });
   }
 
   function drawScoreTrack(context, x, y, width, normalised, colour) {
-    context.fillStyle = "#ddd4c3";
+    context.fillStyle = "#d3dada";
     context.beginPath();
     context.roundRect(x, y, width, 26, 13);
     context.fill();
@@ -208,13 +209,13 @@
 
   /* Page 1: the watchkeeper, the date and the five Aurora Roles. */
   function drawProfileOverviewPage(context, data, profile, summary, dateLabel, pageCount) {
-    drawExportPageBase(context, 1, profile.playerName, "#191713", pageCount);
+    drawExportPageBase(context, 1, profile.playerName, "#14181a", pageCount);
     let y = drawExportHeading(
       context,
       "Watchkeeper Profile",
       profile.playerName || "Watchkeeper",
       `Watch completed - ${dateLabel}`,
-      "#191713",
+      "#14181a",
     );
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
@@ -223,16 +224,16 @@
       size: 30,
       family: "sans",
       weight: 600,
-      colour: "#55504a",
+      colour: "#4b5457",
       lineHeight: 42,
     });
     y += 30;
 
-    drawExportLabel(context, "Most available across the watch", EXPORT_MARGIN, y, "#191713");
+    drawExportLabel(context, "Most available across the watch", EXPORT_MARGIN, y, "#14181a");
     y += 62;
     y = drawExportText(context, summary.overall.label, EXPORT_MARGIN, y, width, {
       size: 62,
-      colour: "#191713",
+      colour: "#14181a",
       lineHeight: 74,
       maxLines: 1,
     });
@@ -243,7 +244,7 @@
         size: 42,
         family: "sans",
         weight: 600,
-        colour: "#191713",
+        colour: "#14181a",
         lineHeight: 52,
         maxLines: 1,
       });
@@ -266,7 +267,7 @@
       drawExportText(context, role.contribution, EXPORT_MARGIN, y + 148, width, {
         size: 26,
         family: "sans",
-        colour: "#857d71",
+        colour: "#5c6568",
         lineHeight: 36,
         maxLines: 1,
       });
@@ -274,11 +275,11 @@
     });
 
     y += 24;
-    drawExportRule(context, y, "#cdc4b3", 2);
+    drawExportRule(context, y, "#c1caca", 2);
     y += 52;
     drawExportText(context, data.assessment.roleNote, EXPORT_MARGIN, y, width, {
       size: 28,
-      colour: "#55504a",
+      colour: "#4b5457",
       lineHeight: 42,
       maxLines: 4,
     });
@@ -286,13 +287,13 @@
 
   /* Page 2: how the pattern moved between the three story phases. */
   function drawProfilePhasePage(context, data, profile, summary, pageNumber, pageCount) {
-    drawExportPageBase(context, pageNumber, profile.playerName, "#191713", pageCount);
+    drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
     let y = drawExportHeading(
       context,
       "Across the watch",
       "Under and after pressure",
       data.assessment.phaseNote,
-      "#191713",
+      "#14181a",
     );
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
@@ -305,23 +306,23 @@
       ["After pressure", summary.recovery, profile.phases[2]],
     ].forEach(([label, lead, phase], index) => {
       const x = EXPORT_MARGIN + index * (columnWidth + 40);
-      drawExportLabel(context, label, x, y, "#191713");
+      drawExportLabel(context, label, x, y, "#14181a");
       drawExportText(context, lead.label, x, y + 74, columnWidth, {
         size: 40,
-        colour: "#191713",
+        colour: "#14181a",
         lineHeight: 50,
         maxLines: 2,
       });
       drawExportText(context, phase.window, x, y + 178, columnWidth, {
         size: 25,
         family: "sans",
-        colour: "#857d71",
+        colour: "#5c6568",
         lineHeight: 34,
         maxLines: 1,
       });
     });
     y += 250;
-    drawExportRule(context, y, "#cdc4b3", 2);
+    drawExportRule(context, y, "#c1caca", 2);
     y += 70;
 
     // One row per role, three bars: baseline, pressure, recovery.
@@ -330,7 +331,7 @@
         size: 34,
         family: "sans",
         weight: 600,
-        colour: "#191713",
+        colour: "#14181a",
         lineHeight: 44,
         maxLines: 1,
       });
@@ -342,7 +343,7 @@
         drawExportText(context, phase.shortLabel, EXPORT_MARGIN + 300, barY + 22, 240, {
           size: 23,
           family: "sans",
-          colour: "#857d71",
+          colour: "#5c6568",
           lineHeight: 30,
           maxLines: 1,
         });
@@ -357,7 +358,7 @@
             size: 27,
             family: "sans",
             weight: 600,
-            colour: "#191713",
+            colour: "#14181a",
             align: "right",
             lineHeight: 34,
           },
@@ -397,7 +398,7 @@
         size: 28,
         family: "sans",
         weight: 600,
-        colour: "#857d71",
+        colour: "#5c6568",
         align: "right",
         lineHeight: 38,
       },
@@ -408,12 +409,12 @@
 
     y = drawExportText(context, domain.interpretation, EXPORT_MARGIN, y, width, {
       size: 34,
-      colour: "#2a2620",
+      colour: "#262b2d",
       lineHeight: 50,
       maxLines: 6,
     });
     y += 60;
-    drawExportRule(context, y, "#cdc4b3", 2);
+    drawExportRule(context, y, "#c1caca", 2);
     y += 80;
 
     drawExportLabel(context, "Facets", EXPORT_MARGIN, y, domain.colour);
@@ -423,7 +424,7 @@
       drawExportText(context, facet.name, EXPORT_MARGIN, y + 40, width - 520, {
         size: 38,
         weight: 600,
-        colour: "#191713",
+        colour: "#14181a",
         lineHeight: 48,
         maxLines: 1,
       });
@@ -445,7 +446,7 @@
       drawScoreTrack(context, EXPORT_MARGIN, y + 72, width, facet.normalised, domain.colour);
       drawExportText(context, facet.meaning, EXPORT_MARGIN, y + 148, width, {
         size: 27,
-        colour: "#857d71",
+        colour: "#5c6568",
         lineHeight: 38,
         maxLines: 2,
       });
@@ -455,13 +456,13 @@
 
   /* Final page: how to read the profile, and the BFI-2 attribution. */
   function drawProfileGuidancePage(context, data, profile, pageNumber, pageCount) {
-    drawExportPageBase(context, pageNumber, profile.playerName, "#191713", pageCount);
+    drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
     let y = drawExportHeading(
       context,
       "How to read this profile",
       "Reading guidance",
       null,
-      "#191713",
+      "#14181a",
     );
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
@@ -474,17 +475,17 @@
     ].forEach((line) => {
       y = drawExportText(context, line, EXPORT_MARGIN, y, width, {
         size: 30,
-        colour: "#2a2620",
+        colour: "#262b2d",
         lineHeight: 45,
       });
       y += 34;
     });
 
     y += 20;
-    drawExportRule(context, y, "#cdc4b3", 2);
+    drawExportRule(context, y, "#c1caca", 2);
     y += 76;
 
-    drawExportLabel(context, "Measurement status", EXPORT_MARGIN, y, "#191713");
+    drawExportLabel(context, "Measurement status", EXPORT_MARGIN, y, "#14181a");
     y += 62;
     y = drawExportText(
       context,
@@ -492,34 +493,34 @@
       EXPORT_MARGIN,
       y,
       width,
-      { size: 29, colour: "#2a2620", lineHeight: 43 },
+      { size: 29, colour: "#262b2d", lineHeight: 43 },
     );
     y += 60;
 
-    drawExportLabel(context, "Attribution", EXPORT_MARGIN, y, "#191713");
+    drawExportLabel(context, "Attribution", EXPORT_MARGIN, y, "#14181a");
     y += 62;
     y = drawExportText(context, data.instrument.attribution, EXPORT_MARGIN, y, width, {
       size: 27,
-      colour: "#55504a",
+      colour: "#4b5457",
       lineHeight: 40,
     });
     y += 30;
     y = drawExportText(context, data.instrument.permission, EXPORT_MARGIN, y, width, {
       size: 27,
-      colour: "#55504a",
+      colour: "#4b5457",
       lineHeight: 40,
     });
     y += 30;
     y = drawExportText(context, data.assessment.bandNote, EXPORT_MARGIN, y, width, {
       size: 27,
-      colour: "#55504a",
+      colour: "#4b5457",
       lineHeight: 40,
     });
     y += 30;
     drawExportText(context, data.instrument.reference, EXPORT_MARGIN, y, width, {
       size: 25,
       family: "sans",
-      colour: "#857d71",
+      colour: "#5c6568",
       lineHeight: 38,
     });
   }
@@ -583,9 +584,9 @@
 
   function storyStyle(type) {
     if (type === "closing" || type === "ending") {
-      return { size: 34, lineHeight: 52, colour: "#344c55", style: "italic", after: 32 };
+      return { size: 34, lineHeight: 52, colour: "#262b2d", style: "italic", after: 32 };
     }
-    return { size: 34, lineHeight: 52, colour: "#2a2620", style: "normal", after: 28 };
+    return { size: 34, lineHeight: 52, colour: "#262b2d", style: "normal", after: 28 };
   }
 
   function layoutStoryPages(context, blocks) {
@@ -688,9 +689,9 @@
   }
 
   function drawStoryPageBase(context, pageNumber, pageCount, playerName) {
-    context.fillStyle = "#efe9dd";
+    context.fillStyle = "#e6eaeb";
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, EXPORT_PAGE_HEIGHT);
-    context.fillStyle = "#2d6378";
+    context.fillStyle = "#14181a";
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, 8);
     drawExportText(
       context,
@@ -698,7 +699,7 @@
       EXPORT_MARGIN,
       105,
       1500,
-      { size: 25, family: "sans", weight: 600, colour: "#857d71", lineHeight: 32 },
+      { size: 25, family: "sans", weight: 600, colour: "#5c6568", lineHeight: 32 },
     );
     drawExportText(
       context,
@@ -706,74 +707,93 @@
       EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
       105,
       420,
-      { size: 25, family: "sans", weight: 600, colour: "#857d71", align: "right", lineHeight: 32 },
+      { size: 25, family: "sans", weight: 600, colour: "#5c6568", align: "right", lineHeight: 32 },
     );
-    drawExportRule(context, EXPORT_PAGE_HEIGHT - 135, "#cdc4b3", 2);
+    drawExportRule(context, EXPORT_PAGE_HEIGHT - 135, "#c1caca", 2);
     drawExportText(
       context,
       "Aurora Station - Personal story - Non-commercial use",
       EXPORT_MARGIN,
       EXPORT_PAGE_HEIGHT - 76,
       1600,
-      { size: 23, family: "sans", colour: "#857d71", lineHeight: 30 },
+      { size: 23, family: "sans", colour: "#5c6568", lineHeight: 30 },
     );
   }
 
+  /*
+   * The record is read after the night, so its cover is dawn like every other
+   * page: paper, mineral ink and a drawn horizon. No aurora — by the time the
+   * record is printed the sky has already gone.
+   */
   function drawStoryCover(context, data, playerName, pageCount) {
-    context.fillStyle = "#06131d";
+    context.fillStyle = "#e6eaeb";
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, EXPORT_PAGE_HEIGHT);
-    const aurora = context.createLinearGradient(0, 0, EXPORT_PAGE_WIDTH, 1150);
-    aurora.addColorStop(0, "rgba(88,229,239,0.68)");
-    aurora.addColorStop(0.24, "rgba(49,203,183,0.52)");
-    aurora.addColorStop(0.5, "rgba(102,216,138,0.42)");
-    aurora.addColorStop(0.74, "rgba(139,114,232,0.46)");
-    aurora.addColorStop(1, "rgba(211,109,168,0.32)");
-    context.fillStyle = aurora;
-    context.fillRect(0, 0, EXPORT_PAGE_WIDTH, 1080);
-    const fade = context.createLinearGradient(0, 500, 0, 1450);
-    fade.addColorStop(0, "rgba(6,19,29,0)");
-    fade.addColorStop(1, "#06131d");
-    context.fillStyle = fade;
-    context.fillRect(0, 480, EXPORT_PAGE_WIDTH, 1000);
+    context.fillStyle = "#14181a";
+    context.fillRect(0, 0, EXPORT_PAGE_WIDTH, 8);
 
-    drawExportText(context, "THE FINAL WATCH", EXPORT_MARGIN, 520, 1500, {
+    // Twelve field contours, one per act, settling toward the horizon.
+    context.save();
+    context.strokeStyle = "#14181a";
+    context.lineWidth = 2;
+    for (let index = 0; index < 12; index += 1) {
+      const ratio = index / 11;
+      context.globalAlpha = 0.06 + ratio * 0.16;
+      const base = 1700 + index * 46;
+      context.beginPath();
+      for (let x = EXPORT_MARGIN; x <= EXPORT_PAGE_WIDTH - EXPORT_MARGIN; x += 12) {
+        const span = (x - EXPORT_MARGIN) / (EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2);
+        const swell = Math.sin(span * Math.PI * 2 + index * 0.42) * (108 - index * 7);
+        const y = base + swell * (1 - ratio * 0.55);
+        if (x === EXPORT_MARGIN) {
+          context.moveTo(x, y);
+        } else {
+          context.lineTo(x, y);
+        }
+      }
+      context.stroke();
+    }
+    context.restore();
+
+    drawExportRule(context, 2360, "#14181a", 3);
+
+    drawExportText(context, "THE FINAL WATCH", EXPORT_MARGIN, 500, 1500, {
       size: 34,
       family: "sans",
       weight: 600,
-      colour: "#7ee5ef",
+      colour: "#4b5457",
       lineHeight: 44,
     });
-    drawExportText(context, cleanText(data.title), EXPORT_MARGIN, 720, STORY_TEXT_WIDTH, {
+    drawExportText(context, cleanText(data.title), EXPORT_MARGIN, 700, STORY_TEXT_WIDTH, {
       size: 152,
       weight: 500,
-      colour: "#f4f7f4",
+      colour: "#14181a",
       lineHeight: 160,
       maxLines: 2,
     });
-    drawExportText(context, cleanText(data.subtitle), EXPORT_MARGIN, 1130, STORY_TEXT_WIDTH, {
+    drawExportText(context, cleanText(data.subtitle), EXPORT_MARGIN, 1110, STORY_TEXT_WIDTH, {
       size: 62,
       style: "italic",
-      colour: "#c8d8dc",
+      colour: "#262b2d",
       lineHeight: 76,
     });
-    drawExportText(context, "A journey shaped by your decisions", EXPORT_MARGIN, 1390, STORY_TEXT_WIDTH, {
+    drawExportText(context, "A journey shaped by your decisions", EXPORT_MARGIN, 1370, STORY_TEXT_WIDTH, {
       size: 34,
       family: "sans",
-      colour: "#91a8b0",
+      colour: "#4b5457",
       lineHeight: 44,
     });
     drawExportText(context, `WATCHKEEPER - ${playerName || "FINAL WATCH"}`, EXPORT_MARGIN, 2920, STORY_TEXT_WIDTH, {
       size: 30,
       family: "sans",
       weight: 600,
-      colour: "#91a8b0",
+      colour: "#5c6568",
       lineHeight: 40,
     });
     drawExportText(context, `${pageCount} PAGES`, EXPORT_PAGE_WIDTH - EXPORT_MARGIN, 2920, 500, {
       size: 30,
       family: "sans",
       weight: 600,
-      colour: "#91a8b0",
+      colour: "#5c6568",
       align: "right",
       lineHeight: 40,
     });
@@ -787,14 +807,14 @@
           size: 27,
           family: "sans",
           weight: 600,
-          colour: "#2d6378",
+          colour: "#4b5457",
           lineHeight: 38,
         });
         y += 70;
         y = drawExportText(context, command.block.title, EXPORT_MARGIN, y, STORY_TEXT_WIDTH, {
           size: 76,
           weight: 500,
-          colour: "#191713",
+          colour: "#14181a",
           lineHeight: 86,
           maxLines: 2,
         });
@@ -802,18 +822,18 @@
         drawExportText(context, command.block.time, EXPORT_MARGIN, y, STORY_TEXT_WIDTH, {
           size: 27,
           family: "sans",
-          colour: "#857d71",
+          colour: "#5c6568",
           lineHeight: 38,
         });
         return;
       }
       if (command.type === "chosen") {
-        context.fillStyle = "rgba(45,99,120,0.07)";
+        context.fillStyle = "rgba(20,24,26,0.05)";
         context.fillRect(EXPORT_MARGIN, command.y, STORY_TEXT_WIDTH, command.height);
-        context.fillStyle = "#6f98a8";
-        context.fillRect(EXPORT_MARGIN, command.y, 8, command.height);
+        context.fillStyle = "#4b5457";
+        context.fillRect(EXPORT_MARGIN, command.y, 4, command.height);
         setExportFont(context, command.style.size, "serif", 400, "italic");
-        context.fillStyle = "#29434e";
+        context.fillStyle = "#14181a";
         context.textAlign = "left";
         context.textBaseline = "alphabetic";
         command.lines.forEach((line, index) => {
