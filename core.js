@@ -695,6 +695,12 @@
         contribution: definition.contribution,
         reading: definition.reading,
         inGroup: definition.inGroup,
+        // The report prints these; they must travel with the score.
+        missionFunction: definition.missionFunction,
+        brings: definition.brings,
+        watchFor: definition.watchFor,
+        actionTitle: definition.actionTitle,
+        action: definition.action,
         domain: definition.domain,
         inverse: definition.inverse,
         score,

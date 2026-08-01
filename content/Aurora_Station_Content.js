@@ -2046,6 +2046,11 @@ window.AURORA_STATION_DATA = {
       },
       "note": "This records how the contributions available to you moved with the situation. It does not record a personality becoming a different one."
     },
+    "pager": {
+      "previous": "Previous",
+      "next": "Next",
+      "position": "Chapter {index} of {total}"
+    },
     "actions": {
       "profilePdf": "Download observation report",
       "storyPdf": "Download the night's record",

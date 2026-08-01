@@ -26,6 +26,7 @@
   const paceNow = document.getElementById("pace-now");
   const paceControl = document.getElementById("pace-control");
   const soundToggle = document.getElementById("sound-toggle");
+  const restartControl = document.getElementById("restart");
   const newPassage = document.getElementById("new-passage");
   const announcer = document.getElementById("announcer");
   const auroraLayer = document.getElementById("env-aurora");
@@ -64,6 +65,7 @@
   let locked = false;
   let restoring = false;
   let entry = null;
+  let markedAct = 0;
   const panels = new Map();
 
   function clamp(value) {
@@ -105,15 +107,6 @@
     return String(value).padStart(2, "0");
   }
 
-  function fileName(value) {
-    const safe = String(value || "Watchkeeper")
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-zA-Z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "")
-      .slice(0, 48);
-    return safe || "Watchkeeper";
-  }
 
   function actFor(number) {
     return data.story.acts.find((act) => act.number === number);
@@ -401,12 +394,7 @@
         const original = story.textContent;
         story.textContent = "Preparing";
         try {
-          await pdf.downloadStory(
-            data,
-            state,
-            core,
-            `Aurora_Station_Record_${fileName(state.participant.name)}.pdf`,
-          );
+          await pdf.downloadStory(data, state, core);
           say("The night's record has been downloaded.");
         } catch {
           say("The record could not be prepared.");
@@ -629,6 +617,36 @@
 
   /* ------------------------------------------------------------ the shell */
 
+  /*
+   * The masthead names the Act being read, not the Act being answered. Once
+   * the watch is long enough to scroll back through, those stop being the same
+   * thing, and the reader trusts what is in front of them.
+   */
+  function actInView() {
+    const plates = watch.querySelectorAll(".act-plate");
+    let seen = 0;
+    plates.forEach((plate) => {
+      // The last plate whose opening has passed the top third of the viewport.
+      if (plate.getBoundingClientRect().top <= window.innerHeight / 3) {
+        seen = Number(plate.id.replace("act-", "")) || seen;
+      }
+    });
+    return seen;
+  }
+
+  function markActInView() {
+    if (!state.participant.name) {
+      return;
+    }
+    const number = actInView();
+    if (!number || number === markedAct) {
+      return;
+    }
+    markedAct = number;
+    const act = actFor(number);
+    actMark.textContent = `${OBS.actLabel} ${pad(number)} · ${OBS.phaseLabels[act.contextPhase]}`;
+  }
+
   /* Progress reads as a sequence of observations, not a filling bar. */
   function updateSequence() {
     const answered = core.answeredCount(state);
@@ -660,12 +678,14 @@
     );
 
     const act = actFor(currentAct);
+    markedAct = currentAct;
     actMark.textContent = state.participant.name
       ? `${OBS.actLabel} ${pad(currentAct)} · ${OBS.phaseLabels[act.contextPhase]}`
       : OBS.watchLabel;
     stationMark.textContent = state.participant.name
       ? state.participant.name.toUpperCase()
       : OBS.stationLabel;
+    markActInView();
   }
 
   /*
@@ -940,6 +960,15 @@
 
   function bind() {
     paceToggle.addEventListener("click", togglePause);
+    restartControl.addEventListener("click", () => {
+      // The watch is long, and abandoning it should not mean clearing storage
+      // by hand. Reading preferences survive; the record does not.
+      if (!window.confirm(data.results.restartConfirm)) {
+        return;
+      }
+      core.clearJourney(storage);
+      window.location.reload();
+    });
     paceNow.addEventListener("click", () => {
       window.clearTimeout(revealTimer);
       const result = revealAvailable();
@@ -990,6 +1019,7 @@
         if (nearBottom()) {
           newPassage.hidden = true;
         }
+        markActInView();
         rememberScroll();
       },
       { passive: true },

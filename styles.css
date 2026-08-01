@@ -80,6 +80,14 @@
   box-sizing: border-box;
 }
 
+/*
+ * A display rule beats the user agent's [hidden] rule, so anything laid out
+ * with flex or grid keeps showing after it is hidden. Say it once, here.
+ */
+[hidden] {
+  display: none !important;
+}
+
 html {
   min-height: 100%;
   background: var(--void);
@@ -198,6 +206,19 @@ p {
   height: 62vh;
   opacity: 0;
   visibility: hidden;
+  /*
+   * The ribbons are drawn to the edge of this box, and screen blending makes
+   * that edge visible as a hard line across the viewport. Fade the layer out
+   * on every side so the light ends the way light does.
+   */
+  mask-image:
+    linear-gradient(180deg, transparent 0%, #000 26%, #000 62%, transparent 100%),
+    linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(180deg, transparent 0%, #000 26%, #000 62%, transparent 100%),
+    linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  -webkit-mask-composite: source-in;
   transition:
     opacity 4200ms ease,
     visibility 0s linear 4200ms;
@@ -320,6 +341,11 @@ body[data-aurora="present"] .env-aurora {
 
 /* --------------------------------------------------------------- masthead */
 
+/*
+ * The masthead floats over a moving document. Its ground stays opaque for the
+ * full height of its own content and only fades below that, so a passage
+ * scrolling underneath never reads through the station's own marks.
+ */
 .masthead {
   position: fixed;
   z-index: 20;
@@ -331,21 +357,35 @@ body[data-aurora="present"] .env-aurora {
   gap: 0.5rem var(--gutter);
   align-items: baseline;
   justify-content: space-between;
-  padding: 1rem var(--gutter);
-  background: linear-gradient(180deg, rgba(5, 8, 11, 0.94) 0%, rgba(5, 8, 11, 0) 100%);
+  padding: 1rem var(--gutter) 1.75rem;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 11, 0.97) 0%,
+      rgba(5, 8, 11, 0.95) 62%,
+      rgba(5, 8, 11, 0) 100%
+    );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .masthead-identity {
   display: flex;
-  gap: 1.25rem;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
   align-items: baseline;
+  min-width: 0;
 }
 
 .masthead-controls {
   display: flex;
+  flex: 0 1 auto;
   flex-wrap: wrap;
   gap: 0.4rem;
   align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 /* Progress reads as an observation sequence, not a percentage. */
@@ -412,6 +452,17 @@ body[data-aurora="present"] .env-aurora {
   color: var(--signal-live);
 }
 
+/* Available, but never competing with the reading controls. */
+.control-quiet {
+  border-color: transparent;
+  color: var(--mineral-faint);
+}
+
+.control-quiet:hover,
+.control-quiet:focus-visible {
+  border-color: var(--edge);
+}
+
 /* --------------------------------------------------------------- utility */
 
 .sr-only {
@@ -466,9 +517,16 @@ body[data-aurora="present"] .env-aurora {
 
 /* ----------------------------------------------------------------- story */
 
+/*
+ * The reading column is offset rather than centred, but only within a page of
+ * a readable width. Past that the whole document centres, so a wide display
+ * gets a wide margin instead of two thirds of empty ground on one side.
+ */
 .watch {
   position: relative;
   z-index: 1;
+  max-width: 96rem;
+  margin-inline: auto;
   padding: 0 0 14rem;
 }
 
@@ -912,6 +970,17 @@ body.report .skip-link {
   color: var(--paper);
 }
 
+body.report .control {
+  border-color: var(--paper-line);
+  color: var(--ink-dim);
+}
+
+body.report .control:hover:not(:disabled),
+body.report .control:focus-visible {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
 body.report :where(a, button, input, [tabindex]):focus-visible {
   outline-color: var(--ink);
 }
@@ -965,6 +1034,78 @@ body.report .art-grain {
 }
 
 /* Each section is ruled and numbered like a filed report. */
+/*
+ * The report is read one chapter at a time. The rail is the index: it names
+ * every chapter, so the reader always knows the shape of the whole record and
+ * how much of it is still ahead.
+ */
+.pager-rail {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: var(--rule) solid var(--paper-line);
+  background: var(--paper);
+}
+
+.pager-tab {
+  display: grid;
+  flex: 1 1 9rem;
+  gap: 0.35rem;
+  min-height: var(--tap);
+  padding: 0.9rem 1rem;
+  border: 0;
+  border-right: var(--rule) solid var(--paper-line);
+  background: transparent;
+  color: var(--ink-faint);
+  font-family: var(--type-operational);
+  text-align: left;
+  cursor: pointer;
+  transition: color 240ms ease, background-color 240ms ease;
+}
+
+.pager-tab:last-child {
+  border-right: 0;
+}
+
+.pager-tab:hover,
+.pager-tab:focus-visible {
+  color: var(--ink);
+  background: var(--paper-raised);
+}
+
+.pager-tab[aria-selected="true"] {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.pager-tab-index {
+  font-size: var(--step-mark);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--track-mark);
+}
+
+.pager-tab-title {
+  font-size: var(--step-note);
+  line-height: 1.3;
+}
+
+.pager-foot {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 5rem;
+  padding: 1.75rem var(--gutter) 0;
+  border-top: var(--rule) solid var(--paper-line);
+}
+
+.pager-position {
+  text-align: center;
+}
+
 .chapter {
   padding: 5rem var(--gutter) 0;
 }
@@ -1456,14 +1597,64 @@ body.report .action-quiet {
   }
 }
 
+/*
+ * A phone holds one column and very little of it at a time. The station marks
+ * take a line of their own, the controls become one scrollable rail instead of
+ * four wrapped rows, and the long vertical rests are cut back so the reader
+ * reaches the next passage without a journey.
+ */
 @media (max-width: 40rem) {
   .masthead {
-    gap: 0.5rem 1rem;
-    padding: 0.75rem var(--gutter);
+    gap: 0.4rem;
+    padding: 0.6rem var(--gutter) 1.1rem;
   }
 
   .masthead-identity {
     flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .masthead-controls {
+    flex: 1 1 100%;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .masthead-controls::-webkit-scrollbar {
+    display: none;
+  }
+
+  .masthead-controls > * {
+    flex: 0 0 auto;
+  }
+
+  .act-plate {
+    min-height: 78svh;
+    margin: 4rem 0 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .prologue {
+    padding: 5rem var(--gutter) 4rem;
+  }
+
+  .interlude {
+    margin: 4rem 0 2rem;
+  }
+
+  .observation {
+    padding: 1.25rem 0;
+  }
+
+  .completion {
+    margin-top: 5rem;
+  }
+
+  .watch {
+    padding-bottom: 8rem;
   }
 
   .response {

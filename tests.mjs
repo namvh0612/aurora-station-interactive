@@ -1173,20 +1173,111 @@ check("the artwork is drawn in the project, not fetched", () => {
   });
 });
 
-check("the debrief is one continuous report, not a carousel", () => {
+check("the debrief is read one chapter at a time, and loses nothing", () => {
   assert.equal(data.results.chapters.length, 5);
   assert.deepEqual(
     data.results.chapters.map((entry) => entry.id),
     ["role", "shift", "currents", "detail", "close"],
   );
-  // Every chapter is built and appended in one pass.
+  // Every chapter is still built and put in the page in one pass; paging only
+  // decides which one is shown.
   assert.match(resultsSource, /shell\.replaceChildren\(/);
   ["buildRoleChapter", "buildShiftChapter", "buildCurrentsChapter", "buildDetailChapter", "buildCloseChapter"].forEach(
     (name) => assert.match(resultsSource, new RegExp(name), name),
   );
-  // No paging, no slides, no auto-advance.
-  assert.doesNotMatch(resultsSource, /pageLabel|showView|activeIndex|setInterval/);
-  assert.doesNotMatch(resultsSource, /popstate/);
+  assert.match(resultsSource, /buildPager\(/);
+  // A chapter is addressable and steppable with the browser's own controls.
+  assert.match(resultsSource, /popstate/);
+  assert.match(resultsSource, /"tablist"/);
+  assert.match(resultsSource, /"tabpanel"/);
+  assert.match(resultsSource, /aria-selected/);
+  ["previous", "next", "position"].forEach((key) =>
+    assert.ok(data.results.pager[key], `pager ${key}`),
+  );
+  // Nothing advances on its own.
+  assert.doesNotMatch(resultsSource, /setInterval/);
+});
+
+check("a role carries its written copy, not only its score", () => {
+  const profile = core.scoreProfile(data, answerAll(() => 4));
+  profile.roles.forEach((role) => {
+    ["missionFunction", "brings", "watchFor", "actionTitle", "action", "reading", "basis"].forEach(
+      (key) => {
+        assert.equal(typeof role[key], "string", `${role.id} ${key}`);
+        assert.ok(role[key].length > 0, `${role.id} ${key} is empty`);
+      },
+    );
+  });
+  // The report prints "{actionTitle} — {action}"; neither half may be missing.
+  assert.doesNotMatch(
+    profile.roles.map((role) => `${role.actionTitle} — ${role.action}`).join(" "),
+    /undefined/,
+  );
+});
+
+check("the export prints the report, not a summary of it", () => {
+  // Everything the page writes out must have somewhere to land in the export.
+  [
+    "missionFunction",
+    "brings",
+    "watchFor",
+    "actionTitle",
+    "notATypeStatement",
+    "advantage",
+    "overextension",
+    "reflection",
+    "observations",
+    "whyTemplates",
+    "instruments",
+  ].forEach((key) => assert.match(pdfSource, new RegExp(key), `export is missing ${key}`));
+  // Overview, contribution, movement, five currents, observations, guidance.
+  assert.match(pdfSource, /profile\.domains\.length \+ 5/);
+  assert.match(pdfSource, /drawProfileRolePage/);
+  assert.match(pdfSource, /drawProfileObservationPage/);
+});
+
+check("an export names itself by watchkeeper and by night", () => {
+  const name = pdf.exportName("report", "Ada Lovelace", Date.UTC(2026, 7, 1, 12));
+  assert.match(name, /^Aurora_Station_Observation_Report_Ada_Lovelace_\d{4}-\d{2}-\d{2}\.pdf$/);
+  const record = pdf.exportName("record", "Ada Lovelace", Date.UTC(2026, 7, 1, 12));
+  assert.match(record, /^Aurora_Station_Night_Watch_Log_Ada_Lovelace_\d{4}-\d{2}-\d{2}\.pdf$/);
+  // The two exports are never the same file.
+  assert.notEqual(name, record);
+  // A missing or unsafe name still produces a usable filename.
+  assert.match(pdf.exportName("report", "", 0), /^Aurora_Station_Observation_Report_Watchkeeper_/);
+  assert.doesNotMatch(pdf.exportName("record", "../../etc/passwd", 0), /[/\\]/);
+});
+
+check("both exports carry document metadata", () => {
+  assert.match(pdfSource, /\/Title \(/);
+  assert.match(pdfSource, /\/Producer/);
+  assert.match(pdfSource, /\/Creator/);
+  assert.match(pdfSource, /\/Lang \(en-GB\)/);
+  assert.match(pdfSource, /\/Info \$\{infoObject\} 0 R/);
+});
+
+check("the watch can be restarted without clearing storage by hand", () => {
+  assert.match(indexSource, /id="restart"/);
+  assert.match(appSource, /restartControl/);
+  assert.match(appSource, /core\.clearJourney\(storage\)/);
+  // Restarting asks first, and keeps the reading preferences.
+  assert.match(appSource, /window\.confirm\(data\.results\.restartConfirm\)/);
+  assert.ok(data.results.restartConfirm);
+});
+
+check("hiding an element actually hides it", () => {
+  // A display rule on .scale-anchors used to beat the user agent's [hidden],
+  // leaving the scale's two anchors on screen with no cells between them.
+  assert.match(stylesSource, /\[hidden\] \{\s*display: none !important;\s*\}/);
+});
+
+check("the aurora ends as light does, not at a box edge", () => {
+  const block = stylesSource.slice(
+    stylesSource.indexOf(".env-aurora {"),
+    stylesSource.indexOf("body[data-aurora=\"present\"]"),
+  );
+  assert.match(block, /mask-image/);
+  assert.match(block, /-webkit-mask-image/);
 });
 
 check("the report carries every required piece of the record", () => {

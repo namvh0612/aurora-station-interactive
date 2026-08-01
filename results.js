@@ -75,15 +75,6 @@
     return `${value > 0 ? "+" : "−"}${Math.abs(value).toFixed(2)}`;
   }
 
-  function fileName(value) {
-    const safe = String(value || "Watchkeeper")
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-zA-Z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "")
-      .slice(0, 48);
-    return safe || "Watchkeeper";
-  }
 
   function completedOn() {
     const stamp = Number(state.completedAt);
@@ -622,20 +613,10 @@
     if (pdf) {
       actions.append(
         exportButton(COPY.actions.profilePdf, "action", () =>
-          pdf.downloadProfile(
-            data,
-            state,
-            core,
-            `Aurora_Station_Report_${fileName(profile.playerName)}.pdf`,
-          ),
+          pdf.downloadProfile(data, state, core),
         ),
         exportButton(COPY.actions.storyPdf, "action action-quiet", () =>
-          pdf.downloadStory(
-            data,
-            state,
-            core,
-            `Aurora_Station_Record_${fileName(profile.playerName)}.pdf`,
-          ),
+          pdf.downloadStory(data, state, core),
         ),
       );
     }
@@ -697,6 +678,115 @@
 
   /* ----------------------------------------------------------------- boot */
 
+  /* ------------------------------------------------------------- the pager */
+
+  /*
+   * The report is long, and reading it as one column asks the reader to hold
+   * five chapters at once. It is still one document — every chapter is built
+   * and stays in the page — but only one is shown, so the record arrives a
+   * piece at a time. The chapter is in the address, so a chapter can be
+   * returned to, linked and stepped through with the browser's own buttons.
+   */
+  function buildPager(chapters) {
+    const rail = el("div", "pager-rail");
+    rail.setAttribute("role", "tablist");
+    rail.setAttribute("aria-label", "Report chapters");
+
+    const foot = el("div", "pager-foot");
+    const previous = el("button", "control", COPY.pager.previous);
+    const next = el("button", "control", COPY.pager.next);
+    const position = el("p", "mark pager-position", "");
+    [previous, next].forEach((button) => {
+      button.type = "button";
+    });
+    foot.append(previous, position, next);
+
+    const tabs = chapters.map((chapter, index) => {
+      const copy = COPY.chapters[index];
+      const tab = el("button", "pager-tab");
+      tab.type = "button";
+      tab.id = `tab-${copy.id}`;
+      tab.setAttribute("role", "tab");
+      tab.setAttribute("aria-controls", chapter.id);
+      tab.append(
+        el("span", "pager-tab-index", String(copy.index).padStart(2, "0")),
+        el("span", "pager-tab-title", copy.title),
+      );
+      tab.addEventListener("click", () => show(index));
+      rail.appendChild(tab);
+      chapter.setAttribute("role", "tabpanel");
+      chapter.setAttribute("aria-labelledby", tab.id);
+      chapter.tabIndex = -1;
+      return tab;
+    });
+
+    rail.addEventListener("keydown", (event) => {
+      const step =
+        event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+      if (!step) {
+        return;
+      }
+      event.preventDefault();
+      const at = tabs.indexOf(document.activeElement);
+      const to = (Math.max(0, at) + step + tabs.length) % tabs.length;
+      show(to);
+      tabs[to].focus();
+    });
+
+    let current = -1;
+
+    function show(index, options) {
+      const to = Math.max(0, Math.min(index, chapters.length - 1));
+      if (to === current) {
+        return;
+      }
+      current = to;
+      chapters.forEach((chapter, at) => {
+        chapter.hidden = at !== to;
+      });
+      tabs.forEach((tab, at) => {
+        tab.setAttribute("aria-selected", String(at === to));
+        tab.tabIndex = at === to ? 0 : -1;
+      });
+      previous.disabled = to === 0;
+      next.disabled = to === chapters.length - 1;
+      position.textContent = COPY.pager.position
+        .replace("{index}", String(to + 1))
+        .replace("{total}", String(chapters.length));
+
+      const id = COPY.chapters[to].id;
+      if (!options || options.pushHash !== false) {
+        const url = `${window.location.pathname}#${id}`;
+        if (window.location.hash.replace("#", "") !== id) {
+          window.history.pushState({ chapter: id }, "", url);
+        }
+      }
+      if (options && options.silent) {
+        return;
+      }
+      window.scrollTo({ top: 0, behavior: "auto" });
+      chapters[to].focus({ preventScroll: true });
+      say(`${COPY.chapters[to].title}. Chapter ${to + 1} of ${chapters.length}.`);
+    }
+
+    previous.addEventListener("click", () => show(current - 1));
+    next.addEventListener("click", () => show(current + 1));
+    window.addEventListener("popstate", () => {
+      show(indexForHash(), { pushHash: false });
+    });
+
+    function indexForHash() {
+      // Both "#role" and the element's own "#chapter-role" resolve, so links
+      // written against either shape land on the same chapter.
+      const id = window.location.hash.replace(/^#(chapter-)?/, "");
+      const at = COPY.chapters.findIndex((entry) => entry.id === id);
+      return at < 0 ? 0 : at;
+    }
+
+    show(indexForHash(), { pushHash: false, silent: true });
+    return [rail, ...chapters, foot];
+  }
+
   function boot() {
     if (!data || !core) {
       shell.replaceChildren(el("p", "loading-note", "Aurora Station could not load its record."));
@@ -715,14 +805,14 @@
       document.body.appendChild(art.grainOverlay());
     }
 
-    shell.replaceChildren(
-      buildMasthead(),
+    const chapters = [
       buildRoleChapter(),
       buildShiftChapter(),
       buildCurrentsChapter(),
       buildDetailChapter(),
       buildCloseChapter(),
-    );
+    ];
+    shell.replaceChildren(buildMasthead(), ...buildPager(chapters));
 
     document.title = `${profile.playerName} — Observation Report`;
     say("The observation report is ready.");

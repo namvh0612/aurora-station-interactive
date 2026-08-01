@@ -285,6 +285,126 @@
     });
   }
 
+  /*
+   * Page 2: the contribution in full. The report on screen carries the role's
+   * mission function, what it brings, what to watch for and the mission
+   * action; without this page the export was a scoreboard of the same profile.
+   */
+  function drawProfileRolePage(context, data, profile, summary, pageNumber, pageCount) {
+    const lead = summary.overall;
+    const primary = lead.primary;
+    drawExportPageBase(context, pageNumber, profile.playerName, primary.colour, pageCount);
+
+    let y = drawExportHeading(
+      context,
+      data.results.chapters[0].eyebrow,
+      lead.isBlend ? lead.label : primary.name,
+      data.results.roleIntro,
+      primary.colour,
+    );
+
+    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    const labels = data.results.labels;
+
+    y += 8;
+    y = drawExportText(
+      context,
+      `${labels.basis} · ${primary.basis}`,
+      EXPORT_MARGIN,
+      y,
+      width,
+      { size: 26, family: "sans", weight: 600, colour: "#5c6568", lineHeight: 36 },
+    );
+    y += 40;
+    y = drawExportText(context, data.results.notATypeStatement, EXPORT_MARGIN, y, width, {
+      size: 33,
+      style: "italic",
+      colour: "#262b2d",
+      lineHeight: 48,
+    });
+    y += 40;
+
+    // Why this contribution, described the same way the report describes it.
+    const why = data.assessment.whyTemplates;
+    const reasons = [
+      lead.isBlend
+        ? why.blend.replace("{roles}", lead.label)
+        : why.single.replace("{role}", primary.name),
+      primary.facetFloor >= primary.score - 0.6 ? why.supported : why.uneven,
+    ];
+    y = drawExportText(context, reasons.join(" "), EXPORT_MARGIN, y, width, {
+      size: 31,
+      colour: "#262b2d",
+      lineHeight: 46,
+    });
+    y += 36;
+    drawExportRule(context, y, "#c1caca", 2);
+    y += 66;
+
+    [
+      [labels.missionFunction, primary.missionFunction],
+      [labels.brings, primary.brings],
+      [labels.watchFor, primary.watchFor],
+      [labels.action, `${primary.actionTitle} — ${primary.action}`],
+    ].forEach(([label, copy]) => {
+      drawExportLabel(context, label, EXPORT_MARGIN, y, primary.colour);
+      y += 54;
+      y = drawExportText(context, copy, EXPORT_MARGIN, y, width, {
+        size: 30,
+        colour: "#262b2d",
+        lineHeight: 44,
+      });
+      y += 44;
+    });
+
+    const instrument = data.assessment.instruments[primary.domain];
+    drawExportRule(context, y, "#c1caca", 2);
+    y += 64;
+    drawExportLabel(context, `${labels.instrument} · ${instrument.name}`, EXPORT_MARGIN, y, "#14181a");
+    y += 54;
+    drawExportText(context, instrument.reads, EXPORT_MARGIN, y, width, {
+      size: 28,
+      colour: "#4b5457",
+      lineHeight: 42,
+    });
+  }
+
+  /*
+   * The observations the watch produced, and the question the report closes
+   * on. Both are written copy; neither survived into the old export.
+   */
+  function drawProfileObservationPage(context, data, profile, summary, pageNumber, pageCount) {
+    drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
+    const closing = data.results.chapters[4];
+    let y = drawExportHeading(context, closing.eyebrow, closing.title, null, "#14181a");
+
+    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    y += 20;
+    drawExportLabel(context, data.results.labels.observations, EXPORT_MARGIN, y, "#14181a");
+    y += 64;
+
+    [summary.consistency, summary.adaptation, summary.contribution].forEach((line) => {
+      y = drawExportText(context, line, EXPORT_MARGIN, y, width, {
+        size: 30,
+        colour: "#262b2d",
+        lineHeight: 45,
+      });
+      y += 38;
+    });
+
+    y += 16;
+    drawExportRule(context, y, "#c1caca", 2);
+    y += 68;
+    drawExportLabel(context, data.results.labels.reflection, EXPORT_MARGIN, y, "#14181a");
+    y += 60;
+    drawExportText(context, summary.reflection, EXPORT_MARGIN, y, width, {
+      size: 33,
+      style: "italic",
+      colour: "#262b2d",
+      lineHeight: 48,
+    });
+  }
+
   /* Page 2: how the pattern moved between the three story phases. */
   function drawProfilePhasePage(context, data, profile, summary, pageNumber, pageCount) {
     drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
@@ -368,8 +488,8 @@
     });
   }
 
-  /* One page per domain: interpretation, then its three facets. */
-  function drawProfileDomainPage(context, profile, domain, pageNumber, pageCount) {
+  /* One page per domain: interpretation, its guidance, then its three facets. */
+  function drawProfileDomainPage(context, data, profile, domain, pageNumber, pageCount) {
     drawExportPageBase(context, pageNumber, profile.playerName, domain.colour, pageCount);
     let y = drawExportHeading(
       context,
@@ -408,49 +528,80 @@
     y += 96;
 
     y = drawExportText(context, domain.interpretation, EXPORT_MARGIN, y, width, {
-      size: 34,
+      size: 32,
       colour: "#262b2d",
-      lineHeight: 50,
-      maxLines: 6,
+      lineHeight: 47,
+      maxLines: 5,
     });
-    y += 60;
-    drawExportRule(context, y, "#c1caca", 2);
-    y += 80;
+    y += 40;
 
-    drawExportLabel(context, "Facets", EXPORT_MARGIN, y, domain.colour);
-    y += 70;
+    // The advantage, the overextension and the reflection the report offers
+    // for this band. Guidance, never a verdict.
+    const labels = data.results.labels;
+    const guidance = data.assessment.domains[domain.code].guidance[domain.band];
+    const instrument = data.assessment.instruments[domain.code];
+    drawExportRule(context, y, "#c1caca", 2);
+    y += 58;
+    [
+      [labels.advantage, guidance.advantage],
+      [labels.overextension, guidance.overextension],
+      [labels.reflection, guidance.reflection],
+    ].forEach(([label, copy]) => {
+      drawExportLabel(context, label, EXPORT_MARGIN, y, domain.colour);
+      y += 48;
+      y = drawExportText(context, copy, EXPORT_MARGIN, y, width, {
+        size: 28,
+        colour: "#262b2d",
+        lineHeight: 41,
+        maxLines: 4,
+      });
+      y += 34;
+    });
+
+    y += 6;
+    drawExportRule(context, y, "#c1caca", 2);
+    y += 62;
+
+    drawExportLabel(
+      context,
+      `${labels.facets} · ${labels.instrument} ${instrument.name}`,
+      EXPORT_MARGIN,
+      y,
+      domain.colour,
+    );
+    y += 62;
 
     domain.facets.forEach((facet) => {
-      drawExportText(context, facet.name, EXPORT_MARGIN, y + 40, width - 520, {
-        size: 38,
+      drawExportText(context, facet.name, EXPORT_MARGIN, y + 34, width - 520, {
+        size: 34,
         weight: 600,
         colour: "#14181a",
-        lineHeight: 48,
+        lineHeight: 44,
         maxLines: 1,
       });
       drawExportText(
         context,
         `${facet.score.toFixed(1)} / ${profile.scaleMax}`,
         EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
-        y + 40,
+        y + 34,
         480,
         {
-          size: 38,
+          size: 34,
           family: "sans",
           weight: 600,
           colour: domain.colour,
           align: "right",
-          lineHeight: 48,
+          lineHeight: 44,
         },
       );
-      drawScoreTrack(context, EXPORT_MARGIN, y + 72, width, facet.normalised, domain.colour);
-      drawExportText(context, facet.meaning, EXPORT_MARGIN, y + 148, width, {
-        size: 27,
+      drawScoreTrack(context, EXPORT_MARGIN, y + 62, width, facet.normalised, domain.colour);
+      drawExportText(context, facet.meaning, EXPORT_MARGIN, y + 130, width, {
+        size: 25,
         colour: "#5c6568",
-        lineHeight: 38,
+        lineHeight: 35,
         maxLines: 2,
       });
-      y += 232;
+      y += 200;
     });
   }
 
@@ -734,10 +885,12 @@
     // Twelve field contours, one per act, settling toward the horizon.
     context.save();
     context.strokeStyle = "#14181a";
-    context.lineWidth = 2;
+    // Printed rather than lit: a hairline at 6% alpha vanishes on paper, so
+    // the contours carry enough weight to survive the page.
+    context.lineWidth = 3;
     for (let index = 0; index < 12; index += 1) {
       const ratio = index / 11;
-      context.globalAlpha = 0.06 + ratio * 0.16;
+      context.globalAlpha = 0.2 + ratio * 0.4;
       const base = 1700 + index * 46;
       context.beginPath();
       for (let x = EXPORT_MARGIN; x <= EXPORT_PAGE_WIDTH - EXPORT_MARGIN; x += 12) {
@@ -908,8 +1061,15 @@
     if (typeof settings.onAssembling === "function") {
       settings.onAssembling();
     }
-    const pdfBytes = buildImagePdf(images);
-    triggerPdfDownload(pdfBytes, filename || "Aurora_Station_Story.pdf");
+    const pdfBytes = buildImagePdf(images, {
+      title: `Aurora Station night watch log — ${safeState.participant.name || "Watchkeeper"}`,
+      subject: "The night as it was recorded, passage by passage.",
+      createdAt: Number(safeState.completedAt),
+    });
+    triggerPdfDownload(
+      pdfBytes,
+      filename || exportName("record", safeState.participant.name, safeState.completedAt),
+    );
     return { pageCount: images.length, byteLength: pdfBytes.length };
   }
 
@@ -940,9 +1100,32 @@
     return output;
   }
 
-  function buildImagePdf(images) {
+  /*
+   * PDF text strings are escaped, not encoded: parentheses and backslashes are
+   * structural, and anything outside ASCII is dropped rather than written as a
+   * byte a reader would guess at.
+   */
+  function pdfString(value) {
+    return String(value || "")
+      .replace(/[^\x20-\x7e]/g, "-")
+      .replace(/([\\()])/g, "\\$1");
+  }
+
+  function pdfDate(stamp) {
+    const when = new Date(Number.isFinite(stamp) && stamp > 0 ? stamp : Date.now());
+    const pad = (value) => String(value).padStart(2, "0");
+    return (
+      `D:${when.getFullYear()}${pad(when.getMonth() + 1)}${pad(when.getDate())}` +
+      `${pad(when.getHours())}${pad(when.getMinutes())}${pad(when.getSeconds())}`
+    );
+  }
+
+  function buildImagePdf(images, meta) {
+    const info = meta || {};
     const pageCount = images.length;
-    const totalObjects = 2 + pageCount * 3;
+    // One extra object for the document information dictionary.
+    const totalObjects = 3 + pageCount * 3;
+    const infoObject = totalObjects;
     const objects = new Array(totalObjects + 1);
     const pageRefs = [];
 
@@ -969,9 +1152,16 @@
       ]);
     }
 
-    objects[1] = asciiBytes("<< /Type /Catalog /Pages 2 0 R >>");
+    objects[1] = asciiBytes("<< /Type /Catalog /Pages 2 0 R /Lang (en-GB) >>");
     objects[2] = asciiBytes(
       `<< /Type /Pages /Count ${pageCount} /Kids [${pageRefs.join(" ")}] >>`,
+    );
+    objects[infoObject] = asciiBytes(
+      `<< /Title (${pdfString(info.title || "Aurora Station")})` +
+        ` /Author (${pdfString(info.author || "Aurora Station")})` +
+        ` /Subject (${pdfString(info.subject || "A BFI-2-aligned narrative self-reflection. Not a clinical instrument.")})` +
+        " /Creator (Aurora Station) /Producer (Aurora Station)" +
+        ` /CreationDate (${pdfDate(info.createdAt)}) >>`,
     );
 
     const header = asciiBytes("%PDF-1.4\n%âãÏÓ\n");
@@ -993,9 +1183,31 @@
     for (let objectNumber = 1; objectNumber <= totalObjects; objectNumber += 1) {
       xref += `${String(offsets[objectNumber]).padStart(10, "0")} 00000 n \n`;
     }
-    xref += `trailer\n<< /Size ${totalObjects + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+    xref += `trailer\n<< /Size ${totalObjects + 1} /Root 1 0 R /Info ${infoObject} 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
     parts.push(asciiBytes(xref));
     return concatenateBytes(parts);
+  }
+
+  /*
+   * One place decides what an export is called, so the two pages that can
+   * trigger one never disagree. The date is the night the watch closed, not
+   * the moment of export, so re-exporting the same record overwrites it
+   * instead of collecting copies, while a second watch keeps its own file.
+   */
+  function exportName(kind, playerName, completedAt) {
+    const safe = String(playerName || "Watchkeeper")
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^A-Za-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 40) || "Watchkeeper";
+    const stamp = Number(completedAt);
+    const when = new Date(Number.isFinite(stamp) && stamp > 0 ? stamp : Date.now());
+    const day = `${when.getFullYear()}-${String(when.getMonth() + 1).padStart(2, "0")}-${String(
+      when.getDate(),
+    ).padStart(2, "0")}`;
+    const label = kind === "report" ? "Observation_Report" : "Night_Watch_Log";
+    return `Aurora_Station_${label}_${safe}_${day}.pdf`;
   }
 
   function triggerPdfDownload(bytes, filename) {
@@ -1029,7 +1241,9 @@
 
     const { canvas, context } = exportCanvas();
     const summary = core.summariseProfile(data, profile);
-    const pageCount = profile.domains.length + 3;
+    // Overview, the contribution in full, the movement, one page per current,
+    // the observations, and the reading guidance.
+    const pageCount = profile.domains.length + 5;
     const images = [];
 
     const capture = async (pageNumber, draw) => {
@@ -1046,14 +1260,27 @@
       drawProfileOverviewPage(context, data, profile, summary, dateLabel, pageCount),
     );
     await capture(2, () =>
-      drawProfilePhasePage(context, data, profile, summary, 2, pageCount),
+      drawProfileRolePage(context, data, profile, summary, 2, pageCount),
+    );
+    await capture(3, () =>
+      drawProfilePhasePage(context, data, profile, summary, 3, pageCount),
     );
     for (let index = 0; index < profile.domains.length; index += 1) {
-      const pageNumber = index + 3;
+      const pageNumber = index + 4;
       await capture(pageNumber, () =>
-        drawProfileDomainPage(context, profile, profile.domains[index], pageNumber, pageCount),
+        drawProfileDomainPage(
+          context,
+          data,
+          profile,
+          profile.domains[index],
+          pageNumber,
+          pageCount,
+        ),
       );
     }
+    await capture(pageCount - 1, () =>
+      drawProfileObservationPage(context, data, profile, summary, pageCount - 1, pageCount),
+    );
     await capture(pageCount, () =>
       drawProfileGuidancePage(context, data, profile, pageCount, pageCount),
     );
@@ -1061,13 +1288,20 @@
     if (typeof settings.onAssembling === "function") {
       settings.onAssembling();
     }
-    const pdfBytes = buildImagePdf(images);
-    triggerPdfDownload(pdfBytes, filename || "Aurora_Station_Profile.pdf");
+    const pdfBytes = buildImagePdf(images, {
+      title: `Aurora Station observation report — ${profile.playerName || "Watchkeeper"}`,
+      createdAt: Number(safeState.completedAt),
+    });
+    triggerPdfDownload(
+      pdfBytes,
+      filename || exportName("report", profile.playerName, safeState.completedAt),
+    );
     return { pageCount: images.length, byteLength: pdfBytes.length };
   }
 
   const api = {
     buildStoryBlocks,
+    exportName,
     layoutStoryPages,
     download: downloadStoryPdf,
     downloadStory: downloadStoryPdf,
