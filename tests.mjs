@@ -1010,6 +1010,97 @@ check("statements never leak into the narrative", () => {
   });
 });
 
+/*
+ * The night is one continuous clock from 21:58 to 05:20. The spine of the
+ * telling — an act's opening, each convergence, its closing — may only ever
+ * move forward. A context is allowed to look back, because remembering the
+ * colour of the sky four hours ago is not the same as the story going there.
+ */
+check("the night's clock only ever moves forward", () => {
+  const SPINE = new Set(["body", "convergence", "closing"]);
+  // The watch runs past midnight, so anything before noon belongs to the next day.
+  const minutes = (stamp) => {
+    const [hour, minute] = stamp.split(":").map(Number);
+    return (hour < 12 ? hour + 24 : hour) * 60 + minute;
+  };
+  let previous = 0;
+  let last = "start";
+  core.buildNodes(data, answerAll((index) => ((index * 7) % 5) + 1)).forEach((node) => {
+    if (!SPINE.has(node.type) || !node.text) {
+      return;
+    }
+    (node.text.match(/\b[0-2]\d:[0-5]\d\b/g) || []).forEach((stamp) => {
+      assert.ok(
+        minutes(stamp) >= previous,
+        `the clock runs backwards: ${last} then ${stamp} in "${node.text.slice(0, 60)}"`,
+      );
+      previous = minutes(stamp);
+      last = stamp;
+    });
+  });
+  // And every act's own window has to contain the stamps printed inside it.
+  data.story.acts.forEach((act) => {
+    const [from, to] = act.time.split(/[–-]/).map((edge) => minutes(edge.trim()));
+    const inside = [act.opening, act.closing]
+      .concat(act.items.map((item) => item.convergence))
+      .join(" ")
+      .match(/\b[0-2]\d:[0-5]\d\b/g) || [];
+    inside.forEach((stamp) => {
+      assert.ok(
+        minutes(stamp) >= from && minutes(stamp) <= to,
+        `Act ${act.number} is stamped ${act.time} but prints ${stamp}`,
+      );
+    });
+  });
+});
+
+check("the story counts what it says it counts", () => {
+  /*
+   * The unfinished handover line is quoted in full and also counted in prose.
+   * The count was six for a line that has four words in it, which is the kind
+   * of thing a reader checks and the author never re-reads.
+   */
+  const marker = "SECTOR C INTERMITTENT — MONITOR";
+  const words = marker.split(/[\s—]+/).filter(Boolean).length;
+  const spelled = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+  const prose = JSON.stringify(data.story);
+  assert.ok(prose.includes(marker), "the handover line is no longer quoted");
+  [...prose.matchAll(/\b([a-z]+) (?:unfinished )?words\b/g)].forEach((match) => {
+    const claimed = spelled.indexOf(match[1]);
+    if (claimed >= 0) {
+      assert.equal(claimed, words, `the line has ${words} words but is called ${match[1]}`);
+    }
+  });
+});
+
+check("the crew on the page matches the crew in the station", () => {
+  /*
+   * Mira hands over and drives out at 22:02, and is recalled during Act 3 —
+   * she is back on the pad as the generator trips. Before that the station
+   * holds two people; after it, three. Five act openings used to have her
+   * acting in a room she had left, and Act 4 managed to contradict itself.
+   */
+  const recall = data.story.acts.find((act) => act.number === 3);
+  assert.match(`${recall.opening} ${recall.closing}`, /Mira/);
+  assert.match(recall.closing, /comes back onto the pad/);
+
+  const headcount = /two of you|two people remain|the two of us/i;
+  data.story.acts.forEach((act) => {
+    const text = [act.opening, act.closing]
+      .concat(act.items.flatMap((item) => [item.context, item.convergence, ...Object.values(item.narrative || {})]))
+      .filter(Boolean)
+      .join(" ");
+    if (act.number > 3) {
+      assert.doesNotMatch(text, headcount, `Act ${act.number} still counts two people`);
+      return;
+    }
+    // Before the recall she cannot be doing anything but leaving.
+    if (act.number === 2) {
+      assert.doesNotMatch(text, /Mira (?!'s)\w+s\b/, `Act ${act.number} has Mira acting after she left`);
+    }
+  });
+});
+
 check("a finished journey ends with the completion panel", () => {
   const nodes = core.buildNodes(data, answerFirst(60));
   assert.equal(nodes.at(-1).type, "completion");

@@ -612,7 +612,7 @@ window.AURORA_STATION_DATA = {
         "number": 1,
         "title": "The Final Handover",
         "time": "21:58–22:06",
-        "opening": "Mira waits by the door while snow runs sideways across the glass. The handover is complete except for six words about Sector C. There is no trigger, no next check and no note of what she has already ruled out.",
+        "opening": "Mira waits by the door while snow runs sideways across the glass. The handover is complete except for four words about Sector C. There is no trigger, no next check and no note of what she has already ruled out.",
         "items": [
           {
             "id": "q01",
@@ -645,8 +645,8 @@ window.AURORA_STATION_DATA = {
             "reverse": false,
             "spectrumId": "agreement-5",
             "statement": "I am someone who feels genuine concern when another person is struggling.",
-            "context": "Mira has spent four seasons repairing what the cold loosens. Tonight her hands are slower than her voice, and the last line of her handover is six unfinished words.",
-            "convergence": "The six words stay on the page either way. SECTOR C INTERMITTENT — MONITOR.",
+            "context": "Mira has spent four seasons repairing what the cold loosens. Tonight her hands are slower than her voice, and the last line of her handover is four unfinished words.",
+            "convergence": "The four words stay on the page either way. SECTOR C INTERMITTENT — MONITOR.",
             "narrative": {
               "low": "You take the folder and go straight to the line. Whatever the season cost her is hers to carry south.",
               "mid": "You register how thin she looks, note it, and return to the page. The unresolved check matters more right now.",
@@ -668,7 +668,7 @@ window.AURORA_STATION_DATA = {
             "context": "The handover is a stack: alarm history, a printed check sheet, a handwritten page and one unresolved line. Nothing is numbered.",
             "convergence": "The console holds at nominal. Outside, the wind changes pitch against the west wall.",
             "narrative": {
-              "low": "You lay the pages out and number what is still open before anything else. Three items. The Sector C line is item one.",
+              "low": "You lay the pages out and number what is still open before anything else. There is exactly one item, and numbering it does not make it any less unfinished.",
               "mid": "You skim the stack, keep the shape of it in your head, and move on. It will hold for now.",
               "high": "You leave the stack as it is. The night will sort itself, and the pages can wait until something asks for them."
             },
@@ -834,7 +834,7 @@ window.AURORA_STATION_DATA = {
         "number": 3,
         "title": "Heat Behind the Panel",
         "time": "22:20–22:41",
-        "opening": "Heat comes through the cabinet door even through your glove. A burnt-plastic smell hangs in the corridor. The local indicator stays green, as if nothing behind the panel has changed.",
+        "opening": "Heat comes through the cabinet door even through your glove. A burnt-plastic smell hangs in the corridor. The local indicator stays green, as if nothing behind the panel has changed. Ilan reaches Mira on the short-range set while she is still inside the pass. She does not ask a second question. The vehicle turns.",
         "items": [
           {
             "id": "q11",
@@ -937,7 +937,7 @@ window.AURORA_STATION_DATA = {
             "contextPhase": "baseline"
           }
         ],
-        "closing": "The Sector C branch begins to cool. Then a dull impact travels through the floor. The main generator trips, and the station returns in emergency red.",
+        "closing": "The Sector C branch begins to cool. Headlights swing across the window as Mira's vehicle comes back onto the pad, and the road closes behind her. Then a dull impact travels through the floor. The main generator trips, and the station returns in emergency red.",
         "contextPhase": "baseline"
       },
       {
@@ -958,10 +958,10 @@ window.AURORA_STATION_DATA = {
             "reverse": true,
             "spectrumId": "agreement-5",
             "statement": "I am someone who tends to remain quiet around other people.",
-            "context": "Ninety seconds. Three things need doing and there are two of you. The room fills with the sound of the plant and very little else.",
-            "convergence": "At the end of it all three tasks are done. Neither of you could say precisely in what order.",
+            "context": "Ninety seconds. Three things need doing and three people to do them, and nobody has said who takes which. Mira is still in outdoor gear. The room fills with the sound of the plant and very little else.",
+            "convergence": "At the end of it all three tasks are done. None of you could say precisely in what order.",
             "narrative": {
-              "low": "You talk the whole way through it—positions, timings, what you are seeing—and the talk is what keeps you both aligned.",
+              "low": "You talk the whole way through it—positions, timings, what you are seeing—and the talk is what keeps all three of you aligned.",
               "mid": "You speak when something needs saying and not otherwise.",
               "high": "You work in silence. Ilan learns where you are from the sound of your movements rather than your voice."
             },
@@ -978,7 +978,7 @@ window.AURORA_STATION_DATA = {
             "reverse": true,
             "spectrumId": "agreement-5",
             "statement": "I am someone who feels little concern for difficulties caused by another person's mistake.",
-            "context": "The escalation should have gone to Hobart at the first spike. It did not, and the person who did not send it is four hours south by now.",
+            "context": "The escalation should have gone to Hobart at the first spike. It did not, and the person who did not send it is three metres away, reading values off a panel she turned back for.",
             "convergence": "The record will show the gap regardless. You log the time and move on.",
             "narrative": {
               "low": "You think about how the end of a long season narrows what a person can see, and the anger does not really arrive.",
@@ -1069,7 +1069,7 @@ window.AURORA_STATION_DATA = {
             "reverse": false,
             "spectrumId": "agreement-5",
             "statement": "I am someone who is comfortable taking charge when direction is needed.",
-            "context": "The midnight call cannot be made. Two people remain, and nothing in the handover says which of them is in charge once the radio goes.",
+            "context": "The midnight call cannot be made. Mira has four seasons here and no watch to stand; the handover is signed in your name. Nothing in it says which of those two facts decides who is in charge once the radio goes.",
             "convergence": "The retry schedule is set for every twenty minutes. The first attempt returns nothing but the carrier.",
             "narrative": {
               "low": "You wait for the shape of it to settle. Ilan begins allocating tasks, and the night acquires a lead by default.",
@@ -1129,7 +1129,7 @@ window.AURORA_STATION_DATA = {
             "reverse": true,
             "spectrumId": "agreement-5",
             "statement": "I am someone who remains secure in my judgement when external support is unavailable.",
-            "context": "There is no one left to confirm a decision against. Whatever is decided tonight is decided here.",
+            "context": "There is no one outside the station left to confirm a decision against. Whatever is decided tonight is decided here.",
             "convergence": "23:11. The storm is at its heaviest and the station is entirely alone.",
             "narrative": {
               "low": "Without someone to check against, your own reasoning starts to sound thinner than it did an hour ago.",
@@ -1150,7 +1150,7 @@ window.AURORA_STATION_DATA = {
             "spectrumId": "agreement-5",
             "statement": "I am someone who avoids exploring speculative or abstract explanations.",
             "context": "Ilan starts talking about the magnetic record—old readings, a pattern he has been chasing for two seasons, why tonight might matter to it.",
-            "convergence": "At 23:15 the outer temperature drops four degrees in under a minute. Neither of you is looking at the panel when it happens.",
+            "convergence": "At 23:15 the outer temperature drops four degrees in under a minute. No one is looking at the panel when it happens.",
             "narrative": {
               "low": "You follow him into it. For twenty minutes the storm is somewhere else, and the argument is genuinely interesting.",
               "mid": "You listen without joining in, and bring it back to the panel when the slot comes round.",
@@ -1183,7 +1183,7 @@ window.AURORA_STATION_DATA = {
             "context": "Every non-essential load has to be found, listed and switched down by hand. It takes hours and covers most of the station.",
             "convergence": "By 23:30 the draw is down by a third. It is not enough to change the arithmetic.",
             "narrative": {
-              "low": "You take the longer half of the building and are still moving when Ilan sits down.",
+              "low": "You take the longest share of the building and are still moving when the others sit down.",
               "mid": "You divide it evenly and keep pace with him through most of it.",
               "high": "You settle into the slower share. Ilan covers more ground, and neither of you remarks on it."
             },
@@ -1200,7 +1200,7 @@ window.AURORA_STATION_DATA = {
             "reverse": false,
             "spectrumId": "agreement-5",
             "statement": "I am someone who lets go of resentment after another person makes a mistake.",
-            "context": "The gap in the record is now four hours old and has shaped every decision since. It will be in the report.",
+            "context": "The gap in the record is now four hours old and has shaped every decision since. It will be in the report, and the person who left it is working two rooms away.",
             "convergence": "The handover folder goes back under the lamp, closed.",
             "narrative": {
               "low": "It stays with you. Something in how you read the rest of the handover has changed.",
@@ -1556,9 +1556,9 @@ window.AURORA_STATION_DATA = {
             "context": "A reading is due every fifteen minutes. Outside the window, the sky is doing something that most people who winter here never see.",
             "convergence": "The instrument drift is small but it is there, and it starts when the display does.",
             "narrative": {
-              "low": "Two readings are missed. Neither of them, in the end, mattered.",
-              "mid": "You take them late but you take them all.",
-              "high": "Every reading goes in on time, including the one at the height of it, which you take with your back to the window."
+              "low": "The reading is missed. It did not, in the end, matter.",
+              "mid": "You take it late, but you take it.",
+              "high": "It goes in on time, at the height of it, taken with your back to the window."
             },
             "contextPhase": "recovery"
           },
@@ -1573,7 +1573,7 @@ window.AURORA_STATION_DATA = {
             "reverse": true,
             "spectrumId": "agreement-5",
             "statement": "I am someone who keeps strong emotional reactions under control.",
-            "context": "Twenty-two hours awake, a station running on its reserve, and the most extraordinary thing either of you will see this year is happening overhead.",
+            "context": "Twenty-two hours awake, a station running on its reserve, and the most extraordinary thing any of you will see this year is happening overhead.",
             "convergence": "The band of red thins and the green comes down to the ridge line.",
             "narrative": {
               "low": "It gets through. For a minute or two you are not much use to anyone, and Ilan does not mention it afterwards.",
@@ -1625,7 +1625,7 @@ window.AURORA_STATION_DATA = {
             "spectrumId": "agreement-5",
             "statement": "I am someone who prefers to talk through a problem with another person.",
             "context": "How much reserve is left, what it will carry and for how long. The arithmetic is not difficult and the result is not good.",
-            "convergence": "Four hours of heat, or eleven minutes of recording, or something in between. Not all three.",
+            "convergence": "Fifteen minutes of running, and the only question is what to spend it on. Banked into the refuge loop with everything else shed, it holds about four hours above freezing. Held on the recorder, which cannot be shed, it buys eleven minutes of unbroken signal. Split, it buys less of each.",
             "narrative": {
               "low": "You work it alone on paper and put the figure in front of him when it is finished.",
               "mid": "You check the inputs with him and do the rest yourself.",
@@ -1665,7 +1665,7 @@ window.AURORA_STATION_DATA = {
             "spectrumId": "agreement-5",
             "statement": "I am someone who leaves my working materials disorganised after finding an answer.",
             "context": "Three sheets, two of them with corrections, and a set of assumptions that exist only in the order they were written down.",
-            "convergence": "04:04. The figure is on the board where both of you can see it.",
+            "convergence": "04:04. The figure is on the board where all three of you can see it.",
             "narrative": {
               "low": "You copy the whole thing out clean, assumptions first, so that the number can be checked by someone who was not here.",
               "mid": "You tidy the final page and leave the working sheets as they are.",
@@ -1685,7 +1685,7 @@ window.AURORA_STATION_DATA = {
             "spectrumId": "agreement-5",
             "statement": "I am someone who rarely experiences fear when resources become critically limited.",
             "context": "Below a certain figure the station stops being a building and becomes a container of air that is getting colder.",
-            "convergence": "Neither of you says the word emergency. The word is not required for the situation to be one.",
+            "convergence": "No one says the word emergency. The word is not required for the situation to be one.",
             "narrative": {
               "low": "The fear is there and it is specific: the frost line, the hours, the distance to the Ridge camp.",
               "mid": "It is present without being loud.",
@@ -1721,7 +1721,7 @@ window.AURORA_STATION_DATA = {
         "id": "act-11",
         "number": 11,
         "title": "Two Paths and a Narrow Third",
-        "time": "04:06–04:12",
+        "time": "04:06–04:20",
         "opening": "Three plans lie beneath the red lamp: heat, recording, or a timed split. Each saves something. Each abandons something. Mira keeps one finger on the fuel estimate. Ilan keeps both hands around the data drive.",
         "items": [
           {
@@ -1736,7 +1736,7 @@ window.AURORA_STATION_DATA = {
             "spectrumId": "agreement-5",
             "statement": "I am someone who prefers another person to make the final decision.",
             "context": "Protect the crew, capture the signal, or split the reserve between them. Three paths, and the watch is yours.",
-            "convergence": "Both of you know which way the other is leaning. Neither has said it.",
+            "convergence": "You know which way each of them is leaning. Neither has said it outright.",
             "narrative": {
               "low": "You take it. Whatever follows, it will have been your decision and you say so aloud before making it.",
               "mid": "You decide, but only after he has said what he would do.",
@@ -1816,7 +1816,7 @@ window.AURORA_STATION_DATA = {
             "spectrumId": "agreement-5",
             "statement": "I am someone who has little interest in the wider meaning of an immediate decision.",
             "context": "Ilan starts to say something about what it means that a station chooses between keeping people warm and keeping a record. He does not finish it.",
-            "convergence": "04:28. The generator stops. What is left is the refuge, the dark, and the wait.",
+            "convergence": "04:16. The reserve begins to run down against the load you chose. What is left after it is the refuge, the dark, and the wait.",
             "narrative": {
               "low": "You pick the thread up and follow it with him for a while. It is the most interesting conversation of the night.",
               "mid": "You let him finish and do not take it further.",
@@ -1825,7 +1825,7 @@ window.AURORA_STATION_DATA = {
             "contextPhase": "recovery"
           }
         ],
-        "closing": "At 04:12, the wind drops below the travel limit. Thirty kilometres south, Ridge starts its vehicles. No voice reaches Aurora.",
+        "closing": "By 04:20, the wind has dropped below the travel limit. Thirty kilometres south, Ridge starts its vehicles. No voice reaches Aurora.",
         "contextPhase": "recovery"
       },
       {
@@ -1847,7 +1847,7 @@ window.AURORA_STATION_DATA = {
             "spectrumId": "agreement-5",
             "statement": "I am someone who expresses enthusiasm visibly during a difficult wait.",
             "context": "Four hours in a cooling room with nothing to do but stay awake and stay warm.",
-            "convergence": "05:02. The refuge is at four degrees. Neither of you has slept.",
+            "convergence": "05:02. The refuge is at four degrees. None of you has slept.",
             "narrative": {
               "low": "You conserve everything, including your voice. The hours pass in a kind of grey economy.",
               "mid": "You keep things moving when they slow and let them slow again.",
@@ -1867,7 +1867,7 @@ window.AURORA_STATION_DATA = {
             "spectrumId": "agreement-5",
             "statement": "I am someone who generally expects other people to act with good intentions.",
             "context": "The Ridge team is south of here, beyond radio range, on a road that closes in whiteout. They may or may not know anything is wrong.",
-            "convergence": "The road opened at some point in the last hour. Neither of you knows this yet.",
+            "convergence": "The road opened at some point in the last hour. None of you knows this yet.",
             "narrative": {
               "low": "You plan for nobody coming. It is the assumption that keeps the refuge plan honest.",
               "mid": "You hope for it and prepare as though it will not happen.",
@@ -1907,7 +1907,7 @@ window.AURORA_STATION_DATA = {
             "spectrumId": "agreement-5",
             "statement": "I am someone who reacts strongly when an emotionally significant event occurs.",
             "context": "A voice, badly broken, giving a callsign that is almost certainly Ridge.",
-            "convergence": "Ridge acknowledges. Two hours out, with a portable generator and a tracked vehicle.",
+            "convergence": "Ridge acknowledges. They have been on the road since the wind dropped and they are minutes away, with a portable generator and a tracked vehicle.",
             "narrative": {
               "low": "You acknowledge, give position and status, and your voice does not change at all.",
               "mid": "Something goes through you and you keep it out of the transmission.",
