@@ -682,15 +682,33 @@ body[data-aurora="present"] .env-aurora {
 }
 
 /*
+ * The story is all present, and legibility is what changes. `--read` is set
+ * from the scroll position: full above the reading line, fading toward the
+ * foot of the screen. Opacity only, so it stays on the compositor and costs
+ * nothing per frame — and it is a state, not an animation, so nothing moves.
+ */
+.passage,
+.observation,
+.act-plate {
+  opacity: var(--read, 1);
+  transition: opacity 180ms linear;
+}
+
+/* Reached by keyboard rather than by scrolling: still readable. */
+.observation:focus-within,
+.passage:focus-within {
+  --read: 1;
+}
+
+/*
  * A faint ground under the line the reader is on, so the eye can keep its
- * place. It follows the pointer rather than lighting itself: nothing moves
- * unless the reader moves it. Background only — no text colour changes, so no
- * contrast is lost. Pointer devices only, because :hover on a touch screen
- * sticks to whatever was last tapped.
+ * place. It follows the pointer rather than lighting itself. Background only —
+ * no text colour changes, so no contrast is lost. Pointer devices only,
+ * because :hover on a touch screen sticks to whatever was last tapped.
  */
 @media (hover: hover) and (pointer: fine) {
   .passage {
-    transition: background-color 260ms ease;
+    transition: background-color 260ms ease, opacity 180ms linear;
   }
 
   .passage:hover {
@@ -1127,58 +1145,6 @@ body[data-aurora="present"] .env-aurora {
   font-family: var(--type-display);
   font-size: var(--step-lead);
   line-height: 1.55;
-}
-
-/* How the story arrives: chosen here, changeable from the controls later. */
-.entry-choice {
-  display: grid;
-  gap: 0.5rem;
-  margin-top: 1.25rem;
-}
-
-.entry-choice-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.entry-option {
-  display: flex;
-  gap: 0.6rem;
-  align-items: baseline;
-  min-height: var(--tap);
-  padding: 0.6rem 1rem;
-  border: var(--rule) solid var(--edge);
-  background: transparent;
-  color: var(--mineral-dim);
-  font-family: var(--type-display);
-  font-size: var(--step-note);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 240ms ease, color 240ms ease;
-}
-
-.entry-option-note {
-  color: var(--mineral-faint);
-}
-
-.entry-option:hover,
-.entry-option:focus-visible {
-  border-color: var(--signal);
-  color: var(--mineral);
-}
-
-.entry-option[aria-checked="true"] {
-  border-color: var(--signal);
-  color: var(--mineral);
-}
-
-.entry-option-name {
-  color: inherit;
-}
-
-.entry-option[aria-checked="true"] .entry-option-name {
-  color: var(--signal-live);
 }
 
 /* The standing limitation, set as a note rather than as a statement. */
@@ -2094,12 +2060,6 @@ body.report .action-quiet {
     justify-content: center;
   }
 
-  #pace-control {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.4rem;
-  }
-
   /* The rail scrolls rather than shrinking, so a chapter keeps its name. */
   .pager-rail {
     overflow-x: auto;
@@ -2125,15 +2085,7 @@ body.report .action-quiet {
     padding-block: 5rem 4rem;
   }
 
-  /*
-   * The prelude has to fit one screen here too. The option notes and the
-   * standing limitation are both said again in the report, so the phone keeps
-   * the choice and the guidance and lets the prose go.
-   */
-  .entry-option-note {
-    display: none;
-  }
-
+  /* The prelude has to fit one screen here too. */
   .entry-disclaimer {
     margin-top: 1rem;
     font-size: var(--step-mark);

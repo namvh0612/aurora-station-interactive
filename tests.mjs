@@ -245,8 +245,17 @@ check("every statement is one self-report sentence on the shared stem", () => {
     assert.match(item.statement, /^I am someone who /, `${item.id} does not use the stem`);
     assert.match(item.statement, /\.$/, `${item.id} does not end in a full stop`);
     // Short enough to answer, and no story detail smuggled into the item.
-    const words = core.wordCount(item.statement);
+    const words = item.statement.trim().split(/\s+/).length;
     assert.ok(words <= 16, `${item.id} runs to ${words} words`);
+    // The stem is first person, so a pronoun for the reader is too. Item 35's
+    // "their" belongs to the patterns, not to the reader, so it is exempt.
+    if (item.bfiItem !== 35) {
+      assert.doesNotMatch(
+        item.statement,
+        /\b(they|their|them|themselves)\b/i,
+        `${item.id} speaks about the reader in the third person`,
+      );
+    }
   });
   // The prelude's practice statement is set the same way.
   const calibration = data.prelude.steps.find((step) => step.id === "calibration");
@@ -724,26 +733,20 @@ check("the summary describes patterns, never a type or a verdict", () => {
 /* ---------------------------------------------------------- aurora state */
 
 check("the aurora enters at its act and deepens to the end of the watch", () => {
+  /*
+   * The environment follows the number of recorded observations. Because the
+   * story never runs past the next unanswered question, the reader cannot get
+   * ahead of their own answers, so the count is a true reading of how far into
+   * the night they are.
+   */
   assert.equal(data.story.auroraAct, 9);
-  const complete = answerFirst(60);
-  const nodes = core.buildNodes(data, complete);
-
-  const actAt = (revealed) => {
-    let act = 0;
-    for (let index = 0; index < revealed; index += 1) {
-      if (nodes[index].actNumber) {
-        act = nodes[index].actNumber;
-      }
-    }
-    return act;
-  };
 
   let peak = 0;
   let sawPresent = false;
-  for (let revealed = 0; revealed <= nodes.length; revealed += 1) {
-    const aurora = core.auroraStateFor(data, complete, nodes, revealed);
-    const act = actAt(revealed);
-    const closed = nodes.slice(0, revealed).some((node) => node.type === "completion");
+  for (let answered = 0; answered <= 60; answered += 1) {
+    const aurora = core.auroraStateFor(data, answerFirst(answered));
+    const act = Math.min(12, Math.floor(answered / 5) + 1);
+    const closed = answered === 60;
 
     if (act < 9 || closed) {
       assert.equal(aurora.state, "off", `aurora visible at act ${act} (closed ${closed})`);
@@ -760,8 +763,7 @@ check("the aurora enters at its act and deepens to the end of the watch", () => 
   assert.equal(peak, 1, "the aurora reaches full intensity by the last act");
 
   // Gone once the record closes — dawn is not a dimmed night.
-  const ended = core.auroraStateFor(data, complete, nodes, nodes.length);
-  assert.deepEqual(ended, { state: "off", intensity: 0 });
+  assert.deepEqual(core.auroraStateFor(data, answerFirst(60)), { state: "off", intensity: 0 });
 });
 
 check("the aurora is absent through onboarding and the early watch", () => {
@@ -866,74 +868,69 @@ check("a completed journey records when it finished", () => {
 check("preferences survive a restart and journey data does not", () => {
   const storage = memoryStorage();
   core.saveState(data, answerFirst(12), storage);
-  core.savePreferences({ textSpeed: "fast", soundEnabled: false }, storage);
+  core.savePreferences({ soundEnabled: false }, storage);
 
   assert.equal(core.answeredCount(core.loadState(data, storage)), 12);
   core.clearJourney(storage);
   assert.equal(core.answeredCount(core.loadState(data, storage)), 0);
   assert.equal(core.loadState(data, storage).participant.name, "");
-  assert.deepEqual(core.loadPreferences(storage), {
-    textSpeed: "fast",
-    soundEnabled: false,
-    scrollMode: "auto",
-  });
+  assert.deepEqual(core.loadPreferences(storage), { soundEnabled: false });
 });
 
-check("how the story arrives is a preference, and it survives a restart", () => {
-  const storage = memoryStorage();
-  core.savePreferences({ textSpeed: "slow", soundEnabled: true, scrollMode: "manual" }, storage);
-  core.clearJourney(storage);
-  assert.equal(core.loadPreferences(storage).scrollMode, "manual");
-  // Anything that is not one of the two modes reads as automatic.
-  assert.equal(core.sanitisePreferences({ scrollMode: "sideways" }).scrollMode, "auto");
-  assert.equal(core.defaultPreferences().scrollMode, "auto");
-  ["auto", "manual"].forEach((mode) => {
-    assert.equal(core.sanitisePreferences({ scrollMode: mode }).scrollMode, mode);
-  });
-  // Both are offered, in the prelude, with a note that it can be changed.
-  assert.deepEqual(
-    data.prelude.reading.options.map((option) => option.id),
-    ["auto", "manual"],
-  );
-  data.prelude.reading.options.forEach((option) => {
-    assert.ok(option.name && option.note, option.id);
-  });
-});
-
-check("a passage is held for as long as it takes to read", () => {
-  assert.deepEqual(core.defaultPreferences(), {
-    textSpeed: "normal",
+check("there is no reading pace to set, and nothing to pause", () => {
+  /*
+   * Reading is scroll-driven. Nothing advances on a timer, so there is no
+   * speed, no pause and no reveal — and no preference for any of them. Sound
+   * is the only thing left to remember.
+   */
+  assert.deepEqual(core.defaultPreferences(), { soundEnabled: true });
+  assert.deepEqual(core.sanitisePreferences({ textSpeed: "fast", scrollMode: "manual" }), {
     soundEnabled: true,
-    scrollMode: "auto",
   });
-  assert.equal(core.sanitisePreferences({ textSpeed: "warp" }).textSpeed, "normal");
-
-  const short = "The panel is warm.";
-  const long = Array.from({ length: 60 }, () => "word").join(" ");
-
-  // The delay follows the words, not a single constant per passage.
-  ["slow", "normal", "fast"].forEach((textSpeed) => {
-    const prefs = { textSpeed };
-    assert.ok(
-      core.revealDelay(prefs, false, long) > core.revealDelay(prefs, false, short) * 2,
-      `${textSpeed} does not scale with length`,
-    );
-    assert.equal(core.revealDelay(prefs, true, long), 0, `${textSpeed} reduced motion`);
+  ["revealDelay", "actClosePause", "wordCount"].forEach((name) => {
+    assert.equal(core[name], undefined, `core still exports ${name}`);
   });
+  [coreSource, appSource].forEach((source) => {
+    assert.doesNotMatch(source, /TEXT_SPEEDS|ACT_CLOSE_PAUSE|textSpeed|scrollMode/);
+  });
+  assert.doesNotMatch(appSource, /setTimeout\([^)]*revealOne|revealTimer/);
+  // The controls that steered it are gone from the page.
+  ["pace-toggle", "pace-now", "pace-control", "scroll-control", "new-passage"].forEach((id) => {
+    assert.doesNotMatch(indexSource, new RegExp(`id="${id}"`), `${id} is still in the page`);
+  });
+});
 
-  // Slower settings hold everything longer than faster ones.
-  assert.ok(core.revealDelay({ textSpeed: "slow" }, false, long) > core.revealDelay({ textSpeed: "normal" }, false, long));
-  assert.ok(core.revealDelay({ textSpeed: "normal" }, false, long) > core.revealDelay({ textSpeed: "fast" }, false, long));
+check("the story runs to the next question and stops there", () => {
+  // The stream itself already gates on an unanswered question; the renderer
+  // simply extends to that gate rather than trickling toward it.
+  assert.match(appSource, /function extend\(\)/);
+  assert.match(appSource, /while \(!idle\(\)\)/);
+  assert.doesNotMatch(appSource, /function revealOne\(/);
 
-  // A sixty-word passage on the slow setting is a readable dwell, not a beat.
-  assert.ok(core.revealDelay({ textSpeed: "slow" }, false, long) >= 8000);
-  // A short line still lands rather than flashing past.
-  assert.ok(core.revealDelay({ textSpeed: "fast" }, false, short) >= 400);
+  const nodes = core.buildNodes(data, answerFirst(3));
+  const last = nodes.at(-1);
+  assert.equal(last.type, "question");
+  assert.equal(last.answered, false);
+  // Nothing beyond the gate is in the stream at all, so nothing can be read
+  // ahead of the reader's own answers.
+  assert.equal(nodes.filter((node) => node.type === "question" && !node.answered).length, 1);
+});
 
-  // An Act closes before the next opens, and the pause follows the pace.
-  assert.ok(core.actClosePause({ textSpeed: "slow" }, false) > core.actClosePause({ textSpeed: "fast" }, false));
-  assert.equal(core.actClosePause({ textSpeed: "slow" }, true), 0);
-  assert.equal(core.wordCount(" one   two  three "), 3);
+check("the page never moves itself", () => {
+  // No follow, no scroll target, no indicator that something was missed.
+  assert.doesNotMatch(appSource, /function follow\(|function settle\(|nearBottom|markScrolling/);
+  // The only scroll the page performs is returning the reader to where they
+  // left off, once, on load.
+  const scrolls = appSource.match(/window\.scrollTo\([^)]*\)/g) || [];
+  assert.equal(scrolls.length, 1, `page scrolls itself ${scrolls.length} times`);
+  assert.match(scrolls[0], /top: state\.scrollY/);
+  // Legibility is what changes, and it is opacity alone.
+  assert.match(appSource, /function focusByScroll\(/);
+  assert.match(appSource, /--read/);
+  assert.match(stylesSource, /opacity: var\(--read, 1\)/);
+  assert.doesNotMatch(stylesSource, /filter: blur\([^)]*\);\s*\n\s*}\s*\n\s*\.passage/);
+  // Reached by keyboard is still readable.
+  assert.match(stylesSource, /:focus-within \{\s*--read: 1;/);
 });
 
 /* ----------------------------------------------------------- node stream */
@@ -1123,10 +1120,6 @@ check("no hidden runtime, payload loader or dynamic evaluation remains", () => {
 });
 
 check("the renderer appends and never force-scrolls", () => {
-  assert.match(appSource, /function nearBottom/);
-  assert.match(appSource, /NEAR_BOTTOM = 260/);
-  assert.match(appSource, /function follow/);
-  assert.match(appSource, /function markScrolling/);
   assert.match(appSource, /watch\.appendChild/);
   assert.doesNotMatch(appSource, /scrollIntoView/);
   // The watch is cleared only on boot.
@@ -1530,15 +1523,24 @@ check("a chapter index is a numeral, not a padded number", () => {
   assert.doesNotMatch(resultsSource, /copy\.index\)\.padStart/);
 });
 
-check("the follow brings the open question into view, not the passage above it", () => {
+check("the story dims below the reading line and clears as it is reached", () => {
   const block = appSource.slice(
-    appSource.indexOf("function follow("),
-    appSource.indexOf("function settle("),
+    appSource.indexOf("function focusByScroll("),
+    appSource.indexOf("function rememberScroll("),
   );
-  assert.match(block, /\.observation:not\(\.is-closed\)/);
-  assert.match(block, /anchor\.offsetTop \+ anchor\.offsetHeight/);
-  // Still a follow, never a jump to the end of the document.
-  assert.match(block, /if \(target <= window\.scrollY\)/);
+  // One frame's work, coalesced, and only ever a custom property.
+  assert.match(block, /requestAnimationFrame/);
+  assert.match(block, /setProperty\("--read"/);
+  assert.doesNotMatch(block, /blur|filter/);
+  // Fractions of the viewport, so a phone and a laptop dim over the same share.
+  assert.match(appSource, /READING_LINE = 0\.\d+/);
+  assert.match(appSource, /FADE_ZONE = 0\.\d+/);
+  assert.match(appSource, /DIMMEST = 0\.\d+/);
+  // Flat under reduced motion rather than half an experience.
+  assert.match(block, /if \(stillMotion\(\)\) \{\s*return;/);
+  // Driven by the reader, and by nothing else.
+  assert.match(appSource, /window\.addEventListener\(\s*"scroll"/);
+  assert.match(appSource, /"focusin", focusByScroll/);
 });
 
 check("a closed act collapses to its record", () => {
@@ -1601,7 +1603,7 @@ check("the soundtrack follows the Act being read", () => {
   assert.match(appSource, /audio\.sync\(data, state, core, revealedAct\(\)\)/);
   assert.match(audioSource, /function phaseForState\(data, state, core, actNumber\)/);
   // And it is kept in step whenever the stream advances, not only on an answer.
-  assert.match(appSource, /syncSound\(\);\s*\n\s*schedule\(\);/);
+  assert.match(appSource, /updateEnvironment\(\);\s*\n\s*syncSound\(\);/);
 });
 
 check("the closed prelude is not rendered", () => {

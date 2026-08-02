@@ -139,7 +139,9 @@ Aurora Station is a static site with no build step and no dependencies. Open `in
 
 There are two pages: `index.html` carries the Prelude, all twelve Acts and the completion panel; `results.html` is the Watchkeeper Profile. Everything on the Results page is recalculated from your raw responses each time it loads — no score is cached, and an unfinished journey is sent back to the story.
 
-The report is read one chapter at a time. All six chapters are built into the page; the pager decides which is shown, puts the chapter in the address bar, and works with the browser's own back and forward buttons. The watch itself can be restarted at any point from the masthead, which clears the record and keeps your sound and reading-pace settings. On a phone the station controls collapse behind a single button rather than a rail that has to be scrolled sideways.
+The watch is read by scrolling. The story runs as far as the next unanswered statement and stops there; everything to that point is already on the page, dimmed below the reading line and clearing as you come down to it. Answering opens the next stretch. Nothing advances on a timer and the page never moves itself, so there is no pace to set and nothing to pause.
+
+The report is read one chapter at a time. All six chapters are built into the page; the pager decides which is shown, puts the chapter in the address bar, and works with the browser's own back and forward buttons. The watch itself can be restarted at any point from the masthead, which clears the record and keeps your sound setting. On a phone the station controls collapse behind a single button.
 
 Both exports are named for the watchkeeper and the night the watch closed, so re-exporting the same record replaces it while a second watch keeps its own file.
 

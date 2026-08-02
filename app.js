@@ -22,24 +22,22 @@
   const sequence = document.getElementById("sequence");
   const sequenceLabel = document.getElementById("sequence-label");
   const sequenceTicks = document.getElementById("sequence-ticks");
-  const paceToggle = document.getElementById("pace-toggle");
-  const paceNow = document.getElementById("pace-now");
-  const paceControl = document.getElementById("pace-control");
-  const scrollControl = document.getElementById("scroll-control");
   const soundToggle = document.getElementById("sound-toggle");
   const restartControl = document.getElementById("restart");
   const controlsToggle = document.getElementById("controls-toggle");
   const controlsPanel = document.getElementById("controls-panel");
   const masthead = document.querySelector(".masthead");
-  const newPassage = document.getElementById("new-passage");
   const announcer = document.getElementById("announcer");
   const auroraLayer = document.getElementById("env-aurora");
 
-  const NEAR_BOTTOM = 260;
   const SELECTED_HOLD = 300;
-  const FOLLOW_TAIL = 120;
-  const QUIET_AFTER_SCROLL = 900;
   const SCROLL_SAVE = 250;
+  // Where the reading line sits, how far below it the story fades out, and how
+  // faint it is allowed to get. All fractions of the viewport, so a phone and a
+  // laptop dim over the same share of the screen.
+  const READING_LINE = 0.58;
+  const FADE_ZONE = 0.42;
+  const DIMMEST = 0.14;
 
   const LABELS = core.responseLabels(data);
   const TOTAL = core.ITEM_COUNT;
@@ -62,12 +60,10 @@
 
   let rendered = 0;
   let builtFor = core.answeredCount(state);
-  let revealTimer = 0;
   let scrollTimer = 0;
-  let userScrollTimer = 0;
-  let userScrolling = false;
   let locked = false;
   let restoring = false;
+  let focusFrame = 0;
   let entry = null;
   let markedAct = 0;
   const panels = new Map();
@@ -81,10 +77,6 @@
   }
 
   /* ------------------------------------------------------------- helpers */
-
-  function manualScroll() {
-    return prefs.scrollMode === "manual";
-  }
 
   function stillMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -134,71 +126,47 @@
 
   function persist() {
     state.narrative.revealedBeatCount = { stream: revealed };
-    state.narrative.paused = prefs.paused === true;
     core.saveState(data, state, storage);
   }
 
-  /* --------------------------------------------------------- scroll rules */
-
-  function nearBottom() {
-    return (
-      window.scrollY + window.innerHeight >=
-      document.documentElement.scrollHeight - NEAR_BOTTOM
-    );
-  }
-
-  function markScrolling() {
-    userScrolling = true;
-    window.clearTimeout(userScrollTimer);
-    userScrollTimer = window.setTimeout(() => {
-      userScrolling = false;
-    }, QUIET_AFTER_SCROLL);
-  }
+  /* ------------------------------------------------------- reading focus */
 
   /*
-   * A short, gentle follow. Never a jump to the bottom of the document.
+   * The page never moves itself. What changes is legibility: a passage the
+   * reader has reached is fully lit, and everything below the reading line
+   * dims toward the foot of the screen, so the story clears as they come down
+   * to it and the run-up to the next question reads as a run-up.
    *
-   * When a question is open it is the thing the reader has been brought here
-   * to answer, so the follow resolves on the panel rather than on the passage
-   * that happens to have been revealed last. Otherwise the scroll settles in
-   * the context above and the scale stays below the fold.
+   * Opacity only — it stays on the compositor, so this costs nothing per
+   * frame. Anything focused is exempt, or a reader working by keyboard would
+   * be answering a question they cannot see.
    */
-  function follow(node) {
-    // Manual reading means the page never moves itself, at all.
-    if (!node || userScrolling || manualScroll()) {
-      return;
-    }
-    const open = watch.querySelector(".observation:not(.is-closed)");
-    const anchor = open && open.offsetTop >= node.offsetTop ? open : node;
-    const bottom = anchor.offsetTop + anchor.offsetHeight;
-    const target = Math.max(
-      0,
-      Math.min(
-        bottom - window.innerHeight + FOLLOW_TAIL,
-        document.documentElement.scrollHeight - window.innerHeight,
-      ),
-    );
-    if (target <= window.scrollY) {
-      return;
-    }
-    window.scrollTo({ top: target, behavior: stillMotion() ? "auto" : "smooth" });
-  }
-
-  function settle(wasNear, node) {
-    if (restoring) {
-      return;
-    }
-    if (manualScroll()) {
-      // Nothing will carry the reader down, so the indicator has to.
-      newPassage.hidden = nearBottom();
-      return;
-    }
-    if (wasNear && !userScrolling) {
-      newPassage.hidden = true;
-      follow(node);
-    } else {
-      newPassage.hidden = false;
-    }
+  function focusByScroll() {
+    /*
+     * Cancel and re-request rather than guarding with a flag. A flag cleared
+     * inside the callback wedges for good if the callback never runs — a
+     * background tab drops frames — and the reading would stay wherever it was
+     * left. This coalesces a burst of scroll events just as well and cannot
+     * get stuck.
+     */
+    window.cancelAnimationFrame(focusFrame);
+    focusFrame = window.requestAnimationFrame(() => {
+      focusFrame = 0;
+      if (stillMotion()) {
+        return;
+      }
+      const height = window.innerHeight;
+      const line = height * READING_LINE;
+      const fade = height * FADE_ZONE;
+      watch.querySelectorAll(".passage, .observation, .act-plate").forEach((block) => {
+        const top = block.getBoundingClientRect().top;
+        let read = 1;
+        if (top > line) {
+          read = Math.max(DIMMEST, 1 - (top - line) / fade);
+        }
+        block.style.setProperty("--read", read.toFixed(3));
+      });
+    });
   }
 
   function rememberScroll() {
@@ -342,11 +310,9 @@
     if (panels.has(actNumber)) {
       return panels.get(actNumber);
     }
-    const wasNear = nearBottom();
     const panel = buildPanel(actNumber);
     watch.appendChild(panel);
     panels.set(actNumber, panel);
-    settle(wasNear, panel);
     return panel;
   }
 
@@ -466,7 +432,7 @@
     }
   }
 
-  /* ---------------------------------------------------------- reveal loop */
+  /* ------------------------------------------------------------- the stream */
 
   function isGate(node) {
     return Boolean(node) && node.type === "question" && !node.answered;
@@ -477,65 +443,22 @@
     return !node || isGate(node);
   }
 
-  function revealOne() {
-    const node = nodes[revealed];
-    if (!node || isGate(node)) {
-      return null;
-    }
-    const wasNear = nearBottom();
-    revealed += 1;
-    const placed = place(node);
-    rendered = revealed;
-    persist();
-    settle(wasNear, placed);
-    return placed;
-  }
-
-  function revealAvailable() {
-    const wasNear = nearBottom();
+  /*
+   * The story runs as far as the next unanswered question and stops there.
+   * Everything to that point is on the page; the reader draws it into focus by
+   * scrolling. Answering opens the next stretch, and the same thing happens
+   * again.
+   */
+  function extend() {
     restoring = true;
-    let last = null;
     while (!idle()) {
       revealed += 1;
-      last = place(nodes[revealed - 1]) || last;
+      place(nodes[revealed - 1]);
       rendered = revealed;
     }
     restoring = false;
     persist();
-    return { wasNear, last };
-  }
-
-  /*
-   * How long the passage that has just landed is held. A node is given the
-   * time its own words take to read; an Act's last passage is given longer, so
-   * the reader finishes the Act before the next plate opens.
-   */
-  function holdFor(node) {
-    if (!node) {
-      return 0;
-    }
-    if (node.type === "question") {
-      return 0;
-    }
-    const next = nodes[revealed + 1];
-    if (next && next.type === "act") {
-      return core.actClosePause(prefs, false);
-    }
-    return core.revealDelay(prefs, false, node.text || node.title || "");
-  }
-
-  function schedule() {
-    window.clearTimeout(revealTimer);
-    if (prefs.paused || idle() || stillMotion() || manualScroll()) {
-      updateControls();
-      return;
-    }
-    const delay = holdFor(nodes[revealed]);
-    revealTimer = window.setTimeout(() => {
-      revealOne();
-      advance();
-    }, delay);
-    updateControls();
+    focusByScroll();
   }
 
   function refresh() {
@@ -549,13 +472,7 @@
       refresh();
     }
     catchUp();
-
-    // In manual reading the story does not trickle: everything up to the next
-    // question is already there, and the reader moves through it themselves.
-    if (!prefs.paused && (stillMotion() || manualScroll())) {
-      const result = revealAvailable();
-      settle(result.wasNear, result.last);
-    }
+    extend();
 
     const pending = core.pendingQuestion(nodes, revealed);
     if (pending) {
@@ -565,7 +482,7 @@
     updateSequence();
     updateEnvironment();
     syncSound();
-    schedule();
+    updateControls();
   }
 
   /* ---------------------------------------------------------- interaction */
@@ -801,69 +718,7 @@
   }
 
   function updateControls() {
-    // The button has to say whether the watch is paused without being opened.
-    controlsToggle.setAttribute(
-      "aria-label",
-      prefs.paused ? "Station controls, the watch is paused" : "Station controls",
-    );
-    controlsToggle.dataset.paused = String(Boolean(prefs.paused));
-
-    paceToggle.textContent = prefs.paused ? "Resume" : "Pause";
-    paceToggle.setAttribute("aria-pressed", String(Boolean(prefs.paused)));
-    paceToggle.setAttribute(
-      "aria-label",
-      prefs.paused ? "Resume revealing the watch" : "Pause revealing the watch",
-    );
-    paceNow.disabled = idle();
-    paceControl.querySelectorAll("[data-pace]").forEach((button) => {
-      const active = button.dataset.pace === prefs.textSpeed;
-      button.setAttribute("aria-checked", String(active));
-      button.setAttribute("aria-pressed", String(active));
-      button.tabIndex = active ? 0 : -1;
-    });
-    scrollControl.querySelectorAll("[data-scroll]").forEach((button) => {
-      const active = button.dataset.scroll === prefs.scrollMode;
-      button.setAttribute("aria-checked", String(active));
-      button.setAttribute("aria-pressed", String(active));
-      button.tabIndex = active ? 0 : -1;
-    });
-    // Reading pace only means something while the story is being revealed.
-    paceControl.hidden = manualScroll();
-    paceToggle.hidden = manualScroll();
-    document.body.dataset.scrollMode = prefs.scrollMode;
-  }
-
-  function setScrollMode(mode) {
-    prefs = { ...core.sanitisePreferences({ ...prefs, scrollMode: mode }), paused: prefs.paused };
-    core.savePreferences(prefs, storage);
-    advance();
-    schedule();
-    updateControls();
-    say(
-      manualScroll()
-        ? "Manual reading. The story is revealed to the next question and stays where it is."
-        : "Automatic reading. The story reveals itself and follows.",
-    );
-  }
-
-  function setPace(pace) {
-    prefs = { ...core.sanitisePreferences({ ...prefs, textSpeed: pace }), paused: prefs.paused };
-    core.savePreferences(prefs, storage);
-    schedule();
-    say(`Reading pace ${prefs.textSpeed}.`);
-  }
-
-  function togglePause() {
-    prefs.paused = !prefs.paused;
-    persist();
-    if (prefs.paused) {
-      window.clearTimeout(revealTimer);
-      updateControls();
-      say("The watch is paused.");
-    } else {
-      schedule();
-      say("The watch resumes.");
-    }
+    controlsToggle.setAttribute("aria-label", "Station controls");
   }
 
   /* ------------------------------------------------------------ the entry */
@@ -976,42 +831,7 @@
     orientationPanel.appendChild(el("p", "entry-body", orientation.intro));
     const list = el("ul", "entry-list");
     orientation.guidance.forEach((line) => list.appendChild(el("li", "", line)));
-    orientationPanel.append(list);
-
-    // How the story arrives is chosen here, and can be changed at any point
-    // from the station controls.
-    const readingCopy = data.prelude.reading;
-    const reading = el("div", "entry-choice");
-    const readingGroup = el("div", "entry-choice-options");
-    readingGroup.setAttribute("role", "radiogroup");
-    readingGroup.setAttribute("aria-label", readingCopy.label);
-    const readingButtons = readingCopy.options.map((option) => {
-      const button = el("button", "entry-option");
-      button.type = "button";
-      button.dataset.scroll = option.id;
-      button.setAttribute("role", "radio");
-      button.append(
-        el("span", "mark entry-option-name", option.name),
-        el("span", "entry-option-note", option.note),
-      );
-      button.addEventListener("click", () => {
-        setScrollMode(option.id);
-        syncReading();
-      });
-      readingGroup.appendChild(button);
-      return button;
-    });
-
-    function syncReading() {
-      readingButtons.forEach((button) => {
-        const active = button.dataset.scroll === prefs.scrollMode;
-        button.setAttribute("aria-checked", String(active));
-        button.tabIndex = active ? 0 : -1;
-      });
-    }
-
-    reading.append(el("p", "mark", readingCopy.label), readingGroup);
-    orientationPanel.append(reading, el("p", "entry-disclaimer", orientation.disclaimer));
+    orientationPanel.append(list, el("p", "entry-disclaimer", orientation.disclaimer));
     const orientationBack = el("button", "control", orientation.back);
     orientationBack.type = "button";
     const begin = el("button", "action", orientation.primary);
@@ -1049,7 +869,6 @@
       calibrationButtons.forEach((button) => button.setAttribute("aria-pressed", "false"));
       calibrationRead.textContent = "";
       calibrationNext.disabled = true;
-      syncReading();
       stage("identity");
     };
 
@@ -1143,7 +962,6 @@
       }
     });
 
-    paceToggle.addEventListener("click", togglePause);
     restartControl.addEventListener("click", () => {
       // The watch is long, and abandoning it should not mean clearing storage
       // by hand. Reading preferences survive; the record does not.
@@ -1153,67 +971,20 @@
       core.clearJourney(storage);
       window.location.reload();
     });
-    paceNow.addEventListener("click", () => {
-      window.clearTimeout(revealTimer);
-      const result = revealAvailable();
-      settle(result.wasNear, result.last);
-      advance();
-    });
-    paceControl.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-pace]");
-      if (button) {
-        setPace(button.dataset.pace);
-      }
-    });
-    scrollControl.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-scroll]");
-      if (button) {
-        setScrollMode(button.dataset.scroll);
-      }
-    });
-    paceControl.addEventListener("keydown", (event) => {
-      const step =
-        event.key === "ArrowRight" || event.key === "ArrowDown"
-          ? 1
-          : event.key === "ArrowLeft" || event.key === "ArrowUp"
-            ? -1
-            : 0;
-      if (!step) {
-        return;
-      }
-      event.preventDefault();
-      const order = ["slow", "normal", "fast"];
-      const next = order[(order.indexOf(prefs.textSpeed) + step + order.length) % order.length];
-      setPace(next);
-      paceControl.querySelector(`[data-pace="${next}"]`).focus();
-    });
-
-    newPassage.addEventListener("click", () => {
-      newPassage.hidden = true;
-      userScrolling = false;
-      follow(watch.lastElementChild);
-    });
-
     document.addEventListener("keydown", shortcut);
-    ["wheel", "touchmove", "pointerdown"].forEach((type) => {
-      window.addEventListener(type, markScrolling, { passive: true });
-    });
-    window.addEventListener("keydown", (event) => {
-      if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) {
-        markScrolling();
-      }
-    });
     window.addEventListener(
       "scroll",
       () => {
-        if (nearBottom()) {
-          newPassage.hidden = true;
-        }
+        focusByScroll();
         markActInView();
         rememberScroll();
       },
       { passive: true },
     );
+    window.addEventListener("resize", focusByScroll, { passive: true });
+    // A block reached by keyboard has to be readable even though the reader
+    // never scrolled to it.
+    watch.addEventListener("focusin", focusByScroll);
   }
 
   function boot() {
@@ -1231,7 +1002,6 @@
       document.body.appendChild(art.grainOverlay());
     }
 
-    prefs.paused = state.narrative.paused === true;
     bind();
     restore();
     updateSequence();

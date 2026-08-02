@@ -1128,7 +1128,7 @@ window.AURORA_STATION_DATA = {
             "facet": "Depression",
             "reverse": true,
             "spectrumId": "agreement-5",
-            "statement": "I am someone who remains secure in their judgement when external support is unavailable.",
+            "statement": "I am someone who remains secure in my judgement when external support is unavailable.",
             "context": "There is no one left to confirm a decision against. Whatever is decided tonight is decided here.",
             "convergence": "23:11. The storm is at its heaviest and the station is entirely alone.",
             "narrative": {
@@ -1179,7 +1179,7 @@ window.AURORA_STATION_DATA = {
             "facet": "Energy Level",
             "reverse": true,
             "spectrumId": "agreement-5",
-            "statement": "I am someone who is usually less active than the people around them.",
+            "statement": "I am someone who is usually less active than the people around me.",
             "context": "Every non-essential load has to be found, listed and switched down by hand. It takes hours and covers most of the station.",
             "convergence": "By 23:30 the draw is down by a third. It is not enough to change the arithmetic.",
             "narrative": {
@@ -1290,7 +1290,7 @@ window.AURORA_STATION_DATA = {
             "facet": "Sociability",
             "reverse": true,
             "spectrumId": "agreement-5",
-            "statement": "I am someone who holds back from discussion even when they have something to contribute.",
+            "statement": "I am someone who holds back from discussion even when I have something to contribute.",
             "context": "Ilan has the signal on the speaker. It repeats with a period of about eleven seconds, and he wants to talk about every part of it.",
             "convergence": "The period is stable to within a tenth of a second. Nothing in the station makes that noise.",
             "narrative": {
@@ -1310,7 +1310,7 @@ window.AURORA_STATION_DATA = {
             "facet": "Compassion",
             "reverse": false,
             "spectrumId": "agreement-5",
-            "statement": "I am someone who willingly interrupts their own work to help another person.",
+            "statement": "I am someone who willingly interrupts my own work to help another person.",
             "context": "Ilan has been waiting two seasons for something like this and his hands are not steady enough to set the gain.",
             "convergence": "The recorder runs clean. Whatever this is, there will be a record of it.",
             "narrative": {
@@ -1663,7 +1663,7 @@ window.AURORA_STATION_DATA = {
             "facet": "Organization",
             "reverse": true,
             "spectrumId": "agreement-5",
-            "statement": "I am someone who leaves their working materials disorganised after finding an answer.",
+            "statement": "I am someone who leaves my working materials disorganised after finding an answer.",
             "context": "Three sheets, two of them with corrections, and a set of assumptions that exist only in the order they were written down.",
             "convergence": "04:04. The figure is on the board where both of you can see it.",
             "narrative": {
@@ -1968,22 +1968,6 @@ window.AURORA_STATION_DATA = {
     "reveal": "Revealed by sentence, short paragraph or narrative beat into one cumulative document. Nothing already revealed is replaced or removed."
   },
   "prelude": {
-    "reading": {
-      "label": "How the story arrives",
-      "options": [
-        {
-          "id": "auto",
-          "name": "Automatic",
-          "note": "Reveals itself and follows down the page."
-        },
-        {
-          "id": "manual",
-          "name": "Manual",
-          "note": "All there already, and the page never moves itself."
-        }
-      ],
-      "note": "You can change this at any point during the watch."
-    },
     "steps": [
       {
         "id": "identity",

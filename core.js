@@ -26,25 +26,11 @@
   const MAX_NAME_LENGTH = 40;
 
   /*
-   * Reveal pacing.
-   *
-   * A passage is held for as long as it takes to read, not for a fixed count:
-   * a one-line beat and a forty-word paragraph are not the same amount of
-   * reading, and a single constant made the long ones feel rushed at every
-   * setting. Each pace is a reading rate in words per minute plus a settling
-   * pause, bounded so a very short line still lands and a very long one never
-   * stalls the watch.
+   * There is no reveal pacing. The story up to the next unanswered question is
+   * present, and the reader draws it into focus by scrolling. Nothing advances
+   * on a timer, so there is no speed to choose, nothing to pause, and nothing
+   * that can move the page while the reader is reading it.
    */
-  const TEXT_SPEEDS = {
-    slow: { wordsPerMinute: 155, settle: 900, min: 1500, max: 14000 },
-    normal: { wordsPerMinute: 260, settle: 600, min: 900, max: 9000 },
-    fast: { wordsPerMinute: 420, settle: 260, min: 420, max: 4500 },
-  };
-  // An Act closes before the next one opens, so the last passage is finished
-  // rather than pushed off the screen by the next Act's plate.
-  const ACT_CLOSE_PAUSE = { slow: 3200, normal: 2000, fast: 900 };
-  const REDUCED_MOTION_DELAY = 0;
-  const SCROLL_MODES = ["auto", "manual"];
 
   const DOMAIN_ORDER = [
     "extraversion",
@@ -430,19 +416,11 @@
   }
 
   function defaultPreferences() {
-    return { textSpeed: "normal", soundEnabled: true, scrollMode: "auto" };
+    return { soundEnabled: true };
   }
 
   function sanitisePreferences(candidate) {
-    const textSpeed = String(candidate?.textSpeed || "");
-    const scrollMode = String(candidate?.scrollMode || "");
-    return {
-      textSpeed: Object.prototype.hasOwnProperty.call(TEXT_SPEEDS, textSpeed)
-        ? textSpeed
-        : "normal",
-      soundEnabled: candidate?.soundEnabled !== false,
-      scrollMode: SCROLL_MODES.includes(scrollMode) ? scrollMode : "auto",
-    };
+    return { soundEnabled: candidate?.soundEnabled !== false };
   }
 
   function loadPreferences(storage) {
@@ -451,32 +429,6 @@
 
   function savePreferences(preferences, storage) {
     return writeRecord(storage, PREFERENCES_KEY, sanitisePreferences(preferences));
-  }
-
-  function wordCount(text) {
-    return String(text || "").trim().split(/\s+/).filter(Boolean).length;
-  }
-
-  /*
-   * How long a passage is held before the next one arrives: the time its own
-   * words take to read at the chosen rate, plus a pause to settle, bounded at
-   * both ends.
-   */
-  function revealDelay(preferences, reducedMotion, text) {
-    if (reducedMotion) {
-      return REDUCED_MOTION_DELAY;
-    }
-    const pace = TEXT_SPEEDS[sanitisePreferences(preferences).textSpeed];
-    const words = wordCount(text);
-    const reading = (words / pace.wordsPerMinute) * 60000;
-    return Math.round(Math.min(pace.max, Math.max(pace.min, reading + pace.settle)));
-  }
-
-  function actClosePause(preferences, reducedMotion) {
-    if (reducedMotion) {
-      return REDUCED_MOTION_DELAY;
-    }
-    return ACT_CLOSE_PAUSE[sanitisePreferences(preferences).textSpeed];
   }
 
   /*
@@ -1052,30 +1004,27 @@
    * deepens through the rest of the night, and it is gone by the debrief —
    * dawn is not a version of the night with the lights turned down.
    */
-  function auroraStateFor(data, state, nodes, revealed) {
+  function auroraStateFor(data, state) {
     const auroraAct = data.story.auroraAct;
     const safe = sanitiseState(data, state);
     if (!safe.participant.name) {
       return { state: "off", intensity: 0 };
     }
 
-    const stream = Array.isArray(nodes) ? nodes : buildNodes(data, safe);
-    const limit = Math.max(0, Math.min(revealed ?? stream.length, stream.length));
-    const seen = stream.slice(0, limit);
+    /*
+     * The environment follows the number of recorded observations. Because the
+     * story only ever runs as far as the next unanswered question, the reader
+     * cannot get ahead of their own answers, so the count is a true reading of
+     * how far into the night they are.
+     */
+    const answered = answeredCount(safe);
 
     // Once the record closes, the station is in daylight.
-    if (seen.some((node) => node.type === "completion")) {
+    if (answered >= ITEM_COUNT) {
       return { state: "off", intensity: 0 };
     }
 
-    let reached = 0;
-    seen.forEach((node) => {
-      const number = node.actNumber || actNumberFor(data, node.actId);
-      if (number) {
-        reached = Math.max(reached, number);
-      }
-    });
-
+    const reached = Math.min(ACT_COUNT, Math.floor(answered / ITEMS_PER_ACT) + 1);
     if (reached < auroraAct) {
       return { state: "off", intensity: 0 };
     }
@@ -1183,7 +1132,6 @@
     MIN_RESPONSE,
     MAX_RESPONSE,
     MAX_NAME_LENGTH,
-    TEXT_SPEEDS,
     DOMAIN_ORDER,
     answeredCount,
     auroraStateFor,
@@ -1217,10 +1165,7 @@
     previousResponse,
     recommendRole,
     recordResponse,
-    actClosePause,
     responseLabels,
-    revealDelay,
-    wordCount,
     roleDefinitions,
     roleScoreFor,
     scoreSuitability,
