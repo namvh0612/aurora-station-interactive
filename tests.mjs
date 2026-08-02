@@ -1688,14 +1688,24 @@ check("the export draws the figures the report opens with", () => {
   assert.match(pdfSource, /function drawInstrumentDial\(/);
   assert.match(pdfSource, /drawInstrumentDial\(\s*context/);
   assert.match(pdfSource, /function drawElementCycle\(/);
-  // The movement page carries one rule per contribution with its travel drawn,
-  // rather than three stacked rules to compare by eye.
+  /*
+   * The movement page keeps a rule per stretch, so two equal readings cannot
+   * land on top of each other and no two labels can collide, and joins the
+   * marks down the rows so the shift is drawn rather than inferred.
+   */
   const phasePage = pdfSource.slice(
     pdfSource.indexOf("function drawProfilePhasePage("),
     pdfSource.indexOf("function drawProfileDomainPage("),
   );
-  assert.match(phasePage, /One rule per contribution/);
+  assert.match(phasePage, /Three rules per contribution/);
+  assert.match(phasePage, /The travel, joined down the rows/);
   assert.doesNotMatch(phasePage, /drawScoreTrack/);
+  // The connector is drawn before the marks, so a mark is never covered.
+  assert.ok(
+    phasePage.indexOf("The travel, joined down the rows") <
+      phasePage.lastIndexOf("context.arc(x, centre, 12"),
+    "the travel is drawn over the marks",
+  );
 });
 
 check("the reading highlight follows the pointer and nothing else", () => {

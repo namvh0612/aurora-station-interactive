@@ -764,94 +764,105 @@
     y += 70;
 
     /*
-     * One rule per contribution, carrying all three readings. The travel is
-     * drawn as a line from first to last, so movement is the mark rather than
-     * something the reader has to reconstruct from three stacked rules, and a
-     * contribution that did not move reads flat at a glance.
+     * Three rules per contribution, one for each stretch of the watch, each
+     * labelled once at the left of its own row so no two labels can collide
+     * and two equal readings cannot land on top of each other. The marks are
+     * then joined down the rows, so the shift is a shape the eye follows
+     * rather than three positions to compare: a contribution that did not move
+     * draws a straight line, one that swung draws a visible bend.
      */
-    const trackX = EXPORT_MARGIN + 430;
-    const trackWidth = width - 430 - 250;
+    const trackX = EXPORT_MARGIN + 560;
+    const trackWidth = width - 560 - 220;
     const at = (normalised) => trackX + trackWidth * Math.max(0, Math.min(1, normalised));
+    const ROW = 52;
 
     // The scale, named once at the top rather than on every row.
-    drawExportText(context, `${profile.scaleMin}`, trackX, y - 14, 80, {
+    drawExportText(context, `${profile.scaleMin}`, trackX, y - 12, 80, {
       size: 23, family: "sans", colour: "#5c6568", align: "center", lineHeight: 30,
     });
-    drawExportText(context, `${profile.scaleMax}`, trackX + trackWidth, y - 14, 80, {
+    drawExportText(context, `${profile.scaleMax}`, trackX + trackWidth, y - 12, 80, {
       size: 23, family: "sans", colour: "#5c6568", align: "center", lineHeight: 30,
     });
-    y += 40;
+    y += 34;
 
     profile.roles.forEach((role) => {
       const readings = profile.phases.map((phase) => ({
         phase,
         entry: phase.roles.find((candidate) => candidate.id === role.id),
       }));
-      const centre = y + 34;
 
-      drawExportText(context, role.shortName, EXPORT_MARGIN, centre + 10, 400, {
+      drawExportText(context, role.shortName, EXPORT_MARGIN, y + 34, 460, {
         size: 34, family: "sans", weight: 600, colour: "#14181a", lineHeight: 44, maxLines: 1,
       });
 
-      // The range, and the whole scale points along it.
-      context.strokeStyle = "#c1caca";
-      context.lineWidth = 2;
+      const rowCentre = (index) => y + 24 + index * ROW;
+
+      // The three ranges, one per stretch.
+      readings.forEach(({ phase }, index) => {
+        const centre = rowCentre(index);
+        context.strokeStyle = "#c1caca";
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(trackX, centre);
+        context.lineTo(trackX + trackWidth, centre);
+        context.stroke();
+        for (let step = 0; step <= 4; step += 1) {
+          const tick = trackX + (trackWidth * step) / 4;
+          context.beginPath();
+          context.moveTo(tick, centre - 6);
+          context.lineTo(tick, centre + 6);
+          context.stroke();
+        }
+        drawExportText(context, phase.shortLabel, EXPORT_MARGIN + 300, centre + 10, 250, {
+          size: 23, family: "sans", colour: "#5c6568", lineHeight: 30, maxLines: 1,
+        });
+        drawExportText(
+          context,
+          readings[index].entry.score.toFixed(1),
+          EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
+          centre + 10,
+          200,
+          { size: 27, family: "sans", weight: 600, colour: "#14181a", align: "right", lineHeight: 34 },
+        );
+      });
+
+      // The travel, joined down the rows and drawn first so a mark always
+      // sits on top of it.
+      context.strokeStyle = role.colourPaper;
+      context.lineWidth = 4;
       context.beginPath();
-      context.moveTo(trackX, centre);
-      context.lineTo(trackX + trackWidth, centre);
-      context.stroke();
-      for (let step = 0; step <= 4; step += 1) {
-        const tick = trackX + (trackWidth * step) / 4;
-        context.beginPath();
-        context.moveTo(tick, centre - 8);
-        context.lineTo(tick, centre + 8);
-        context.stroke();
-      }
-
-      // The travel, first reading to last.
-      const first = at(readings[0].entry.normalised);
-      const last = at(readings[2].entry.normalised);
-      if (Math.abs(last - first) > 3) {
-        context.strokeStyle = role.colourPaper;
-        context.lineWidth = 5;
-        context.beginPath();
-        context.moveTo(first, centre);
-        context.lineTo(last, centre);
-        context.stroke();
-      }
-
-      // Three marks on the one rule: hollow to start, then filled, then ringed.
-      readings.forEach(({ phase, entry }, index) => {
+      readings.forEach(({ entry }, index) => {
         const x = at(entry.normalised);
+        const centre = rowCentre(index);
+        if (index === 0) {
+          context.moveTo(x, centre);
+        } else {
+          context.lineTo(x, centre);
+        }
+      });
+      context.stroke();
+
+      readings.forEach(({ entry }, index) => {
+        const x = at(entry.normalised);
+        const centre = rowCentre(index);
         context.lineWidth = 4;
         context.strokeStyle = role.colourPaper;
-        context.fillStyle = index === 1 ? role.colourPaper : "#e6eaeb";
+        context.fillStyle = "#e6eaeb";
         context.beginPath();
-        context.arc(x, centre, index === 2 ? 15 : 12, 0, Math.PI * 2);
+        context.arc(x, centre, 12, 0, Math.PI * 2);
         context.fill();
         context.stroke();
-        if (index === 2) {
+        // The stretch under pressure is the filled one, so the middle of the
+        // night is findable without reading the labels.
+        if (index === 1) {
           context.fillStyle = role.colourPaper;
           context.beginPath();
           context.arc(x, centre, 6, 0, Math.PI * 2);
           context.fill();
         }
-        drawExportText(context, phase.shortLabel, x, centre + 52, 260, {
-          size: 21, family: "sans", colour: "#5c6568", align: "center", lineHeight: 28, maxLines: 1,
-        });
       });
 
-      // The three readings, in order, at the end of the row.
-      drawExportText(
-        context,
-        readings.map(({ entry }) => entry.score.toFixed(1)).join("  ·  "),
-        EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
-        centre + 10,
-        260,
-        { size: 27, family: "sans", weight: 600, colour: "#14181a", align: "right", lineHeight: 34 },
-      );
-
-      y += 150;
+      y += ROW * 3 + 44;
     });
   }
 
