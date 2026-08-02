@@ -690,7 +690,7 @@ window.AURORA_STATION_DATA = {
             "narrative": {
               "low": "The unfinished line sits behind everything you do. You return to the panel twice more than the schedule asks.",
               "mid": "It stays with you, but at a distance—a thing to watch rather than a thing to carry.",
-              "high": "You file it as one open item among several and let your attention settle back into the ordinary shape of the watch."
+              "high": "You file it as one open item, no more urgent than any other, and let your attention settle back into the ordinary shape of the watch."
             },
             "contextPhase": "baseline"
           },
@@ -1625,7 +1625,7 @@ window.AURORA_STATION_DATA = {
             "spectrumId": "agreement-5",
             "statement": "I am someone who prefers to talk through a problem with another person.",
             "context": "How much reserve is left, what it will carry and for how long. The arithmetic is not difficult and the result is not good.",
-            "convergence": "Fifteen minutes of running, and the only question is what to spend it on. Banked into the refuge loop with everything else shed, it holds about four hours above freezing. Held on the recorder, which cannot be shed, it buys eleven minutes of unbroken signal. Split, it buys less of each.",
+            "convergence": "Fifteen minutes of running. Banked into the refuge loop it holds four hours above freezing; spent on the recorder it buys eleven minutes. Not both.",
             "narrative": {
               "low": "You work it alone on paper and put the figure in front of him when it is finished.",
               "mid": "You check the inputs with him and do the rest yourself.",
@@ -1846,12 +1846,12 @@ window.AURORA_STATION_DATA = {
             "reverse": false,
             "spectrumId": "agreement-5",
             "statement": "I am someone who expresses enthusiasm visibly during a difficult wait.",
-            "context": "Four hours in a cooling room with nothing to do but stay awake and stay warm.",
+            "context": "A cooling room, no way to know how long the wait will be, and nothing to do but stay awake and stay warm.",
             "convergence": "05:02. The refuge is at four degrees. None of you has slept.",
             "narrative": {
-              "low": "You conserve everything, including your voice. The hours pass in a kind of grey economy.",
+              "low": "You conserve everything, including your voice. The time passes in a kind of grey economy.",
               "mid": "You keep things moving when they slow and let them slow again.",
-              "high": "You keep something alive in the room—talk, a plan for the morning, an argument about nothing—and the temperature does not drop any slower for it, but the hours do pass."
+              "high": "You keep something alive in the room—talk, a plan for the morning, an argument about nothing—and the temperature does not drop any slower for it, but the time does pass."
             },
             "contextPhase": "recovery"
           },
@@ -1890,8 +1890,8 @@ window.AURORA_STATION_DATA = {
             "convergence": "05:14. Something that is not the wind comes through on the handheld.",
             "narrative": {
               "low": "Every entry goes in on the half hour, in a hand that gets worse and never stops.",
-              "mid": "Most of them go in. Two half hours pass unrecorded.",
-              "high": "The log thins out and then stops. The last two hours of Aurora Station are not written down by anyone."
+              "mid": "Most of them go in. One half hour passes unrecorded.",
+              "high": "The log thins out and then stops. The last hour of Aurora Station is not written down by anyone."
             },
             "contextPhase": "recovery"
           },

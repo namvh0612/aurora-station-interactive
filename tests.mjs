@@ -1054,6 +1054,54 @@ check("the night's clock only ever moves forward", () => {
   });
 });
 
+check("no act asks for more time than it has", () => {
+  /*
+   * An act is a bounded scene, and its prose has to fit inside it. Act 12 runs
+   * fifty-two minutes and described four hours in the cooling room, a log
+   * losing its last two hours, and two half-hourly marks missed out of the two
+   * it contains — while also saying most of them went in.
+   *
+   * Three kinds of "hours" are not elapsed time in the scene and are exempt:
+   * the past, a running total carried into it, and what a reserve can buy.
+   */
+  const spelled = {
+    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6,
+    seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, "twenty-two": 22,
+  };
+  const notElapsed = /hours? (old|ago)|awake for [\w-]+ hours|[\w-]+ hours awake|hours above freezing/i;
+  const minutes = (stamp) => {
+    const [hour, minute] = stamp.split(":").map(Number);
+    return (hour < 12 ? hour + 24 : hour) * 60 + minute;
+  };
+  data.story.acts.forEach((act) => {
+    const [from, to] = act.time.split(/[–-]/).map((edge) => minutes(edge.trim()));
+    const span = to - from;
+    const text = [act.opening, act.closing]
+      .concat(act.items.flatMap((item) => [
+        item.context,
+        item.convergence,
+        ...Object.values(item.narrative || {}),
+      ]))
+      .filter(Boolean)
+      .join("  ");
+    [...text.matchAll(/\b([\w-]+)\s+hours?\b/gi)].forEach((match) => {
+      const claimed = spelled[match[1].toLowerCase()]
+        ?? (/^\d+$/.test(match[1]) ? Number(match[1]) : null);
+      if (claimed === null) {
+        return;
+      }
+      const around = text.slice(Math.max(0, match.index - 24), match.index + match[0].length + 20);
+      if (notElapsed.test(around)) {
+        return;
+      }
+      assert.ok(
+        claimed * 60 <= span,
+        `Act ${act.number} runs ${span} minutes but spends "${match[0]}"`,
+      );
+    });
+  });
+});
+
 check("the story counts what it says it counts", () => {
   /*
    * The unfinished handover line is quoted in full and also counted in prose.
