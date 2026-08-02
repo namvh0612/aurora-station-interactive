@@ -1,19 +1,23 @@
 # Aurora Station — The Final Watch
 
-**Aurora Station** is a narrative self-reflection experience built on the structure of the **Big Five Inventory-2 (BFI-2)**. Rather than asking participants to describe themselves through abstract labels, it places them inside a shared story and asks how strongly they agree that each statement describes the way they generally tend to think, feel or behave.
+**Aurora Station** is a narrative self-reflection experience. Rather than asking participants to describe themselves through abstract labels, it places them inside a shared story and asks how strongly they agree that each statement describes the way they generally tend to think, feel or behave.
 
 The story is one continuous document. Twelve Acts of five statements each build a single scrolling record that grows as you read, and nothing already written is taken away. When all sixty are recorded, a separate Results page reports five domains and fifteen facets.
 
 ## Measurement status
 
-Aurora Station is a **BFI-2-aligned narrative self-reflection**, not an official or clinically validated BFI-2 assessment.
+Aurora Station is a **narrative self-reflection, not a validated or clinically administered assessment**.
 
-It reproduces the BFI-2 *structure* exactly — the official item order, domain keys and facet assignment, twelve items per domain, four per facet, and an equal number of positively and reverse-keyed items throughout. It does **not** use the official item wording: every statement is rewritten into an Aurora Station scenario. Scenario adaptation changes the validated instrument, so the results here are for reflection only.
+It is built on an established five-domain, fifteen-facet structure: twelve statements per domain, four per facet, an equal number of positively and reverse-keyed statements throughout, and one fixed statement order. The statements themselves are written for Aurora Station. They are not taken from a published instrument, and the readings they produce are for reflection only — there are no norms and no comparison with other people.
 
-The BFI-2 items are copyright Oliver P. John and Christopher J. Soto. The official resource grants personal and research use; separate permission is required before any commercial use.
+### Where the structure comes from
 
-- [The BFI-2 at the Colby Personality Lab](https://www.colby.edu/academics/departments-and-programs/psychology/research-opportunities/personality-lab/the-bfi-2/)
-- [Soto & John, the BFI-2 paper](https://escholarship.org/content/qt16x6n05t/qt16x6n05t.pdf)
+The five-domain, fifteen-facet structure is that of the Big Five Inventory-2 by Christopher J. Soto and Oliver P. John. Aurora Station uses that structure and its keying pattern; the statements are its own. The source is credited here and in the exported report, and is not named inside the experience itself.
+
+- [The Personality Lab at Colby](https://www.colby.edu/academics/departments-and-programs/psychology/research-opportunities/personality-lab/the-bfi-2/)
+- [Soto & John, the source paper](https://escholarship.org/content/qt16x6n05t/qt16x6n05t.pdf)
+
+The official resource grants personal and research use free of charge. Confirm separate permission before any commercial use.
 
 The experience is designed to support thoughtful reflection and constructive conversation. It does not seek to identify one ideal personality, assign a fixed type, or determine whether someone is suitable for a role.
 
@@ -46,6 +50,13 @@ Higher and lower expressions of a dimension can both be valuable. Each may offer
 ### Patterns matter more than individual answers
 
 A single response should not be interpreted on its own. The profile reflects tendencies that emerge across multiple situations and different forms of pressure.
+
+### One statement at a time
+
+Every statement takes the same form — *I am someone who…* — and asks about a
+general tendency rather than about the scene around it. The situation is set by
+the passage above it; the statement itself stays short enough to answer without
+re-reading, and never gives away what happens next.
 
 ### An honest reading, including the middle
 
@@ -155,7 +166,7 @@ Two font families carry everything: an editorial display serif for narrative, ac
 
 The reading column is centred and its measure grows with the page, so the same document reads as one column on a phone and as a centred page on a laptop rather than a narrow strip against empty ground. Act plates are the exception: they run full-bleed to the edges of the display. The measure still tightens through the degraded stretch, as a share of itself.
 
-The five behavioural currents carry the five elements — Wood, Fire, Earth, Metal and Water — assigned by the Big Five trait each already reads. The element supplies the colour and the shape of one chapter of the report: which contribution yours tends to feed, which tends to feed yours, and which holds it in check. It is used for that relationship and nothing else. Every reading in the report comes from the sixty recorded responses; no part of it is derived from a date of birth. Each element keeps one hue across the whole product, set light enough to read on the night and deep enough to read on paper.
+The five behavioural currents carry the five elements — Wood, Fire, Earth, Metal and Water — assigned by the tendency each current already reads. The element supplies the colour and the shape of one chapter of the report: which contribution yours tends to feed, which tends to feed yours, and which holds it in check. It is used for that relationship and nothing else. Every reading in the report comes from the sixty recorded responses; no part of it is derived from a date of birth. Each element keeps one hue across the whole product, set light enough to read on the night and deep enough to read on paper.
 
 The aurora is a narrative event, not a background. It is absent through onboarding and the whole early and middle watch, enters at Act 09 when the storm breaks, deepens through the remaining acts, and is gone by the time the report opens.
 

@@ -67,7 +67,7 @@ function memoryStorage() {
 
 /* ------------------------------------------------------------- structure */
 
-check("the content validates against the BFI-2 structure", () => {
+check("the content validates against the five-domain structure", () => {
   const result = core.validateContent(data);
   assert.deepEqual(result.problems, []);
   assert.equal(result.valid, true);
@@ -191,13 +191,66 @@ check("the response scale uses the official five labels", () => {
   assert.equal(spectrum.rightAnchor, "Agree strongly");
 });
 
-check("the product does not claim to be an official BFI-2", () => {
-  assert.equal(data.instrument.status, "BFI-2-aligned narrative self-reflection");
-  assert.match(data.instrument.statusNote, /not an official or clinically validated/i);
+check("the product never claims to be a validated instrument", () => {
+  assert.match(data.instrument.status, /not a clinical instrument/i);
+  assert.match(data.instrument.statusNote, /not a validated/i);
+  assert.match(data.instrument.permission, /commercial/i);
+});
+
+check("the experience does not name the instrument, and the credit survives", () => {
+  /*
+   * The five domains keep their names — those are the behavioural currents —
+   * but the instrument itself is not named anywhere the reader reads. The
+   * credit for the structure stays, in one place: the instrument record, which
+   * the report's colophon and the README render.
+   */
+  const surfaces = [appSource, resultsSource, indexSource, resultsHtml, stylesSource, coreSource];
+  surfaces.forEach((source) => {
+    assert.doesNotMatch(source, /BFI-?2/i, "instrument named in source");
+    assert.doesNotMatch(source, /\bBig Five\b/i, "Big Five named in source");
+    assert.doesNotMatch(source, /\bOCEAN\b/, "OCEAN named in source");
+  });
+
+  // Nothing the reader is shown names it either.
+  const shown = [
+    data.instrument.status,
+    data.instrument.statusNote,
+    data.assessment.roleNote,
+    data.assessment.phaseNote,
+    data.assessment.bandNote,
+    data.results.disclaimer,
+    data.results.relationsNote,
+  ].join(" ");
+  assert.doesNotMatch(shown, /BFI-?2|\bBig Five\b|\bOCEAN\b/i);
+
+  // The credit itself is intact, and says what was actually borrowed.
   assert.match(data.instrument.attribution, /Soto/);
   assert.match(data.instrument.attribution, /John/);
+  assert.match(data.instrument.attribution, /structure/i);
   assert.match(data.instrument.reference, /colby\.edu/);
-  assert.match(data.instrument.permission, /commercial/i);
+  assert.match(readme, /Soto/);
+  assert.match(readme, /colby\.edu/);
+  // And the domains keep their names.
+  ["Extraversion", "Agreeableness", "Conscientiousness", "Negative Emotionality", "Open-Mindedness"]
+    .forEach((name) => {
+      assert.ok(
+        core.domainDefinitions(data).some((domain) => domain.name === name),
+        `${name} was renamed`,
+      );
+    });
+});
+
+check("every statement is one self-report sentence on the shared stem", () => {
+  items.forEach((item) => {
+    assert.match(item.statement, /^I am someone who /, `${item.id} does not use the stem`);
+    assert.match(item.statement, /\.$/, `${item.id} does not end in a full stop`);
+    // Short enough to answer, and no story detail smuggled into the item.
+    const words = core.wordCount(item.statement);
+    assert.ok(words <= 16, `${item.id} runs to ${words} words`);
+  });
+  // The prelude's practice statement is set the same way.
+  const calibration = data.prelude.steps.find((step) => step.id === "calibration");
+  assert.match(calibration.statement, /^I am someone who /);
 });
 
 /* ----------------------------------------------------- narrative mapping */
@@ -294,7 +347,7 @@ check("interpretation bands use the specified edges", () => {
   assert.equal(core.bandForScore(data, 3.49).id, "balanced");
   assert.equal(core.bandForScore(data, 3.5).id, "higher");
   assert.equal(core.bandForScore(data, 5).id, "higher");
-  assert.match(data.assessment.bandNote, /not official BFI-2 norms/i);
+  assert.match(data.assessment.bandNote, /not norms/i);
 });
 
 check("negative emotionality is scored directly and never inverted", () => {
@@ -619,7 +672,7 @@ check("phase facets are not reported separately", () => {
     assert.equal("facets" in phase, false, `${phase.id} exposes facets`);
   });
   assert.equal(profile.facets.length, 15);
-  assert.match(data.assessment.phaseNote, /not official BFI-2 scores/i);
+  assert.match(data.assessment.phaseNote, /not separate measurements/i);
 });
 
 check("shifts use the 0.25 and 0.50 thresholds", () => {
@@ -1024,6 +1077,7 @@ const resultsHtml = read("./results.html");
 const stylesSource = read("./styles.css");
 const pdfSource = read("./pdf-export.js");
 const audioSource = read("./audio.js");
+const readme = read("./README.md");
 
 check("both pages load the modules they need and nothing else", () => {
   [
@@ -1609,6 +1663,69 @@ check("the phone controls are reachable and the bar carries the reading", () => 
   assert.doesNotMatch(masthead, /^\s*backdrop-filter/m);
   // The button keeps a name once its label is only a glyph.
   assert.match(indexSource, /id="controls-toggle"[\s\S]*?aria-label="Station controls"/);
+});
+
+check("the export finds its chapters by name, not by position", () => {
+  /*
+   * Inserting the relations chapter shifted every index after it, and the
+   * closing page went on printing the heading that had moved into slot four.
+   * Nothing in the export may address a chapter by its position again.
+   */
+  assert.doesNotMatch(pdfSource, /results\.chapters\[\d+\]/);
+  ["role", "close", "relations"].forEach((id) => {
+    assert.match(
+      pdfSource,
+      new RegExp(`chapters\\.find\\(\\(entry\\) => entry\\.id === "${id}"\\)`),
+      `${id} is not looked up by id`,
+    );
+  });
+});
+
+check("the export draws the figures the report opens with", () => {
+  // A dial on the contribution page, and the cycle on the relations page.
+  assert.match(pdfSource, /function drawInstrumentDial\(/);
+  assert.match(pdfSource, /drawInstrumentDial\(\s*context/);
+  assert.match(pdfSource, /function drawElementCycle\(/);
+  // The movement page carries one rule per contribution with its travel drawn,
+  // rather than three stacked rules to compare by eye.
+  const phasePage = pdfSource.slice(
+    pdfSource.indexOf("function drawProfilePhasePage("),
+    pdfSource.indexOf("function drawProfileDomainPage("),
+  );
+  assert.match(phasePage, /One rule per contribution/);
+  assert.doesNotMatch(phasePage, /drawScoreTrack/);
+});
+
+check("the reading highlight follows the pointer and nothing else", () => {
+  // No renderer-applied class, and no scroll-driven marking.
+  assert.doesNotMatch(appSource, /is-marked|markNearestInView|markTimer/);
+  assert.doesNotMatch(stylesSource, /is-marked|passage-mark/);
+  // A hover state, on pointer devices only.
+  assert.match(stylesSource, /@media \(hover: hover\) and \(pointer: fine\)/);
+  const opened = stylesSource.indexOf("@media (hover: hover) and (pointer: fine)");
+  // To the media query's own closing brace, not a fixed number of characters.
+  const block = stylesSource.slice(opened, stylesSource.indexOf("\n}", opened));
+  assert.match(block, /\.passage:hover \{\s*background-color:/);
+  // Background only: the highlight may never set a text colour.
+  assert.doesNotMatch(block, /^\s*color:/m);
+});
+
+check("every prelude step fits the screen it is read on", () => {
+  // The oversized index is set behind the opening rather than above it.
+  const index = stylesSource.slice(
+    stylesSource.indexOf(".entry-index"),
+    stylesSource.indexOf("}", stylesSource.indexOf(".entry-index")),
+  );
+  assert.match(index, /position: absolute/);
+  // The guidance is three lines now, not five.
+  const orientation = data.prelude.steps.find((step) => step.id === "orientation");
+  assert.ok(orientation.guidance.length <= 3, `${orientation.guidance.length} guidance lines`);
+  // The standing limitation is a note, not a statement.
+  const disclaimer = stylesSource.slice(
+    stylesSource.indexOf(".entry-disclaimer"),
+    stylesSource.indexOf("}", stylesSource.indexOf(".entry-disclaimer")),
+  );
+  assert.match(disclaimer, /font-size: var\(--step-note\)/);
 });
 
 check("hiding an element actually hides it", () => {

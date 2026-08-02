@@ -61,7 +61,7 @@
   /*
    * ---- behavioural traces ----
    *
-   * The five elements, on the currents their Big Five reading already matches:
+   * The five elements, on the currents whose reading each one already matches:
    * Wood, Fire, Earth, Metal, Water. The hue is the identity and does not
    * change; the value does, because a colour chosen for a white slide does not
    * clear 3:1 on a near-black night or on mineral paper.
@@ -682,26 +682,23 @@ body[data-aurora="present"] .env-aurora {
 }
 
 /*
- * A faint ground under the passage the reader has just arrived at, so the eye
- * can find its place again after the page moves. It is a background and
- * nothing else: no text colour changes, so no contrast is lost, and it clears
- * itself rather than staying lit.
+ * A faint ground under the line the reader is on, so the eye can keep its
+ * place. It follows the pointer rather than lighting itself: nothing moves
+ * unless the reader moves it. Background only — no text colour changes, so no
+ * contrast is lost. Pointer devices only, because :hover on a touch screen
+ * sticks to whatever was last tapped.
  */
-.passage.is-marked {
-  animation: passage-mark 2600ms ease-out both;
-}
+@media (hover: hover) and (pointer: fine) {
+  .passage {
+    transition: background-color 260ms ease;
+  }
 
-@keyframes passage-mark {
-  0% {
+  .passage:hover {
     background-color: rgba(207, 226, 230, 0.07);
   }
 
-  55% {
-    background-color: rgba(207, 226, 230, 0.055);
-  }
-
-  100% {
-    background-color: transparent;
+  body.report .passage:hover {
+    background-color: rgba(20, 24, 26, 0.045);
   }
 }
 
@@ -1000,19 +997,33 @@ body[data-aurora="present"] .env-aurora {
   align-content: start;
   width: min(var(--measure-wide), 100%);
   margin-inline: auto;
-  padding: clamp(2.5rem, 8vh, 6rem) var(--gutter) 0;
+  padding: clamp(1.5rem, 5vh, 3.5rem) var(--gutter) 0;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
+/*
+ * The step number is set behind the opening rather than above it, so it reads
+ * as the plate's own numbering and costs the column no height. It was 166px of
+ * decoration in a panel that then would not fit a screen.
+ */
 .entry-index {
-  margin: 1.5rem 0 0.5rem;
+  position: absolute;
+  z-index: -1;
+  top: clamp(0.5rem, 3vh, 2rem);
+  right: var(--gutter);
+  margin: 0;
   color: var(--mineral);
-  font-size: var(--step-plate);
+  font-size: var(--step-display);
   font-variant-numeric: lining-nums;
   letter-spacing: -0.06em;
   line-height: 0.8;
-  opacity: 0.12;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.entry-title {
+  font-size: var(--step-chapter);
 }
 
 .entry-head {
@@ -1121,22 +1132,22 @@ body[data-aurora="present"] .env-aurora {
 /* How the story arrives: chosen here, changeable from the controls later. */
 .entry-choice {
   display: grid;
-  gap: 0.75rem;
-  margin-top: 1.75rem;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
 }
 
 .entry-choice-options {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
-  max-width: var(--measure-wide);
 }
 
 .entry-option {
-  display: grid;
-  gap: 0.35rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
   min-height: var(--tap);
-  padding: 0.85rem 1rem;
+  padding: 0.6rem 1rem;
   border: var(--rule) solid var(--edge);
   background: transparent;
   color: var(--mineral-dim);
@@ -1145,6 +1156,10 @@ body[data-aurora="present"] .env-aurora {
   text-align: left;
   cursor: pointer;
   transition: border-color 240ms ease, color 240ms ease;
+}
+
+.entry-option-note {
+  color: var(--mineral-faint);
 }
 
 .entry-option:hover,
@@ -1166,13 +1181,15 @@ body[data-aurora="present"] .env-aurora {
   color: var(--signal-live);
 }
 
-/* The standing limitation, set at reading size rather than as a statement. */
+/* The standing limitation, set as a note rather than as a statement. */
 .entry-disclaimer {
-  max-width: var(--measure);
-  margin-top: 1.5rem;
+  max-width: var(--measure-wide);
+  margin-top: 1.25rem;
   padding-left: 1.25rem;
   border-left: var(--rule) solid var(--edge);
   color: var(--mineral-dim);
+  font-size: var(--step-note);
+  line-height: 1.55;
 }
 
 /* Inside the prelude the scale is indented to sit under its statement. */
@@ -1180,6 +1197,15 @@ body[data-aurora="present"] .env-aurora {
 .entry-frame .responses {
   max-width: var(--measure);
   margin-left: 1.25rem;
+}
+
+/*
+ * The readout is the last thing in the panel and the foot is pinned over the
+ * bottom of it, so it needs its own clearance rather than sitting under the
+ * gradient.
+ */
+.entry-frame .observation-readout {
+  margin: 0.85rem 0 0.5rem 1.25rem;
 }
 
 /* ============================================================ dawn report */
@@ -1394,16 +1420,22 @@ body.report .art-grain {
   stroke-width: 1;
 }
 
-/* The two relationships the reader is part of are the ones drawn in ink. */
+/* The relationships the reader is part of are the ones drawn in ink. */
 .art-cycle-live {
   stroke: var(--ink-dim);
 }
 
+/*
+ * The head carries its line's own class, so it takes the same colour without
+ * depending on a shared marker that could only ever be one colour.
+ */
 .art-cycle-head {
   fill: var(--paper-line);
+  stroke: none;
+  stroke-dasharray: none;
 }
 
-.art-cycle-live .art-cycle-head {
+.art-cycle-head.art-cycle-live {
   fill: var(--ink-dim);
 }
 
@@ -1448,33 +1480,6 @@ body.report .art-grain {
   color: var(--ink-dim);
 }
 
-.relations-summary {
-  display: grid;
-  gap: 0.6rem;
-  margin: 1.75rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.relations-summary li {
-  display: grid;
-  gap: 0.15rem 0.75rem;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: baseline;
-}
-
-.relations-summary li::before {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: var(--trace, var(--ink-faint));
-  content: "";
-}
-
-.relations-summary-role {
-  grid-column: 2;
-  font-size: var(--step-note);
-}
 
 /* The current is named by a mark beside it, not by a coloured edge. */
 .relations-role {
@@ -2120,6 +2125,25 @@ body.report .action-quiet {
     padding-block: 5rem 4rem;
   }
 
+  /*
+   * The prelude has to fit one screen here too. The option notes and the
+   * standing limitation are both said again in the report, so the phone keeps
+   * the choice and the guidance and lets the prose go.
+   */
+  .entry-option-note {
+    display: none;
+  }
+
+  .entry-disclaimer {
+    margin-top: 1rem;
+    font-size: var(--step-mark);
+    line-height: 1.5;
+  }
+
+  .entry-list li {
+    padding-block: 0.2rem;
+  }
+
   .interlude {
     margin: 4rem 0 2rem;
   }
@@ -2160,9 +2184,10 @@ body.report .action-quiet {
  * already changed. Nothing that carries meaning is removed.
  */
 @media (prefers-reduced-motion: reduce) {
-  .passage,
-  .passage.is-marked {
+  .passage {
     animation: none;
+    /* The hover ground still appears; it simply arrives at once. */
+    transition: none;
   }
 
   .env-drift,

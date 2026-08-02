@@ -415,26 +415,6 @@
     const centre = size / 2;
     const radius = size * 0.34;
 
-    // One arrowhead per line style, so direction is drawn rather than implied.
-    const defs = shape("defs", {});
-    [
-      ["art-cycle-feed-head", "art-cycle-head"],
-      ["art-cycle-check-head", "art-cycle-head art-cycle-head-check"],
-    ].forEach(([id, className]) => {
-      const marker = shape("marker", {
-        id,
-        viewBox: "0 0 10 10",
-        refX: 9,
-        refY: 5,
-        markerWidth: 6,
-        markerHeight: 6,
-        orient: "auto-start-reverse",
-      });
-      marker.appendChild(shape("path", { d: "M0 1 L10 5 L0 9 Z", class: className }));
-      defs.appendChild(marker);
-    });
-    figure.appendChild(defs);
-
     const placed = nodes.map((node, index) => {
       const angle = (Math.PI * 2 * index) / nodes.length - Math.PI / 2;
       return {
@@ -445,46 +425,60 @@
       };
     });
 
-    // Stop each line short of the node it points at, so the head is visible.
-    function segment(from, to, gap) {
+    const related = links
+      ? [links.supports, links.supportedBy, links.checks, links.checkedBy]
+      : [];
+
+    /*
+     * Each line draws its own head rather than sharing a marker. A marker's
+     * content is referenced, not a descendant of the path that uses it, so a
+     * descendant selector can never colour one arrow differently from another
+     * — the heads all came out the pale quiet tone even on the lines drawn in
+     * ink. Drawing the head as a sibling path lets it take the line's own
+     * class, and keeps it the same size whatever the stroke width.
+     */
+    function connect(from, to, className) {
       const dx = to.x - from.x;
       const dy = to.y - from.y;
       const length = Math.hypot(dx, dy) || 1;
       const unit = { x: dx / length, y: dy / length };
-      return [
-        [from.x + unit.x * gap, from.y + unit.y * gap],
-        [to.x - unit.x * gap, to.y - unit.y * gap],
-      ];
-    }
+      const left = { x: -unit.y, y: unit.x };
+      const gap = 18;
+      const start = { x: from.x + unit.x * gap, y: from.y + unit.y * gap };
+      const end = { x: to.x - unit.x * gap, y: to.y - unit.y * gap };
 
-    const related = links
-      ? [links.supports, links.supportedBy, links.checks, links.checkedBy]
-      : [];
+      figure.appendChild(
+        shape("path", { d: path([[start.x, start.y], [end.x, end.y]], false), class: className }),
+      );
+
+      const head = 9;
+      figure.appendChild(
+        shape("path", {
+          d: path(
+            [
+              [end.x, end.y],
+              [end.x - unit.x * head + left.x * head * 0.5, end.y - unit.y * head + left.y * head * 0.5],
+              [end.x - unit.x * head - left.x * head * 0.5, end.y - unit.y * head - left.y * head * 0.5],
+            ],
+            true,
+          ),
+          class: `${className} art-cycle-head`,
+        }),
+      );
+    }
 
     // The feeding cycle, each step drawn in the direction it feeds.
     placed.forEach((node, index) => {
       const target = placed[(index + 1) % placed.length];
       const live = node.id === leadId || target.id === leadId;
-      figure.appendChild(
-        shape("path", {
-          d: path(segment(node, target, 18), false),
-          class: live ? "art-cycle-ring art-cycle-live" : "art-cycle-ring",
-          "marker-end": "url(#art-cycle-feed-head)",
-        }),
-      );
+      connect(node, target, live ? "art-cycle-ring art-cycle-live" : "art-cycle-ring");
     });
 
     // The checking cycle: each node reaches across to the one it restrains.
     placed.forEach((node, index) => {
       const target = placed[(index + 2) % placed.length];
       const live = node.id === leadId || target.id === leadId;
-      figure.appendChild(
-        shape("path", {
-          d: path(segment(node, target, 18), false),
-          class: live ? "art-cycle-check art-cycle-live" : "art-cycle-check",
-          "marker-end": "url(#art-cycle-check-head)",
-        }),
-      );
+      connect(node, target, live ? "art-cycle-check art-cycle-live" : "art-cycle-check");
     });
 
     placed.forEach((node) => {

@@ -246,6 +246,50 @@
   }
 
   /*
+   * One dial, matching the instrument on screen: an arc for the range the
+   * reading could have taken, ticks along it, and a needle at the reading. No
+   * number on the face — the figure illustrates, the text states the value.
+   */
+  function drawInstrumentDial(context, centreX, centreY, radius, normalised, colour) {
+    const from = Math.PI * 0.82;
+    const to = Math.PI * 2.18;
+    const at = from + (to - from) * Math.max(0, Math.min(1, normalised));
+
+    context.save();
+    context.strokeStyle = "#c1caca";
+    context.lineWidth = 4;
+    context.beginPath();
+    context.arc(centreX, centreY, radius, from, to);
+    context.stroke();
+
+    for (let step = 0; step <= 8; step += 1) {
+      const angle = from + ((to - from) * step) / 8;
+      const major = step % 2 === 0;
+      const inner = radius - (major ? 26 : 14);
+      context.strokeStyle = major ? "#5c6568" : "#c1caca";
+      context.lineWidth = major ? 3 : 2;
+      context.beginPath();
+      context.moveTo(centreX + Math.cos(angle) * inner, centreY + Math.sin(angle) * inner);
+      context.lineTo(centreX + Math.cos(angle) * radius, centreY + Math.sin(angle) * radius);
+      context.stroke();
+    }
+
+    context.strokeStyle = colour;
+    context.lineWidth = 7;
+    context.lineCap = "round";
+    context.beginPath();
+    context.moveTo(centreX, centreY);
+    context.lineTo(centreX + Math.cos(at) * (radius - 18), centreY + Math.sin(at) * (radius - 18));
+    context.stroke();
+
+    context.fillStyle = "#14181a";
+    context.beginPath();
+    context.arc(centreX, centreY, 11, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+
+  /*
    * The five contributions on a ring, drawn the way the report draws them: a
    * feeding cycle around the outside, checking reaches across the middle, the
    * reader's own contribution filled and the four it touches picked out.
@@ -424,7 +468,7 @@
 
     let y = drawExportHeading(
       context,
-      data.results.chapters[0].eyebrow,
+      data.results.chapters.find((entry) => entry.id === "role").eyebrow,
       lead.isBlend ? lead.label : primary.name,
       data.results.roleIntro,
       primary.colourPaper,
@@ -487,9 +531,26 @@
     const instrument = data.assessment.instruments[primary.domain];
     drawExportRule(context, y, "#c1caca", 2);
     y += 64;
+    // The gauge the chapter opens with on screen, which the export was missing.
+    drawInstrumentDial(
+      context,
+      EXPORT_PAGE_WIDTH - EXPORT_MARGIN - 210,
+      y + 190,
+      190,
+      primary.normalised,
+      primary.colourPaper,
+    );
+    drawExportText(
+      context,
+      `${primary.score.toFixed(1)} / ${profile.scaleMax}`,
+      EXPORT_PAGE_WIDTH - EXPORT_MARGIN - 210,
+      y + 268,
+      420,
+      { size: 34, family: "sans", weight: 600, colour: "#14181a", align: "center", lineHeight: 44 },
+    );
     drawExportLabel(context, `${labels.instrument} · ${instrument.name}`, EXPORT_MARGIN, y, "#14181a");
     y += 54;
-    drawExportText(context, instrument.reads, EXPORT_MARGIN, y, width, {
+    drawExportText(context, instrument.reads, EXPORT_MARGIN, y, width - 520, {
       size: 28,
       colour: "#4b5457",
       lineHeight: 42,
@@ -630,7 +691,9 @@
    */
   function drawProfileObservationPage(context, data, profile, summary, pageNumber, pageCount) {
     drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
-    const closing = data.results.chapters[4];
+    // By id, never by position: inserting a chapter before this one used to
+    // slide the index and print the wrong heading over this page.
+    const closing = data.results.chapters.find((entry) => entry.id === "close");
     let y = drawExportHeading(context, closing.eyebrow, closing.title, null, "#14181a");
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
@@ -700,46 +763,95 @@
     drawExportRule(context, y, "#c1caca", 2);
     y += 70;
 
-    // One row per role, three bars: baseline, pressure, recovery.
+    /*
+     * One rule per contribution, carrying all three readings. The travel is
+     * drawn as a line from first to last, so movement is the mark rather than
+     * something the reader has to reconstruct from three stacked rules, and a
+     * contribution that did not move reads flat at a glance.
+     */
+    const trackX = EXPORT_MARGIN + 430;
+    const trackWidth = width - 430 - 250;
+    const at = (normalised) => trackX + trackWidth * Math.max(0, Math.min(1, normalised));
+
+    // The scale, named once at the top rather than on every row.
+    drawExportText(context, `${profile.scaleMin}`, trackX, y - 14, 80, {
+      size: 23, family: "sans", colour: "#5c6568", align: "center", lineHeight: 30,
+    });
+    drawExportText(context, `${profile.scaleMax}`, trackX + trackWidth, y - 14, 80, {
+      size: 23, family: "sans", colour: "#5c6568", align: "center", lineHeight: 30,
+    });
+    y += 40;
+
     profile.roles.forEach((role) => {
-      drawExportText(context, role.shortName, EXPORT_MARGIN, y + 34, 520, {
-        size: 34,
-        family: "sans",
-        weight: 600,
-        colour: "#14181a",
-        lineHeight: 44,
-        maxLines: 1,
+      const readings = profile.phases.map((phase) => ({
+        phase,
+        entry: phase.roles.find((candidate) => candidate.id === role.id),
+      }));
+      const centre = y + 34;
+
+      drawExportText(context, role.shortName, EXPORT_MARGIN, centre + 10, 400, {
+        size: 34, family: "sans", weight: 600, colour: "#14181a", lineHeight: 44, maxLines: 1,
       });
-      profile.phases.forEach((phase, index) => {
-        const entry = phase.roles.find((candidate) => candidate.id === role.id);
-        const barY = y + 60 + index * 46;
-        const barX = EXPORT_MARGIN + 560;
-        const barWidth = width - 560 - 220;
-        drawExportText(context, phase.shortLabel, EXPORT_MARGIN + 300, barY + 22, 240, {
-          size: 23,
-          family: "sans",
-          colour: "#5c6568",
-          lineHeight: 30,
-          maxLines: 1,
+
+      // The range, and the whole scale points along it.
+      context.strokeStyle = "#c1caca";
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(trackX, centre);
+      context.lineTo(trackX + trackWidth, centre);
+      context.stroke();
+      for (let step = 0; step <= 4; step += 1) {
+        const tick = trackX + (trackWidth * step) / 4;
+        context.beginPath();
+        context.moveTo(tick, centre - 8);
+        context.lineTo(tick, centre + 8);
+        context.stroke();
+      }
+
+      // The travel, first reading to last.
+      const first = at(readings[0].entry.normalised);
+      const last = at(readings[2].entry.normalised);
+      if (Math.abs(last - first) > 3) {
+        context.strokeStyle = role.colourPaper;
+        context.lineWidth = 5;
+        context.beginPath();
+        context.moveTo(first, centre);
+        context.lineTo(last, centre);
+        context.stroke();
+      }
+
+      // Three marks on the one rule: hollow to start, then filled, then ringed.
+      readings.forEach(({ phase, entry }, index) => {
+        const x = at(entry.normalised);
+        context.lineWidth = 4;
+        context.strokeStyle = role.colourPaper;
+        context.fillStyle = index === 1 ? role.colourPaper : "#e6eaeb";
+        context.beginPath();
+        context.arc(x, centre, index === 2 ? 15 : 12, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+        if (index === 2) {
+          context.fillStyle = role.colourPaper;
+          context.beginPath();
+          context.arc(x, centre, 6, 0, Math.PI * 2);
+          context.fill();
+        }
+        drawExportText(context, phase.shortLabel, x, centre + 52, 260, {
+          size: 21, family: "sans", colour: "#5c6568", align: "center", lineHeight: 28, maxLines: 1,
         });
-        drawScoreTrack(context, barX, barY, barWidth, entry.normalised, role.colourPaper);
-        drawExportText(
-          context,
-          entry.score.toFixed(1),
-          EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
-          barY + 22,
-          200,
-          {
-            size: 27,
-            family: "sans",
-            weight: 600,
-            colour: "#14181a",
-            align: "right",
-            lineHeight: 34,
-          },
-        );
       });
-      y += 216;
+
+      // The three readings, in order, at the end of the row.
+      drawExportText(
+        context,
+        readings.map(({ entry }) => entry.score.toFixed(1)).join("  ·  "),
+        EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
+        centre + 10,
+        260,
+        { size: 27, family: "sans", weight: 600, colour: "#14181a", align: "right", lineHeight: 34 },
+      );
+
+      y += 150;
     });
   }
 
@@ -864,7 +976,7 @@
     });
   }
 
-  /* Final page: how to read the profile, and the BFI-2 attribution. */
+  /* Final page: how to read the profile, and where the structure comes from. */
   function drawProfileGuidancePage(context, data, profile, pageNumber, pageCount) {
     drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
     let y = drawExportHeading(
@@ -1418,7 +1530,7 @@
     objects[infoObject] = asciiBytes(
       `<< /Title (${pdfString(info.title || "Aurora Station")})` +
         ` /Author (${pdfString(info.author || "Aurora Station")})` +
-        ` /Subject (${pdfString(info.subject || "A BFI-2-aligned narrative self-reflection. Not a clinical instrument.")})` +
+        ` /Subject (${pdfString(info.subject || "A narrative self-reflection. Not a clinical instrument.")})` +
         " /Creator (Aurora Station) /Producer (Aurora Station)" +
         ` /CreationDate (${pdfDate(info.createdAt)}) >>`,
     );

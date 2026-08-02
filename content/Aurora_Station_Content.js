@@ -21,12 +21,12 @@ window.AURORA_STATION_DATA = {
     "export": "Direct personalised story PDF and multi-page profile PDF downloads"
   },
   "assessment": {
-    "model": "BFI-2-aligned five domains and fifteen facets",
+    "model": "Five behavioural currents and fifteen components",
     "scoredItemCount": 60,
     "actCount": 12,
     "itemsPerAct": 5,
     "spectrum": {
-      "id": "bfi2-agreement-5",
+      "id": "agreement-5",
       "min": 1,
       "max": 5,
       "positions": [
@@ -68,7 +68,7 @@ window.AURORA_STATION_DATA = {
       "noTotalScore": "There is no overall personality score and no domain or facet weighting.",
       "negativeEmotionalityRule": "Score Negative Emotionality directly. Do not silently invert it. If Emotional Stability is displayed it must be labelled as 6 - Negative Emotionality."
     },
-    "methodNote": "Narrative self-reflection aligned to the BFI-2 structure: five domains, fifteen facets, four items per facet and balanced keying, answered on a five-point agreement scale. The statements are Aurora Station scenarios rather than the official BFI-2 items, so this adaptation is not a validated instrument.",
+    "methodNote": "Narrative self-reflection on an established five-domain structure: five domains, fifteen facets, four statements per facet and balanced keying, answered on a five-point agreement scale. The statements are written for Aurora Station rather than taken from a published instrument, so this is not a validated measure.",
     "itemsPerDomain": 12,
     "itemsPerFacet": 4,
     "interpretationBands": [
@@ -88,7 +88,7 @@ window.AURORA_STATION_DATA = {
         "label": "Higher self-reported expression"
       }
     ],
-    "bandNote": "These display bands are interface rules, not official BFI-2 norms.",
+    "bandNote": "These display bands are interface rules. They are not norms, and they do not compare you with anyone.",
     "domains": {
       "extraversion": {
         "code": "extraversion",
@@ -374,7 +374,7 @@ window.AURORA_STATION_DATA = {
         "description": "The storm breaks, the last reserve is committed, and the station waits for Ridge."
       }
     },
-    "phaseNote": "Phase scores are an Aurora Station narrative interpretation of the same responses. They are not official BFI-2 scores and have no norms.",
+    "phaseNote": "Stretch readings are an Aurora Station narrative interpretation of the same responses. They are not separate measurements and they have no norms.",
     "phaseOrder": [
       "baseline",
       "pressure",
@@ -489,7 +489,7 @@ window.AURORA_STATION_DATA = {
       "architect",
       "sentinel"
     ],
-    "roleNote": "Aurora Roles are mission contributions derived from your BFI-2 profile. They are not fixed personality types. All five sit on the same one-to-five scale, they do not total anything, and no role is better than another.",
+    "roleNote": "Aurora Roles are mission contributions derived from your own responses. They are not fixed personality types. All five sit on the same one-to-five scale, they do not total anything, and no role is better than another.",
     "elements": {
       "wood": {
         "id": "wood",
@@ -623,8 +623,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Sociability",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would want to keep talking with the others rather than let the room fall quiet.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who enjoys keeping conversations going with other people.",
             "context": "Mira zips her coat. Ilan has not left the window. The handover folder sits closed beneath the lamp and no one has spoken for a while.",
             "convergence": "At 22:02 the outer door seals. Two people remain awake in a station built for twenty.",
             "narrative": {
@@ -643,8 +643,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Compassion",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would find myself caring about how tired the person handing over looked.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who feels genuine concern when another person is struggling.",
             "context": "Mira has spent four seasons repairing what the cold loosens. Tonight her hands are slower than her voice, and the last line of her handover is six unfinished words.",
             "convergence": "The six words stay on the page either way. SECTOR C INTERMITTENT — MONITOR.",
             "narrative": {
@@ -663,8 +663,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Organization",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would take over the watch without first putting the open items into any clear order.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who often begins work without first putting things into order.",
             "context": "The handover is a stack: alarm history, a printed check sheet, a handwritten page and one unresolved line. Nothing is numbered.",
             "convergence": "The console holds at nominal. Outside, the wind changes pitch against the west wall.",
             "narrative": {
@@ -683,8 +683,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Anxiety",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "Even with an unresolved warning on the console, I would stay fairly relaxed.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who remains fairly calm when an unresolved problem is present.",
             "context": "SECTOR C INTERMITTENT — MONITOR. No trigger value. No next check. No record of what has already been ruled out.",
             "convergence": "Somewhere inside the wall, metal answers the wind with a small click.",
             "narrative": {
@@ -703,8 +703,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Aesthetic Sensitivity",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "The cold light, the wind and the emptiness of the station would leave little impression on me.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who is rarely affected by unusual light, sound or beauty.",
             "context": "The lamp throws the control room into one warm circle. Beyond it the corridor runs grey, and the window has gone the colour of old paper.",
             "convergence": "The lamp holds its circle. Nothing on the panel has moved.",
             "narrative": {
@@ -734,8 +734,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Assertiveness",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would be the one to say plainly what we should do first.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who speaks up clearly about what should be done.",
             "context": "The tone repeats. Ilan looks up from the magnetic record and waits. Nothing in the handover says which check comes first.",
             "convergence": "The history opens on three brief spikes, each one cleared without reaching the trip limit.",
             "narrative": {
@@ -754,8 +754,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Respectfulness",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would keep my tone even with the other person even if they pushed back on my reading.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who treats others with consideration during disagreement.",
             "context": "Ilan disagrees. He thinks the spikes are an artefact of the sensor, and he says so twice, the second time more sharply.",
             "convergence": "Both readings go into the record. Neither of you can rule the other out yet.",
             "narrative": {
@@ -774,8 +774,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Productiveness",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would be inclined to leave the deeper cross-check until later in the night.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who tends to postpone demanding work until later.",
             "context": "A full cross-check against the magnetic record takes about forty minutes. Nothing requires it before the midnight call.",
             "convergence": "22:14. The temperature line is flat. The current line is not.",
             "narrative": {
@@ -794,8 +794,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Depression",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "If the first check found nothing, I would stay optimistic about finding the cause.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who regains optimism after an unsuccessful attempt.",
             "context": "The first pass returns clean. Whatever moved the current line has left no signature the standard tools can see.",
             "convergence": "The second pass is queued. Outside, the storm loses its rhythm for a moment, then finds it again.",
             "narrative": {
@@ -814,8 +814,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Intellectual Curiosity",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would want to understand why the two lines moved together, not only whether the alarm cleared.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who wants to understand how and why things work.",
             "context": "The alarm has cleared. The question of why a temperature spike and a current spike arrived in the same second has not been asked by anyone but you.",
             "convergence": "At 22:18 the panel reports a temperature rise behind the Sector C wall. This one does not clear.",
             "narrative": {
@@ -845,8 +845,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Energy Level",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "Finding the source behind the panel would rarely leave me feeling eager or energised.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who seldom feels eager or energised by a discovery.",
             "context": "The wall panel is warm. Behind it, somewhere, is the first physical thing the night has offered instead of a number.",
             "convergence": "The panel comes away. Warm air, the smell of hot insulation, and no flame.",
             "narrative": {
@@ -865,8 +865,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Trust",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would assume the earlier checks had missed something rather than take them at face value.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who often assumes that other people have overlooked something.",
             "context": "Mira's sheet says this run was inspected six weeks ago and passed. The insulation in front of you has been hot for long enough to discolour.",
             "convergence": "Either way the run has to be traced by hand. You start at the junction and work outward.",
             "narrative": {
@@ -885,8 +885,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Responsibility",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would hold to the agreed sequence even when a shortcut looked faster.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who follows agreed responsibilities even when shortcuts are available.",
             "context": "The isolation procedure has eleven steps. Steps four through seven are slow, and the fault is almost certainly past them.",
             "convergence": "The section comes down cleanly. Ilan holds the light steady while the run cools.",
             "narrative": {
@@ -905,8 +905,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Emotional Volatility",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "My mood would swing noticeably as the readings rose and fell.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who experiences noticeable changes in mood.",
             "context": "The temperature behind the wall climbs, holds, drops, climbs again. Each movement takes about ninety seconds.",
             "convergence": "At 22:39 the readings settle. The run is isolated and the wall begins, slowly, to give back its heat.",
             "narrative": {
@@ -925,8 +925,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Creative Imagination",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would improvise a way to isolate the circuit with whatever was already in the room.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who creates practical solutions when standard options are unavailable.",
             "context": "The correct clamp is in the external store, and the external store is on the far side of the storm.",
             "convergence": "The circuit is isolated. Whatever caused the heat is now behind a break in the line.",
             "narrative": {
@@ -956,8 +956,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Sociability",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "Through the worst of it I would tend to stay quiet.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who tends to remain quiet around other people.",
             "context": "Ninety seconds. Three things need doing and there are two of you. The room fills with the sound of the plant and very little else.",
             "convergence": "At the end of it all three tasks are done. Neither of you could say precisely in what order.",
             "narrative": {
@@ -976,8 +976,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Compassion",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would feel little sympathy for whoever's oversight had brought us to this point.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who feels little concern for difficulties caused by another person's mistake.",
             "context": "The escalation should have gone to Hobart at the first spike. It did not, and the person who did not send it is four hours south by now.",
             "convergence": "The record will show the gap regardless. You log the time and move on.",
             "narrative": {
@@ -996,8 +996,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Organization",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would keep the three workstreams in a strict order rather than let them run together.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who prefers to organise different tasks into a clear sequence.",
             "context": "Isolation, ventilation and the log all need attention inside the same ninety seconds.",
             "convergence": "Ninety seconds later the air moves again and the panel reads within limits.",
             "narrative": {
@@ -1016,8 +1016,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Anxiety",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would be noticeably tense until it was over.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who becomes tense while a difficult situation remains unresolved.",
             "context": "There is a point in the sequence where the ventilation is open and the isolation is not yet complete. It lasts about twenty seconds.",
             "convergence": "22:55. The Sector C wall is cool enough to touch. Nothing has caught fire.",
             "narrative": {
@@ -1036,8 +1036,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Aesthetic Sensitivity",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "The changing sound of the plant would hold my attention as something worth listening to.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who pays attention to meaningful patterns in sound and atmosphere.",
             "context": "As the load shifts, the machinery under the floor moves through a series of tones—low, then higher, then a long sustained note.",
             "convergence": "The sustained note thins and stops. In the quiet after it, the radio does not answer Hobart.",
             "narrative": {
@@ -1067,8 +1067,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Assertiveness",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "With base unreachable, I would take the lead without waiting to be asked.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who is comfortable taking charge when direction is needed.",
             "context": "The midnight call cannot be made. Two people remain, and nothing in the handover says which of them is in charge once the radio goes.",
             "convergence": "The retry schedule is set for every twenty minutes. The first attempt returns nothing but the carrier.",
             "narrative": {
@@ -1087,8 +1087,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Respectfulness",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would argue the point rather than let a weak plan pass.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who tends to challenge others rather than let a poor decision pass.",
             "context": "Ilan proposes climbing to the mast in the storm to check the feed. The wind is running at a speed that has already closed the road.",
             "convergence": "The mast stays unchecked. The retry schedule runs on.",
             "narrative": {
@@ -1107,8 +1107,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Productiveness",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would find it hard to get started on the retry schedule while so much else was unresolved.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who has difficulty beginning a task when several problems remain open.",
             "context": "The schedule is dull work: twenty minutes of waiting, ninety seconds of calling, a line in the log. It will run all night.",
             "convergence": "Every attempt returns the same silence. The Ridge team, wherever they are, is not answering either.",
             "narrative": {
@@ -1127,8 +1127,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Depression",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "Cut off from base, I would still feel secure in my own judgement.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who remains secure in their judgement when external support is unavailable.",
             "context": "There is no one left to confirm a decision against. Whatever is decided tonight is decided here.",
             "convergence": "23:11. The storm is at its heaviest and the station is entirely alone.",
             "narrative": {
@@ -1147,8 +1147,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Intellectual Curiosity",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would steer away from speculation about what the record might mean.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who avoids exploring speculative or abstract explanations.",
             "context": "Ilan starts talking about the magnetic record—old readings, a pattern he has been chasing for two seasons, why tonight might matter to it.",
             "convergence": "At 23:15 the outer temperature drops four degrees in under a minute. Neither of you is looking at the panel when it happens.",
             "narrative": {
@@ -1178,8 +1178,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Energy Level",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "Through the long rationing work I would be the less active one.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who is usually less active than the people around them.",
             "context": "Every non-essential load has to be found, listed and switched down by hand. It takes hours and covers most of the station.",
             "convergence": "By 23:30 the draw is down by a third. It is not enough to change the arithmetic.",
             "narrative": {
@@ -1198,8 +1198,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Trust",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would let go of the missed escalation rather than hold it against anyone.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who lets go of resentment after another person makes a mistake.",
             "context": "The gap in the record is now four hours old and has shaped every decision since. It will be in the report.",
             "convergence": "The handover folder goes back under the lamp, closed.",
             "narrative": {
@@ -1218,8 +1218,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Responsibility",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would be somewhat careless with the smaller savings once the main work was done.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who sometimes becomes careless once the main work is complete.",
             "context": "The large loads are down. What remains is a long tail of small ones—corridor lighting, standby heaters, instruments nobody is reading.",
             "convergence": "Frost begins to show on the inner face of the corridor wall.",
             "narrative": {
@@ -1238,8 +1238,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Emotional Volatility",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "Watching frost form on the inside of the wall would not easily upset me.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who remains emotionally steady when conditions become disturbing.",
             "context": "It is a thin white line where the wall meets the floor, and it was not there an hour ago.",
             "convergence": "The frost line does not retreat. By 23:40 it has widened by the breadth of a finger.",
             "narrative": {
@@ -1258,8 +1258,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Creative Imagination",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would have little to add beyond the savings already on the list.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who has difficulty generating options beyond those already available.",
             "context": "The standard rationing list was written for a station with a working generator. Tonight it is being applied to something else.",
             "convergence": "The reserve figure is recalculated. However it is read, it is smaller than the night is long.",
             "narrative": {
@@ -1289,8 +1289,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Sociability",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would hold back from the discussion even when I had something to say.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who holds back from discussion even when they have something to contribute.",
             "context": "Ilan has the signal on the speaker. It repeats with a period of about eleven seconds, and he wants to talk about every part of it.",
             "convergence": "The period is stable to within a tenth of a second. Nothing in the station makes that noise.",
             "narrative": {
@@ -1309,8 +1309,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Compassion",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would set aside my own task to help the other person get the recording right.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who willingly interrupts their own work to help another person.",
             "context": "Ilan has been waiting two seasons for something like this and his hands are not steady enough to set the gain.",
             "convergence": "The recorder runs clean. Whatever this is, there will be a record of it.",
             "narrative": {
@@ -1329,8 +1329,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Organization",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would keep the recording log neat enough that anyone could read it later.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who keeps records neat and understandable for other people.",
             "context": "Times, gain settings, ambient conditions, every change made and when. None of it is required by any procedure.",
             "convergence": "00:40. The pulse continues. The reserve figure has not improved.",
             "narrative": {
@@ -1349,8 +1349,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Anxiety",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would worry about what the signal meant long after the recorder was running.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who continues worrying about an uncertain signal or event.",
             "context": "There is no procedure for an unidentified periodic source beneath a station in a storm.",
             "convergence": "01:10. Ilan goes to check the east corridor and does not come back for some time.",
             "narrative": {
@@ -1369,8 +1369,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Aesthetic Sensitivity",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "The rhythm of the pulse would strike me as something worth preserving for its own sake.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who notices patterns that are worth preserving for their own sake.",
             "context": "Under the speaker noise there is a shape to it—a rise, a hold, a fall—that repeats without ever being quite identical.",
             "convergence": "The recording continues. Eleven seconds, and eleven again, under the floor.",
             "narrative": {
@@ -1400,8 +1400,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Assertiveness",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would find it hard to bring the other person round to a calmer reading of what they saw.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who finds it difficult to influence another person's interpretation.",
             "context": "Ilan says there was a figure in the whiteout, upright, about thirty metres out, and that it did not move like drifting snow.",
             "convergence": "The camera covering that approach recorded snow and nothing else.",
             "narrative": {
@@ -1420,8 +1420,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Respectfulness",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I might be short with the other person while the checks were running.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who can become abrupt with others while under pressure.",
             "context": "It is 01:40, the sector sweep has found nothing twice, and Ilan asks you to run it a third time.",
             "convergence": "The third sweep is clean. So is the fourth, which nobody asked for.",
             "narrative": {
@@ -1440,8 +1440,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Productiveness",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would keep searching until the sector was fully cleared.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who continues working until an important task is fully completed.",
             "context": "Full clearance means every external approach, every camera arc and both storm doors. In this wind it takes over an hour.",
             "convergence": "Whatever Ilan saw, no instrument on the station saw it with him.",
             "narrative": {
@@ -1460,8 +1460,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Depression",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "The long hours in the whiteout would leave me feeling low.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who tends to feel low after prolonged difficult conditions.",
             "context": "Two hours of searching in a wind that removes sound, in a light that removes distance, for something that was probably never there.",
             "convergence": "At 03:50 the storm breaks apart, and the sky above Aurora Station opens.",
             "narrative": {
@@ -1480,8 +1480,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Intellectual Curiosity",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would keep several explanations for the figure in play at once.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who keeps several complex explanations under consideration.",
             "context": "Exhaustion, drifting snow, a shadow thrown by the mast light, a person who cannot be there. None of them can be ruled out from inside.",
             "convergence": "The account goes into the log as reported and unverified. It stays that way.",
             "narrative": {
@@ -1511,8 +1511,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Energy Level",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "Even at this hour I would still have energy for the next task.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who retains energy for further work after a demanding period.",
             "context": "03:52. You have been awake for twenty-two hours and the aurora has just come over the ridge.",
             "convergence": "Green, and then a band of red above it, moving across the whole northern sky.",
             "narrative": {
@@ -1531,8 +1531,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Trust",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would be wary of why the other person wanted the instruments left running.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who is cautious about trusting another person's intentions.",
             "context": "Ilan asks for the magnetometer to stay powered through the display. It is not a large load, but nothing tonight is free.",
             "convergence": "The magnetometer stays powered. Its trace begins to move with the light overhead.",
             "narrative": {
@@ -1551,8 +1551,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Responsibility",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would keep the observation schedule exactly, aurora or not.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who follows an agreed schedule despite distractions.",
             "context": "A reading is due every fifteen minutes. Outside the window, the sky is doing something that most people who winter here never see.",
             "convergence": "The instrument drift is small but it is there, and it starts when the display does.",
             "narrative": {
@@ -1571,8 +1571,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Emotional Volatility",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would keep whatever I felt about the sky under control.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who keeps strong emotional reactions under control.",
             "context": "Twenty-two hours awake, a station running on its reserve, and the most extraordinary thing either of you will see this year is happening overhead.",
             "convergence": "The band of red thins and the green comes down to the ridge line.",
             "narrative": {
@@ -1591,8 +1591,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Creative Imagination",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would find it hard to picture what could produce both the light and the pulse.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who finds it difficult to imagine an unfamiliar explanation.",
             "context": "A magnetic disturbance overhead. An acoustic period beneath the ice. Between them, a delay that stays roughly constant.",
             "convergence": "The delay is measured at just under four seconds. It does not vary.",
             "narrative": {
@@ -1622,8 +1622,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Sociability",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would talk the calculation through aloud rather than work it silently.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who prefers to talk through a problem with another person.",
             "context": "How much reserve is left, what it will carry and for how long. The arithmetic is not difficult and the result is not good.",
             "convergence": "Four hours of heat, or eleven minutes of recording, or something in between. Not all three.",
             "narrative": {
@@ -1642,8 +1642,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Compassion",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would set aside what this costs the others and work the numbers coldly.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who can disregard the emotional cost of a decision to other people.",
             "context": "One of the options ends the recording. Ilan has not said anything about it, which is itself a kind of statement.",
             "convergence": "The figure comes out the same either way. It is the choosing that is hard.",
             "narrative": {
@@ -1662,8 +1662,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Organization",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would leave my workings scattered and move on once the number was found.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who leaves their working materials disorganised after finding an answer.",
             "context": "Three sheets, two of them with corrections, and a set of assumptions that exist only in the order they were written down.",
             "convergence": "04:04. The figure is on the board where both of you can see it.",
             "narrative": {
@@ -1682,8 +1682,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Anxiety",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "With the reserve this low I would rarely feel afraid.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who rarely experiences fear when resources become critically limited.",
             "context": "Below a certain figure the station stops being a building and becomes a container of air that is getting colder.",
             "convergence": "Neither of you says the word emergency. The word is not required for the situation to be one.",
             "narrative": {
@@ -1702,8 +1702,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Aesthetic Sensitivity",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "The look and sound of the station at its lowest power would be a distraction rather than something worth attention.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who finds aesthetic qualities distracting rather than meaningful.",
             "context": "With the main loads down, the building has a different acoustic. Longer silences, and a low note under everything that was never audible before.",
             "convergence": "04:06. The reserve will support one major load. There are two that matter and a third that is neither.",
             "narrative": {
@@ -1733,8 +1733,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Assertiveness",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would rather the other person made the final call.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who prefers another person to make the final decision.",
             "context": "Protect the crew, capture the signal, or split the reserve between them. Three paths, and the watch is yours.",
             "convergence": "Both of you know which way the other is leaning. Neither has said it.",
             "narrative": {
@@ -1753,8 +1753,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Respectfulness",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would put the decision to the others courteously, whatever the pressure.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who remains courteous when presenting a difficult decision.",
             "context": "There are six minutes before the load has to be committed, and one of the three options ends two seasons of Ilan's work.",
             "convergence": "He says he understands. It is not clear whether that is agreement.",
             "narrative": {
@@ -1773,8 +1773,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Productiveness",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would move the decision to a close efficiently.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who moves an important decision toward completion efficiently.",
             "context": "Every minute spent deciding is a minute of reserve spent on lighting the room in which the decision is being made.",
             "convergence": "04:12. The switch is thrown. The station commits.",
             "narrative": {
@@ -1793,8 +1793,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Depression",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "The weight of what would be lost either way would settle on me.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who feels the emotional weight of a difficult outcome.",
             "context": "Whichever path is taken, something that mattered to someone in this room stops tonight and does not resume.",
             "convergence": "The unchosen paths close quietly. Nothing marks the moment except the log entry.",
             "narrative": {
@@ -1813,8 +1813,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Intellectual Curiosity",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would have little patience for what the choice meant beyond tonight.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who has little interest in the wider meaning of an immediate decision.",
             "context": "Ilan starts to say something about what it means that a station chooses between keeping people warm and keeping a record. He does not finish it.",
             "convergence": "04:28. The generator stops. What is left is the refuge, the dark, and the wait.",
             "narrative": {
@@ -1844,8 +1844,8 @@ window.AURORA_STATION_DATA = {
             "domain": "extraversion",
             "facet": "Energy Level",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would keep visible enthusiasm going through the wait.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who expresses enthusiasm visibly during a difficult wait.",
             "context": "Four hours in a cooling room with nothing to do but stay awake and stay warm.",
             "convergence": "05:02. The refuge is at four degrees. Neither of you has slept.",
             "narrative": {
@@ -1864,8 +1864,8 @@ window.AURORA_STATION_DATA = {
             "domain": "agreeableness",
             "facet": "Trust",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would assume the others out there would come as soon as they could.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who generally expects other people to act with good intentions.",
             "context": "The Ridge team is south of here, beyond radio range, on a road that closes in whiteout. They may or may not know anything is wrong.",
             "convergence": "The road opened at some point in the last hour. Neither of you knows this yet.",
             "narrative": {
@@ -1884,8 +1884,8 @@ window.AURORA_STATION_DATA = {
             "domain": "conscientiousness",
             "facet": "Responsibility",
             "reverse": true,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "In the powerless wait I would let the routine slip.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who allows routine responsibilities to slip during prolonged uncertainty.",
             "context": "There is still a log to keep, a temperature to record every half hour, and a radio to try. None of it changes anything.",
             "convergence": "05:14. Something that is not the wind comes through on the handheld.",
             "narrative": {
@@ -1904,8 +1904,8 @@ window.AURORA_STATION_DATA = {
             "domain": "negativeEmotionality",
             "facet": "Emotional Volatility",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "Hearing the signal come through, I would react strongly one way or the other.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who reacts strongly when an emotionally significant event occurs.",
             "context": "A voice, badly broken, giving a callsign that is almost certainly Ridge.",
             "convergence": "Ridge acknowledges. Two hours out, with a portable generator and a tracked vehicle.",
             "narrative": {
@@ -1924,8 +1924,8 @@ window.AURORA_STATION_DATA = {
             "domain": "openMindedness",
             "facet": "Creative Imagination",
             "reverse": false,
-            "spectrumId": "bfi2-agreement-5",
-            "statement": "I would want to record the night in a way no standard log would capture.",
+            "spectrumId": "agreement-5",
+            "statement": "I am someone who looks for an original way to record or represent an experience.",
             "context": "The official record will have times, readings and decisions. It will not have the eleven seconds, the figure, or the colour of the sky at 03:50.",
             "convergence": "The last entry is timed 05:20. The watch is over.",
             "narrative": {
@@ -1964,7 +1964,7 @@ window.AURORA_STATION_DATA = {
       "scoring",
       "branch balance"
     ],
-    "revision": "Rewritten against the BFI-2 structure: every statement targets one facet with an explicit keying direction, and the Act scenes are unchanged.",
+    "revision": "Every statement targets one component with an explicit keying direction, and the Act scenes are unchanged.",
     "reveal": "Revealed by sentence, short paragraph or narrative beat into one cumulative document. Nothing already revealed is replaced or removed."
   },
   "prelude": {
@@ -1974,12 +1974,12 @@ window.AURORA_STATION_DATA = {
         {
           "id": "auto",
           "name": "Automatic",
-          "note": "The story reveals itself at your reading pace and the page follows it down."
+          "note": "Reveals itself and follows down the page."
         },
         {
           "id": "manual",
           "name": "Manual",
-          "note": "Everything up to the next question is already there, and the page never moves on its own."
+          "note": "All there already, and the page never moves itself."
         }
       ],
       "note": "You can change this at any point during the watch."
@@ -2001,7 +2001,7 @@ window.AURORA_STATION_DATA = {
         "label": "PRELUDE / 02",
         "heading": "Calibrate your response",
         "intro": "Each statement describes how you generally tend to think, feel or behave. Choose how strongly you agree or disagree. Try the scale once here.",
-        "statement": "I like to know what is expected of me before I begin something new.",
+        "statement": "I am someone who likes to know what is expected before starting something new.",
         "note": "This practice response is not recorded, not scored and not part of the sixty.",
         "primary": "Continue",
         "back": "Back"
@@ -2012,10 +2012,8 @@ window.AURORA_STATION_DATA = {
         "heading": "Before the watch begins",
         "intro": "Twelve Acts. Five reflections in each. The story continues from whatever you choose.",
         "guidance": [
-          "There are no right or wrong responses.",
-          "A higher response is not automatically better.",
-          "Answer according to how you generally tend to think, feel or behave.",
-          "Do not answer as an ideal watchkeeper would.",
+          "There are no right or wrong responses, and a higher one is not better.",
+          "Answer as you generally are, not as an ideal watchkeeper would.",
           "The midpoint is a valid answer, not a way of avoiding one."
         ],
         "disclaimer": "This is a subjective self-report. It is not a diagnosis, a clinical test, an intelligence test or an ability assessment, and it must not be used for employment selection or performance decisions.",
@@ -2025,10 +2023,10 @@ window.AURORA_STATION_DATA = {
     ]
   },
   "instrument": {
-    "basis": "BFI-2",
-    "status": "BFI-2-aligned narrative self-reflection",
-    "statusNote": "The statements are rewritten into Aurora Station scenarios. Scenario adaptation changes the validated instrument, so this is not an official or clinically validated BFI-2 assessment.",
-    "attribution": "Based on the structure of the Big Five Inventory-2 (BFI-2) by Christopher J. Soto and Oliver P. John. BFI-2 items are copyright Oliver P. John and Christopher J. Soto.",
+    "basis": "Five-domain structure",
+    "status": "Narrative self-reflection, not a clinical instrument",
+    "statusNote": "The statements are written for Aurora Station. This is a reflection built on an established five-domain structure, not a validated or clinically administered assessment.",
+    "attribution": "The five-domain, fifteen-facet structure this reflection is built on comes from the Big Five Inventory-2 by Christopher J. Soto and Oliver P. John. The statements here are written for Aurora Station and are not their items.",
     "reference": "https://www.colby.edu/academics/departments-and-programs/psychology/research-opportunities/personality-lab/the-bfi-2/",
     "paper": "https://escholarship.org/content/qt16x6n05t/qt16x6n05t.pdf",
     "permission": "The official resource grants personal and research use. Confirm separate permission before any commercial use."

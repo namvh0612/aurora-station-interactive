@@ -155,7 +155,7 @@
     items.forEach((item, index) => {
       complain(!seenIds.has(item.id), `duplicate item id ${item.id}`);
       seenIds.add(item.id);
-      complain(item.bfiItem === index + 1, `${item.id} is out of BFI-2 order`);
+      complain(item.bfiItem === index + 1, `${item.id} is out of item order`);
       complain(
         DOMAIN_ORDER.includes(item.domain),
         `${item.id} has unknown domain ${item.domain}`,

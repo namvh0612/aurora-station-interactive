@@ -70,8 +70,6 @@
   let restoring = false;
   let entry = null;
   let markedAct = 0;
-  let marked = null;
-  let markTimer = 0;
   const panels = new Map();
 
   function clamp(value) {
@@ -198,48 +196,8 @@
     if (wasNear && !userScrolling) {
       newPassage.hidden = true;
       follow(node);
-      mark(node);
     } else {
       newPassage.hidden = false;
-    }
-  }
-
-  /*
-   * A faint ground under whatever the reader has just arrived at, so the eye
-   * can find its place after the page moves. It fades on its own; it never
-   * changes a text colour, and it is a background alone.
-   */
-  function mark(node) {
-    if (!node || !node.classList || stillMotion()) {
-      return;
-    }
-    node.classList.remove("is-marked");
-    // Restart the animation rather than letting a second call be ignored.
-    void node.offsetWidth;
-    node.classList.add("is-marked");
-  }
-
-  function markNearestInView() {
-    if (stillMotion()) {
-      return;
-    }
-    const middle = window.innerHeight * 0.42;
-    let best = null;
-    let bestGap = Infinity;
-    watch.querySelectorAll(".passage").forEach((passage) => {
-      const box = passage.getBoundingClientRect();
-      if (box.bottom < 0 || box.top > window.innerHeight) {
-        return;
-      }
-      const gap = Math.abs(box.top - middle);
-      if (gap < bestGap) {
-        bestGap = gap;
-        best = passage;
-      }
-    });
-    if (best && best !== marked) {
-      marked = best;
-      mark(best);
     }
   }
 
@@ -1252,8 +1210,6 @@
           newPassage.hidden = true;
         }
         markActInView();
-        window.clearTimeout(markTimer);
-        markTimer = window.setTimeout(markNearestInView, 120);
         rememberScroll();
       },
       { passive: true },

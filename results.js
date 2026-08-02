@@ -623,21 +623,6 @@
       el("p", "relations-shadow", `${labels.shadow}: ${element.shadow}`),
     );
 
-    // The four relationships, named beside the figure rather than only below it.
-    const summaryList = el("ul", "relations-summary");
-    [
-      ["supports", labels.supports],
-      ["supportedBy", labels.supportedBy],
-      ["checks", labels.checks],
-      ["checkedBy", labels.checkedBy],
-    ].forEach(([relationKey, label]) => {
-      const other = roleFor(relations[relationKey]);
-      const row = el("li");
-      row.style.setProperty("--trace", other.colourPaper);
-      row.append(el("span", "mark", label), el("span", "relations-summary-role", other.shortName));
-      summaryList.appendChild(row);
-    });
-    own.appendChild(summaryList);
 
     lede.append(own, figure);
     body.appendChild(lede);
@@ -742,7 +727,7 @@
       COPY.privacy,
     ].forEach((line) => colophon.appendChild(el("p", "", line)));
 
-    const link = el("a", "", "The BFI-2 at the Colby Personality Lab");
+    const link = el("a", "", "The structure this is built on, at the Colby Personality Lab");
     link.href = data.instrument.reference;
     link.rel = "noopener noreferrer";
     link.target = "_blank";
