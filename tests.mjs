@@ -730,6 +730,47 @@ check("the summary describes patterns, never a type or a verdict", () => {
   });
 });
 
+check("the pressure observation names which way the contribution moved", () => {
+  /*
+   * The shifts are sorted by size and the sign was thrown away, so the largest
+   * mover was always described as having "became more visible" — including
+   * when it had fallen. Across three thousand simulated watches, half of them
+   * had a fall at the top of that list, so half of all reports asserted the
+   * opposite of the reader's own responses. `compareRoles` had been computing
+   * the direction all along and the summary never read it.
+   */
+  const swing = (early, late) =>
+    answerAll((index, item) => {
+      if (item.domain !== "agreeableness") {
+        return 3;
+      }
+      const want = item.contextPhase === "baseline" ? early : item.contextPhase === "pressure" ? late : 3;
+      return item.reverse ? 6 - want : want;
+    });
+
+  const fell = core.scoreProfile(data, swing(5, 1));
+  const rose = core.scoreProfile(data, swing(1, 5));
+  const reading = (profile) => {
+    const phase = (id) => profile.phases.find((entry) => entry.id === id);
+    const steward = (id) => phase(id).roles.find((role) => role.id === "steward").score;
+    return steward("pressure") - steward("baseline");
+  };
+
+  assert.ok(reading(fell) < 0, "the probe did not make the Steward fall");
+  assert.ok(reading(rose) > 0, "the probe did not make the Steward rise");
+
+  const fallText = core.summariseProfile(data, fell).adaptation;
+  const riseText = core.summariseProfile(data, rose).adaptation;
+  assert.match(fallText, /receded/, "a contribution that fell is described as rising");
+  assert.doesNotMatch(fallText, /became more visible/);
+  assert.match(riseText, /became more visible/, "a contribution that rose is described as falling");
+  assert.doesNotMatch(riseText, /receded/);
+
+  // Both name the two stretches being compared, so the sentence cannot be read
+  // against whichever tab of the instrument happens to be open above it.
+  [fallText, riseText].forEach((text) => assert.match(text, /routine stretch against the worst/));
+});
+
 /* ---------------------------------------------------------- aurora state */
 
 check("the aurora enters at its act and deepens to the end of the watch", () => {

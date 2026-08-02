@@ -1096,11 +1096,19 @@
           ? copy.recoveryRetained
           : copy.recoveryNew;
 
+    /*
+     * The shifts are sorted by size, so the first is the contribution that
+     * moved furthest — which is the finding, whichever way it went. Its
+     * direction decides how it is described. Saying "became more visible" of a
+     * contribution that fell states the opposite of the reader's own responses,
+     * and half of all watches have a fall at the top of this list.
+     */
+    const largestShift = pressureComparison.shifts[0];
     const adaptation = pressureComparison.stable
       ? copy.adaptationStable
-      : copy.adaptationShift
-          .replace("{pressure}", pressureComparison.shifts[0].name)
-          .replace("{reading}", pressureComparison.shifts[0].reading)
+      : (largestShift.direction === "rose" ? copy.adaptationShift : copy.adaptationRecede)
+          .replace("{pressure}", largestShift.name)
+          .replace("{reading}", largestShift.reading)
           .replace("{recoveryClause}", recoveryClause);
 
     const contribution = copy.contribution.replace(
