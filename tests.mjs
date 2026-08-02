@@ -1550,9 +1550,29 @@ check("the soundtrack follows the Act being read", () => {
   assert.match(appSource, /syncSound\(\);\s*\n\s*schedule\(\);/);
 });
 
+check("the closed prelude is not rendered", () => {
+  /*
+   * A `display` declaration on the dialog itself beats the user agent's
+   * `dialog:not([open]) { display: none }`, so the prelude stayed on screen
+   * after it closed and painted over the whole watch. The layout belongs to
+   * the open state only.
+   */
+  assert.doesNotMatch(stylesSource, /^\.entry \{/m);
+  assert.match(stylesSource, /^\.entry\[open\] \{/m);
+  const block = stylesSource.slice(
+    stylesSource.indexOf(".entry[open] {"),
+    stylesSource.indexOf("}", stylesSource.indexOf(".entry[open] {")),
+  );
+  assert.match(block, /display: grid/);
+  assert.match(block, /position: fixed/);
+  // Nothing else may lay the dialog out unconditionally either.
+  const unconditional = stylesSource.match(/^\.entry[^-[\w][^{]*\{[^}]*display:[^}]*\}/gm) || [];
+  assert.deepEqual(unconditional, []);
+});
+
 check("the prelude is composed like an Act, not as a card", () => {
   const block = stylesSource.slice(
-    stylesSource.indexOf(".entry {"),
+    stylesSource.indexOf(".entry[open] {"),
     stylesSource.indexOf(".entry-index"),
   );
   // Full viewport, no card shell.

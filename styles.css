@@ -951,7 +951,12 @@ body[data-aurora="present"] .env-aurora {
  * oversized index and one reading column. It is still a dialog element, which
  * is what makes the rest of the page inert while it is open.
  */
-.entry {
+/*
+ * Laid out only while it is open. A `display` declaration on the element
+ * itself would beat the user agent's `dialog:not([open]) { display: none }`,
+ * and the closed prelude would stay painted over the whole watch.
+ */
+.entry[open] {
   position: fixed;
   inset: 0;
   display: grid;
