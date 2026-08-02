@@ -25,13 +25,26 @@
   const REVERSE_CONSTANT = MIN_RESPONSE + MAX_RESPONSE;
   const MAX_NAME_LENGTH = 40;
 
-  // Reveal pacing. All delays are configurable constants.
+  /*
+   * Reveal pacing.
+   *
+   * A passage is held for as long as it takes to read, not for a fixed count:
+   * a one-line beat and a forty-word paragraph are not the same amount of
+   * reading, and a single constant made the long ones feel rushed at every
+   * setting. Each pace is a reading rate in words per minute plus a settling
+   * pause, bounded so a very short line still lands and a very long one never
+   * stalls the watch.
+   */
   const TEXT_SPEEDS = {
-    slow: 2400,
-    normal: 1200,
-    fast: 500,
+    slow: { wordsPerMinute: 155, settle: 900, min: 1500, max: 14000 },
+    normal: { wordsPerMinute: 260, settle: 600, min: 900, max: 9000 },
+    fast: { wordsPerMinute: 420, settle: 260, min: 420, max: 4500 },
   };
+  // An Act closes before the next one opens, so the last passage is finished
+  // rather than pushed off the screen by the next Act's plate.
+  const ACT_CLOSE_PAUSE = { slow: 3200, normal: 2000, fast: 900 };
   const REDUCED_MOTION_DELAY = 0;
+  const SCROLL_MODES = ["auto", "manual"];
 
   const DOMAIN_ORDER = [
     "extraversion",
@@ -417,16 +430,18 @@
   }
 
   function defaultPreferences() {
-    return { textSpeed: "normal", soundEnabled: true };
+    return { textSpeed: "normal", soundEnabled: true, scrollMode: "auto" };
   }
 
   function sanitisePreferences(candidate) {
     const textSpeed = String(candidate?.textSpeed || "");
+    const scrollMode = String(candidate?.scrollMode || "");
     return {
       textSpeed: Object.prototype.hasOwnProperty.call(TEXT_SPEEDS, textSpeed)
         ? textSpeed
         : "normal",
       soundEnabled: candidate?.soundEnabled !== false,
+      scrollMode: SCROLL_MODES.includes(scrollMode) ? scrollMode : "auto",
     };
   }
 
@@ -438,11 +453,30 @@
     return writeRecord(storage, PREFERENCES_KEY, sanitisePreferences(preferences));
   }
 
-  function revealDelay(preferences, reducedMotion) {
+  function wordCount(text) {
+    return String(text || "").trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  /*
+   * How long a passage is held before the next one arrives: the time its own
+   * words take to read at the chosen rate, plus a pause to settle, bounded at
+   * both ends.
+   */
+  function revealDelay(preferences, reducedMotion, text) {
     if (reducedMotion) {
       return REDUCED_MOTION_DELAY;
     }
-    return TEXT_SPEEDS[sanitisePreferences(preferences).textSpeed];
+    const pace = TEXT_SPEEDS[sanitisePreferences(preferences).textSpeed];
+    const words = wordCount(text);
+    const reading = (words / pace.wordsPerMinute) * 60000;
+    return Math.round(Math.min(pace.max, Math.max(pace.min, reading + pace.settle)));
+  }
+
+  function actClosePause(preferences, reducedMotion) {
+    if (reducedMotion) {
+      return REDUCED_MOTION_DELAY;
+    }
+    return ACT_CLOSE_PAUSE[sanitisePreferences(preferences).textSpeed];
   }
 
   /*
@@ -1183,8 +1217,10 @@
     previousResponse,
     recommendRole,
     recordResponse,
+    actClosePause,
     responseLabels,
     revealDelay,
+    wordCount,
     roleDefinitions,
     roleScoreFor,
     scoreSuitability,

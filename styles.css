@@ -378,15 +378,18 @@ body[data-aurora="present"] .env-aurora {
   align-items: baseline;
   justify-content: space-between;
   padding: 1rem var(--gutter) 1.75rem;
+  /*
+   * An opaque ground rather than a blur: backdrop-filter makes this bar a
+   * containing block, which would trap the phone control button inside it
+   * instead of letting it sit at the foot of the screen.
+   */
   background:
     linear-gradient(
       180deg,
-      rgba(5, 8, 11, 0.97) 0%,
-      rgba(5, 8, 11, 0.95) 62%,
+      rgba(5, 8, 11, 0.98) 0%,
+      rgba(5, 8, 11, 0.96) 66%,
       rgba(5, 8, 11, 0) 100%
     );
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .masthead-identity {
@@ -419,6 +422,18 @@ body[data-aurora="present"] .env-aurora {
 
 .control-menu {
   display: none;
+}
+
+.control-menu-glyph {
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.control-menu-glyph span {
+  width: 1rem;
+  height: 1px;
+  background: currentcolor;
 }
 
 /* Progress reads as an observation sequence, not a percentage. */
@@ -666,6 +681,30 @@ body[data-aurora="present"] .env-aurora {
   color: var(--mineral-dim);
 }
 
+/*
+ * A faint ground under the passage the reader has just arrived at, so the eye
+ * can find its place again after the page moves. It is a background and
+ * nothing else: no text colour changes, so no contrast is lost, and it clears
+ * itself rather than staying lit.
+ */
+.passage.is-marked {
+  animation: passage-mark 2600ms ease-out both;
+}
+
+@keyframes passage-mark {
+  0% {
+    background-color: rgba(207, 226, 230, 0.07);
+  }
+
+  55% {
+    background-color: rgba(207, 226, 230, 0.055);
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
 .passage-closing,
 .passage-ending {
   max-width: var(--measure-wide);
@@ -906,21 +945,69 @@ body[data-aurora="present"] .env-aurora {
 
 /* ---------------------------------------------------------------- entry */
 
+/*
+ * The prelude is the opening of the watch, so it is composed like an Act
+ * opening rather than as a dialog card: the whole viewport, a drawn ground, an
+ * oversized index and one reading column. It is still a dialog element, which
+ * is what makes the rest of the page inert while it is open.
+ */
 .entry {
-  width: min(46rem, calc(100vw - 2rem));
-  max-height: calc(100vh - 2rem);
+  position: fixed;
+  inset: 0;
+  display: grid;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
   padding: 0;
-  border: var(--rule) solid var(--edge);
-  background: var(--deep);
+  overflow: hidden;
+  border: 0;
+  background: var(--void);
   color: var(--mineral);
 }
 
 .entry::backdrop {
-  background: rgba(3, 5, 7, 0.94);
+  background: var(--void);
 }
 
+.entry-figure {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0.4;
+  mask-image: linear-gradient(180deg, #000 0%, #000 42%, transparent 92%);
+}
+
+.entry-figure > svg {
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * The column scrolls, so a long step can never be clipped, and the actions are
+ * pinned to the foot so they are reachable at any height.
+ */
 .entry-frame {
-  padding: clamp(1.75rem, 5vw, 3.5rem);
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: start;
+  width: min(var(--measure-wide), 100%);
+  margin-inline: auto;
+  padding: clamp(2.5rem, 8vh, 6rem) var(--gutter) 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.entry-index {
+  margin: 1.5rem 0 0.5rem;
+  color: var(--mineral);
+  font-size: var(--step-plate);
+  font-variant-numeric: lining-nums;
+  letter-spacing: -0.06em;
+  line-height: 0.8;
+  opacity: 0.12;
 }
 
 .entry-head {
@@ -981,14 +1068,13 @@ body[data-aurora="present"] .env-aurora {
 
 .entry-list {
   max-width: var(--measure);
-  margin: 1.5rem 0 0;
+  margin: 1.25rem 0 0;
   padding: 0;
   list-style: none;
 }
 
 .entry-list li {
-  padding: 0.65rem 0 0.65rem 1.5rem;
-  border-bottom: var(--rule) solid var(--rime);
+  padding: 0.3rem 0 0.3rem 1.5rem;
   text-indent: -1.5rem;
 }
 
@@ -997,13 +1083,18 @@ body[data-aurora="present"] .env-aurora {
   content: "— ";
 }
 
+/* Pinned, so the actions are reachable however tall the step becomes. */
 .entry-foot {
+  position: sticky;
+  bottom: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
   justify-content: space-between;
-  margin-top: 2.5rem;
+  margin-top: 1.75rem;
+  padding: 1rem 0 clamp(1.25rem, 4vh, 2.5rem);
+  background: linear-gradient(180deg, rgba(5, 8, 11, 0) 0%, var(--void) 28%);
 }
 
 /*
@@ -1020,6 +1111,63 @@ body[data-aurora="present"] .env-aurora {
   font-family: var(--type-display);
   font-size: var(--step-lead);
   line-height: 1.55;
+}
+
+/* How the story arrives: chosen here, changeable from the controls later. */
+.entry-choice {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.entry-choice-options {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  max-width: var(--measure-wide);
+}
+
+.entry-option {
+  display: grid;
+  gap: 0.35rem;
+  min-height: var(--tap);
+  padding: 0.85rem 1rem;
+  border: var(--rule) solid var(--edge);
+  background: transparent;
+  color: var(--mineral-dim);
+  font-family: var(--type-display);
+  font-size: var(--step-note);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 240ms ease, color 240ms ease;
+}
+
+.entry-option:hover,
+.entry-option:focus-visible {
+  border-color: var(--signal);
+  color: var(--mineral);
+}
+
+.entry-option[aria-checked="true"] {
+  border-color: var(--signal);
+  color: var(--mineral);
+}
+
+.entry-option-name {
+  color: inherit;
+}
+
+.entry-option[aria-checked="true"] .entry-option-name {
+  color: var(--signal-live);
+}
+
+/* The standing limitation, set at reading size rather than as a statement. */
+.entry-disclaimer {
+  max-width: var(--measure);
+  margin-top: 1.5rem;
+  padding-left: 1.25rem;
+  border-left: var(--rule) solid var(--edge);
+  color: var(--mineral-dim);
 }
 
 /* Inside the prelude the scale is indented to sit under its statement. */
@@ -1230,39 +1378,97 @@ body.report .art-grain {
 /* The feeding ring is continuous; the checking reaches are broken. */
 .art-cycle-ring {
   fill: none;
-  stroke: var(--ink-faint);
+  stroke: var(--paper-line);
   stroke-width: 1.5;
 }
 
 .art-cycle-check {
   fill: none;
-  stroke: var(--ink-faint);
+  stroke: var(--paper-line);
   stroke-dasharray: 3 5;
   stroke-width: 1;
 }
 
-.art-cycle-node {
-  stroke-width: 2;
+/* The two relationships the reader is part of are the ones drawn in ink. */
+.art-cycle-live {
+  stroke: var(--ink-dim);
 }
 
-.art-cycle-node-lead {
-  stroke-width: 3;
+.art-cycle-head {
+  fill: var(--paper-line);
+}
+
+.art-cycle-live .art-cycle-head {
+  fill: var(--ink-dim);
 }
 
 .art-cycle-label {
   fill: var(--ink-dim);
   font-family: var(--type-operational);
-  font-size: 13px;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  letter-spacing: 0.04em;
 }
 
 .art-cycle-label-lead {
   fill: var(--ink);
 }
 
+/* The key, so solid and broken are named where they are seen. */
+.relations-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+}
+
+.relations-key span {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.relations-key span::before {
+  width: 1.5rem;
+  height: 0;
+  border-top: 1.5px solid var(--ink-dim);
+  content: "";
+}
+
+.relations-key span:last-child::before {
+  border-top-style: dashed;
+  border-top-width: 1px;
+}
+
 .relations-shadow {
   margin-top: 1rem;
   color: var(--ink-dim);
+}
+
+.relations-summary {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.relations-summary li {
+  display: grid;
+  gap: 0.15rem 0.75rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+}
+
+.relations-summary li::before {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--trace, var(--ink-faint));
+  content: "";
+}
+
+.relations-summary-role {
+  grid-column: 2;
+  font-size: var(--step-note);
 }
 
 /* The current is named by a mark beside it, not by a coloured edge. */
@@ -1763,22 +1969,18 @@ body.report .action-quiet {
 }
 
 /*
- * A phone holds one column and very little of it at a time. The bar is fixed,
- * so every row it takes is a row taken from every screen: it collapses to a
- * single line — the Act being read, then one scrollable rail carrying every
- * control — and the long vertical rests are cut back so the reader reaches the
- * next passage without a journey.
+ * A phone holds one column and very little of it at a time. The fixed bar
+ * carries the reading and nothing else — the Act and the count — while
+ * everything that can be operated moves to the foot of the screen, in reach of
+ * a thumb. The long vertical rests are cut back so the reader reaches the next
+ * passage without a journey.
  */
 @media (max-width: 40rem) {
   .masthead {
     flex-wrap: nowrap;
     gap: 0.75rem;
-    align-items: center;
-    padding: 0.4rem var(--gutter) 0.9rem;
-  }
-
-  .masthead-identity {
-    flex: 0 0 auto;
+    align-items: baseline;
+    padding: 0.5rem var(--gutter) 0.8rem;
   }
 
   /* The name is on the plate and in the report; the Act is what is needed here. */
@@ -1786,24 +1988,71 @@ body.report .action-quiet {
     display: none;
   }
 
+  .masthead-identity {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  #act-mark {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .masthead-controls {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     flex-wrap: nowrap;
-    justify-content: space-between;
+    justify-content: flex-end;
+    min-width: 0;
   }
 
   .masthead-controls > * {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
   }
 
-  /* One button, and everything behind it. */
+  /* The reading already says the number; the ticks say it a second time. */
+  .sequence-ticks {
+    display: none;
+  }
+
+  /*
+   * One button, at the foot of the screen. The top right corner is the
+   * furthest point from a thumb, and the row up there had no width left for
+   * it anyway — it was being pushed off the edge entirely.
+   */
   .control-menu {
+    position: fixed;
+    right: var(--gutter);
+    bottom: max(var(--gutter), 1rem);
+    z-index: 30;
     display: inline-flex;
+    gap: 0;
     align-items: center;
-    gap: 0.45rem;
+    justify-content: center;
+    width: var(--tap);
+    height: var(--tap);
+    padding: 0;
+    border-color: var(--edge);
+    background: var(--shelf);
+  }
+
+  .control-menu-text {
+    position: absolute;
+    overflow: hidden;
+    clip-path: inset(50%);
+    width: 1px;
+    height: 1px;
+  }
+
+  .control-menu-glyph {
+    display: flex;
   }
 
   .control-menu[data-paused="true"]::before {
+    position: absolute;
+    top: 0.3rem;
+    right: 0.3rem;
     width: 0.4rem;
     height: 0.4rem;
     border-radius: 50%;
@@ -1811,14 +2060,16 @@ body.report .action-quiet {
     content: "";
   }
 
+  /* The panel opens upward from the button, never off the top of the screen. */
   .controls-panel {
-    position: absolute;
-    z-index: 30;
-    top: 100%;
+    position: fixed;
     right: var(--gutter);
+    bottom: calc(max(var(--gutter), 1rem) + var(--tap) + 0.5rem);
+    z-index: 30;
     display: none;
     grid-auto-flow: row;
     gap: 0.4rem;
+    width: min(16rem, calc(100vw - var(--gutter) * 2));
     padding: 0.75rem;
     border: var(--rule) solid var(--edge);
     background: var(--deep);
@@ -1868,8 +2119,10 @@ body.report .action-quiet {
     margin: 4rem 0 2rem;
   }
 
+  /* padding-block only: a shorthand here would undo the inline padding the
+     wider breakpoint just set, and the panel would run edge to edge. */
   .observation {
-    padding: 1.25rem 0;
+    padding-block: 1.25rem 0;
   }
 
   .completion {
@@ -1902,7 +2155,8 @@ body.report .action-quiet {
  * already changed. Nothing that carries meaning is removed.
  */
 @media (prefers-reduced-motion: reduce) {
-  .passage {
+  .passage,
+  .passage.is-marked {
     animation: none;
   }
 

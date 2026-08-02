@@ -822,20 +822,65 @@ check("preferences survive a restart and journey data does not", () => {
   assert.deepEqual(core.loadPreferences(storage), {
     textSpeed: "fast",
     soundEnabled: false,
+    scrollMode: "auto",
   });
 });
 
-check("preference defaults and reveal delays match the specification", () => {
-  assert.deepEqual(core.defaultPreferences(), { textSpeed: "normal", soundEnabled: true });
-  assert.deepEqual(core.sanitisePreferences({ textSpeed: "warp" }), {
+check("how the story arrives is a preference, and it survives a restart", () => {
+  const storage = memoryStorage();
+  core.savePreferences({ textSpeed: "slow", soundEnabled: true, scrollMode: "manual" }, storage);
+  core.clearJourney(storage);
+  assert.equal(core.loadPreferences(storage).scrollMode, "manual");
+  // Anything that is not one of the two modes reads as automatic.
+  assert.equal(core.sanitisePreferences({ scrollMode: "sideways" }).scrollMode, "auto");
+  assert.equal(core.defaultPreferences().scrollMode, "auto");
+  ["auto", "manual"].forEach((mode) => {
+    assert.equal(core.sanitisePreferences({ scrollMode: mode }).scrollMode, mode);
+  });
+  // Both are offered, in the prelude, with a note that it can be changed.
+  assert.deepEqual(
+    data.prelude.reading.options.map((option) => option.id),
+    ["auto", "manual"],
+  );
+  data.prelude.reading.options.forEach((option) => {
+    assert.ok(option.name && option.note, option.id);
+  });
+});
+
+check("a passage is held for as long as it takes to read", () => {
+  assert.deepEqual(core.defaultPreferences(), {
     textSpeed: "normal",
     soundEnabled: true,
+    scrollMode: "auto",
   });
-  assert.equal(core.TEXT_SPEEDS.slow, 2400);
-  assert.equal(core.TEXT_SPEEDS.normal, 1200);
-  assert.equal(core.TEXT_SPEEDS.fast, 500);
-  assert.equal(core.revealDelay({ textSpeed: "slow" }, false), 2400);
-  assert.equal(core.revealDelay({ textSpeed: "slow" }, true), 0);
+  assert.equal(core.sanitisePreferences({ textSpeed: "warp" }).textSpeed, "normal");
+
+  const short = "The panel is warm.";
+  const long = Array.from({ length: 60 }, () => "word").join(" ");
+
+  // The delay follows the words, not a single constant per passage.
+  ["slow", "normal", "fast"].forEach((textSpeed) => {
+    const prefs = { textSpeed };
+    assert.ok(
+      core.revealDelay(prefs, false, long) > core.revealDelay(prefs, false, short) * 2,
+      `${textSpeed} does not scale with length`,
+    );
+    assert.equal(core.revealDelay(prefs, true, long), 0, `${textSpeed} reduced motion`);
+  });
+
+  // Slower settings hold everything longer than faster ones.
+  assert.ok(core.revealDelay({ textSpeed: "slow" }, false, long) > core.revealDelay({ textSpeed: "normal" }, false, long));
+  assert.ok(core.revealDelay({ textSpeed: "normal" }, false, long) > core.revealDelay({ textSpeed: "fast" }, false, long));
+
+  // A sixty-word passage on the slow setting is a readable dwell, not a beat.
+  assert.ok(core.revealDelay({ textSpeed: "slow" }, false, long) >= 8000);
+  // A short line still lands rather than flashing past.
+  assert.ok(core.revealDelay({ textSpeed: "fast" }, false, short) >= 400);
+
+  // An Act closes before the next opens, and the pause follows the pace.
+  assert.ok(core.actClosePause({ textSpeed: "slow" }, false) > core.actClosePause({ textSpeed: "fast" }, false));
+  assert.equal(core.actClosePause({ textSpeed: "slow" }, true), 0);
+  assert.equal(core.wordCount(" one   two  three "), 3);
 });
 
 /* ----------------------------------------------------------- node stream */
@@ -978,6 +1023,7 @@ const indexSource = read("./index.html");
 const resultsHtml = read("./results.html");
 const stylesSource = read("./styles.css");
 const pdfSource = read("./pdf-export.js");
+const audioSource = read("./audio.js");
 
 check("both pages load the modules they need and nothing else", () => {
   [
@@ -1466,6 +1512,83 @@ check("the prelude statement is set like every other statement", () => {
     }
     assert.notEqual(step.heading, step.heading.toUpperCase(), `${step.heading} is shouted`);
   });
+});
+
+check("the soundtrack follows the Act being read", () => {
+  // The table of tracks, in the owner's terms.
+  const expected = [
+    ["station-drift", 1, 3],
+    ["system-pressure", 4, 6],
+    ["the-silence-between", 7, 8],
+    ["under-ice-pulse", 9, 11],
+    ["under-the-ice", 12, 12],
+  ];
+  expected.forEach(([key, from, to]) => {
+    for (let act = from; act <= to; act += 1) {
+      assert.equal(
+        audio.trackForAct(act),
+        key,
+        `Act ${String(act).padStart(2, "0")} should be ${key}`,
+      );
+    }
+  });
+  // Every Act is covered exactly once.
+  const covered = new Set();
+  expected.forEach(([, from, to]) => {
+    for (let act = from; act <= to; act += 1) {
+      assert.equal(covered.has(act), false, `Act ${act} is covered twice`);
+      covered.add(act);
+    }
+  });
+  assert.equal(covered.size, core.ACT_COUNT);
+
+  // It is resolved from the revealed Act, not from the pending question.
+  assert.match(appSource, /function revealedAct\(\)/);
+  assert.match(appSource, /audio\.sync\(data, state, core, revealedAct\(\)\)/);
+  assert.match(audioSource, /function phaseForState\(data, state, core, actNumber\)/);
+  // And it is kept in step whenever the stream advances, not only on an answer.
+  assert.match(appSource, /syncSound\(\);\s*\n\s*schedule\(\);/);
+});
+
+check("the prelude is composed like an Act, not as a card", () => {
+  const block = stylesSource.slice(
+    stylesSource.indexOf(".entry {"),
+    stylesSource.indexOf(".entry-index"),
+  );
+  // Full viewport, no card shell.
+  assert.match(block, /inset: 0/);
+  assert.match(block, /max-width: none/);
+  assert.match(block, /border: 0/);
+  // It scrolls rather than clipping, and the actions stay reachable.
+  assert.match(block, /overflow-y: auto/);
+  const foot = stylesSource.slice(
+    stylesSource.indexOf(".entry-foot {"),
+    stylesSource.indexOf("}", stylesSource.indexOf(".entry-foot {")),
+  );
+  assert.match(foot, /position: sticky/);
+  // Drawn ground and an oversized index, from the same artwork system.
+  assert.match(appSource, /art\.preludeGround\(\)/);
+  assert.match(artworkSource, /function preludeGround\(\)/);
+  assert.match(stylesSource, /\.entry-index/);
+});
+
+check("the phone controls are reachable and the bar carries the reading", () => {
+  const phone = stylesSource.slice(stylesSource.indexOf("@media (max-width: 40rem)"));
+  // The control sits at the foot of the screen, not in the far corner.
+  assert.match(phone, /\.control-menu \{[^}]*position: fixed/);
+  assert.match(phone, /bottom: max\(var\(--gutter\), 1rem\)/);
+  // The panel opens upward from it, so it cannot leave the screen either.
+  assert.match(phone, /\.controls-panel \{[^}]*position: fixed/);
+  // The ticks say the number a second time, so the phone drops them.
+  assert.match(phone, /\.sequence-ticks \{\s*display: none;/);
+  // A blur on the bar would make it a containing block and trap the button.
+  const masthead = stylesSource.slice(
+    stylesSource.indexOf(".masthead {"),
+    stylesSource.indexOf(".masthead-identity"),
+  );
+  assert.doesNotMatch(masthead, /^\s*backdrop-filter/m);
+  // The button keeps a name once its label is only a glyph.
+  assert.match(indexSource, /id="controls-toggle"[\s\S]*?aria-label="Station controls"/);
 });
 
 check("hiding an element actually hides it", () => {

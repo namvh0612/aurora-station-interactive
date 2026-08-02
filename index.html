@@ -43,8 +43,12 @@
           type="button"
           aria-expanded="false"
           aria-controls="controls-panel"
+          aria-label="Station controls"
         >
-          Controls
+          <span class="control-menu-text">Controls</span>
+          <span class="control-menu-glyph" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
         </button>
         <div class="controls-panel" id="controls-panel">
           <button class="control" id="pace-toggle" type="button" aria-pressed="false">Pause</button>
@@ -53,6 +57,10 @@
             <button class="control" type="button" role="radio" data-pace="slow" aria-checked="false">Slow</button>
             <button class="control" type="button" role="radio" data-pace="normal" aria-checked="true">Normal</button>
             <button class="control" type="button" role="radio" data-pace="fast" aria-checked="false">Fast</button>
+          </div>
+          <div class="sequence" role="radiogroup" aria-label="Scrolling" id="scroll-control">
+            <button class="control" type="button" role="radio" data-scroll="auto" aria-checked="true">Auto</button>
+            <button class="control" type="button" role="radio" data-scroll="manual" aria-checked="false">Manual</button>
           </div>
           <button
             class="control"

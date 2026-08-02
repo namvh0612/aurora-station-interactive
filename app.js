@@ -25,6 +25,7 @@
   const paceToggle = document.getElementById("pace-toggle");
   const paceNow = document.getElementById("pace-now");
   const paceControl = document.getElementById("pace-control");
+  const scrollControl = document.getElementById("scroll-control");
   const soundToggle = document.getElementById("sound-toggle");
   const restartControl = document.getElementById("restart");
   const controlsToggle = document.getElementById("controls-toggle");
@@ -69,6 +70,8 @@
   let restoring = false;
   let entry = null;
   let markedAct = 0;
+  let marked = null;
+  let markTimer = 0;
   const panels = new Map();
 
   function clamp(value) {
@@ -80,6 +83,10 @@
   }
 
   /* ------------------------------------------------------------- helpers */
+
+  function manualScroll() {
+    return prefs.scrollMode === "manual";
+  }
 
   function stillMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -159,7 +166,8 @@
    * the context above and the scale stays below the fold.
    */
   function follow(node) {
-    if (!node || userScrolling) {
+    // Manual reading means the page never moves itself, at all.
+    if (!node || userScrolling || manualScroll()) {
       return;
     }
     const open = watch.querySelector(".observation:not(.is-closed)");
@@ -182,11 +190,56 @@
     if (restoring) {
       return;
     }
+    if (manualScroll()) {
+      // Nothing will carry the reader down, so the indicator has to.
+      newPassage.hidden = nearBottom();
+      return;
+    }
     if (wasNear && !userScrolling) {
       newPassage.hidden = true;
       follow(node);
+      mark(node);
     } else {
       newPassage.hidden = false;
+    }
+  }
+
+  /*
+   * A faint ground under whatever the reader has just arrived at, so the eye
+   * can find its place after the page moves. It fades on its own; it never
+   * changes a text colour, and it is a background alone.
+   */
+  function mark(node) {
+    if (!node || !node.classList || stillMotion()) {
+      return;
+    }
+    node.classList.remove("is-marked");
+    // Restart the animation rather than letting a second call be ignored.
+    void node.offsetWidth;
+    node.classList.add("is-marked");
+  }
+
+  function markNearestInView() {
+    if (stillMotion()) {
+      return;
+    }
+    const middle = window.innerHeight * 0.42;
+    let best = null;
+    let bestGap = Infinity;
+    watch.querySelectorAll(".passage").forEach((passage) => {
+      const box = passage.getBoundingClientRect();
+      if (box.bottom < 0 || box.top > window.innerHeight) {
+        return;
+      }
+      const gap = Math.abs(box.top - middle);
+      if (gap < bestGap) {
+        bestGap = gap;
+        best = passage;
+      }
+    });
+    if (best && best !== marked) {
+      marked = best;
+      mark(best);
     }
   }
 
@@ -494,13 +547,32 @@
     return { wasNear, last };
   }
 
+  /*
+   * How long the passage that has just landed is held. A node is given the
+   * time its own words take to read; an Act's last passage is given longer, so
+   * the reader finishes the Act before the next plate opens.
+   */
+  function holdFor(node) {
+    if (!node) {
+      return 0;
+    }
+    if (node.type === "question") {
+      return 0;
+    }
+    const next = nodes[revealed + 1];
+    if (next && next.type === "act") {
+      return core.actClosePause(prefs, false);
+    }
+    return core.revealDelay(prefs, false, node.text || node.title || "");
+  }
+
   function schedule() {
     window.clearTimeout(revealTimer);
-    if (prefs.paused || idle() || stillMotion()) {
+    if (prefs.paused || idle() || stillMotion() || manualScroll()) {
       updateControls();
       return;
     }
-    const delay = nodes[revealed].type === "question" ? 0 : core.revealDelay(prefs, false);
+    const delay = holdFor(nodes[revealed]);
     revealTimer = window.setTimeout(() => {
       revealOne();
       advance();
@@ -520,7 +592,9 @@
     }
     catchUp();
 
-    if (!prefs.paused && stillMotion()) {
+    // In manual reading the story does not trickle: everything up to the next
+    // question is already there, and the reader moves through it themselves.
+    if (!prefs.paused && (stillMotion() || manualScroll())) {
       const result = revealAvailable();
       settle(result.wasNear, result.last);
     }
@@ -532,6 +606,7 @@
 
     updateSequence();
     updateEnvironment();
+    syncSound();
     schedule();
   }
 
@@ -569,9 +644,7 @@
         if (next) {
           say(next.item.statement);
         }
-        if (audio) {
-          audio.sync(data, state, core);
-        }
+        syncSound();
       },
       stillMotion() ? 0 : SELECTED_HOLD,
     );
@@ -625,6 +698,29 @@
     }
     event.preventDefault();
     record(pending.actNumber, value);
+  }
+
+  /*
+   * The soundtrack follows the Act that has been revealed, so a track begins
+   * when its first Act opens and the change is heard on the Act boundary
+   * rather than whenever a question happens to be answered.
+   */
+  function revealedAct() {
+    let reached = 0;
+    for (let index = 0; index < revealed && index < nodes.length; index += 1) {
+      const number = nodes[index].actNumber || 0;
+      if (number > reached) {
+        reached = number;
+      }
+    }
+    return reached;
+  }
+
+  function syncSound() {
+    if (!audio) {
+      return;
+    }
+    audio.sync(data, state, core, revealedAct());
   }
 
   /* ------------------------------------------------------------ the shell */
@@ -767,6 +863,29 @@
       button.setAttribute("aria-pressed", String(active));
       button.tabIndex = active ? 0 : -1;
     });
+    scrollControl.querySelectorAll("[data-scroll]").forEach((button) => {
+      const active = button.dataset.scroll === prefs.scrollMode;
+      button.setAttribute("aria-checked", String(active));
+      button.setAttribute("aria-pressed", String(active));
+      button.tabIndex = active ? 0 : -1;
+    });
+    // Reading pace only means something while the story is being revealed.
+    paceControl.hidden = manualScroll();
+    paceToggle.hidden = manualScroll();
+    document.body.dataset.scrollMode = prefs.scrollMode;
+  }
+
+  function setScrollMode(mode) {
+    prefs = { ...core.sanitisePreferences({ ...prefs, scrollMode: mode }), paused: prefs.paused };
+    core.savePreferences(prefs, storage);
+    advance();
+    schedule();
+    updateControls();
+    say(
+      manualScroll()
+        ? "Manual reading. The story is revealed to the next question and stays where it is."
+        : "Automatic reading. The story reveals itself and follows.",
+    );
   }
 
   function setPace(pace) {
@@ -799,16 +918,25 @@
     const dialog = el("dialog", "entry");
     dialog.setAttribute("aria-labelledby", "entry-title");
 
+    // The prelude is composed like an Act opening, not like a dialog card:
+    // a drawn ground, an oversized index, then the reading column.
+    const figure = el("div", "entry-figure");
+    if (art) {
+      figure.appendChild(art.preludeGround());
+    }
+    dialog.appendChild(figure);
+
     const frame = el("div", "entry-frame");
     const head = el("div", "entry-head");
     const label = el("p", "mark", identity.label);
     const station = el("p", "mark", OBS.stationLabel);
     head.append(label, station);
 
+    const index = el("p", "entry-index", "01");
     const title = el("h1", "entry-title", identity.heading);
     title.id = "entry-title";
     const body = el("p", "entry-body", identity.intro);
-    frame.append(head, title, body);
+    frame.append(head, index, title, body);
 
     /* --- the watchkeeper --- */
     const identityPanel = el("section");
@@ -890,7 +1018,42 @@
     orientationPanel.appendChild(el("p", "entry-body", orientation.intro));
     const list = el("ul", "entry-list");
     orientation.guidance.forEach((line) => list.appendChild(el("li", "", line)));
-    orientationPanel.append(list, el("p", "entry-statement", orientation.disclaimer));
+    orientationPanel.append(list);
+
+    // How the story arrives is chosen here, and can be changed at any point
+    // from the station controls.
+    const readingCopy = data.prelude.reading;
+    const reading = el("div", "entry-choice");
+    const readingGroup = el("div", "entry-choice-options");
+    readingGroup.setAttribute("role", "radiogroup");
+    readingGroup.setAttribute("aria-label", readingCopy.label);
+    const readingButtons = readingCopy.options.map((option) => {
+      const button = el("button", "entry-option");
+      button.type = "button";
+      button.dataset.scroll = option.id;
+      button.setAttribute("role", "radio");
+      button.append(
+        el("span", "mark entry-option-name", option.name),
+        el("span", "entry-option-note", option.note),
+      );
+      button.addEventListener("click", () => {
+        setScrollMode(option.id);
+        syncReading();
+      });
+      readingGroup.appendChild(button);
+      return button;
+    });
+
+    function syncReading() {
+      readingButtons.forEach((button) => {
+        const active = button.dataset.scroll === prefs.scrollMode;
+        button.setAttribute("aria-checked", String(active));
+        button.tabIndex = active ? 0 : -1;
+      });
+    }
+
+    reading.append(el("p", "mark", readingCopy.label), readingGroup);
+    orientationPanel.append(reading, el("p", "entry-disclaimer", orientation.disclaimer));
     const orientationBack = el("button", "control", orientation.back);
     orientationBack.type = "button";
     const begin = el("button", "action", orientation.primary);
@@ -914,8 +1077,10 @@
         value.panel.hidden = key !== name;
       });
       label.textContent = current.copy.label;
+      index.textContent = pad(Object.keys(stages).indexOf(name) + 1);
       title.textContent = current.copy.heading;
       body.hidden = name !== "identity";
+      frame.scrollTop = 0;
       window.requestAnimationFrame(() => current.focus()?.focus());
     }
 
@@ -926,6 +1091,7 @@
       calibrationButtons.forEach((button) => button.setAttribute("aria-pressed", "false"));
       calibrationRead.textContent = "";
       calibrationNext.disabled = true;
+      syncReading();
       stage("identity");
     };
 
@@ -1041,6 +1207,12 @@
         setPace(button.dataset.pace);
       }
     });
+    scrollControl.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-scroll]");
+      if (button) {
+        setScrollMode(button.dataset.scroll);
+      }
+    });
     paceControl.addEventListener("keydown", (event) => {
       const step =
         event.key === "ArrowRight" || event.key === "ArrowDown"
@@ -1080,6 +1252,8 @@
           newPassage.hidden = true;
         }
         markActInView();
+        window.clearTimeout(markTimer);
+        markTimer = window.setTimeout(markNearestInView, 120);
         rememberScroll();
       },
       { passive: true },
@@ -1110,7 +1284,7 @@
 
     if (audio) {
       audio.init({ toggleButton: soundToggle });
-      audio.sync(data, state, core);
+      syncSound();
     }
 
     if (!state.participant.name) {

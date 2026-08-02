@@ -407,63 +407,147 @@
    */
   function elementCycle(nodes, leadId, links) {
     const size = 300;
+    // The box is wider than the ring so the outer labels have their own room
+    // instead of being pulled back across the lines they sit beside.
     const figure = svg(size, size, "art-cycle");
+    figure.setAttribute("viewBox", `-64 -20 ${size + 128} ${size + 44}`);
     figure.setAttribute("preserveAspectRatio", "xMidYMid meet");
     const centre = size / 2;
     const radius = size * 0.34;
+
+    // One arrowhead per line style, so direction is drawn rather than implied.
+    const defs = shape("defs", {});
+    [
+      ["art-cycle-feed-head", "art-cycle-head"],
+      ["art-cycle-check-head", "art-cycle-head art-cycle-head-check"],
+    ].forEach(([id, className]) => {
+      const marker = shape("marker", {
+        id,
+        viewBox: "0 0 10 10",
+        refX: 9,
+        refY: 5,
+        markerWidth: 6,
+        markerHeight: 6,
+        orient: "auto-start-reverse",
+      });
+      marker.appendChild(shape("path", { d: "M0 1 L10 5 L0 9 Z", class: className }));
+      defs.appendChild(marker);
+    });
+    figure.appendChild(defs);
 
     const placed = nodes.map((node, index) => {
       const angle = (Math.PI * 2 * index) / nodes.length - Math.PI / 2;
       return {
         ...node,
+        angle,
         x: centre + Math.cos(angle) * radius,
         y: centre + Math.sin(angle) * radius,
       };
     });
 
-    // The feeding cycle: one closed ring through every node in order.
-    figure.appendChild(
-      shape("path", {
-        d: path(placed.map((node) => [node.x, node.y]), true),
-        class: "art-cycle-ring",
-      }),
-    );
+    // Stop each line short of the node it points at, so the head is visible.
+    function segment(from, to, gap) {
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const length = Math.hypot(dx, dy) || 1;
+      const unit = { x: dx / length, y: dy / length };
+      return [
+        [from.x + unit.x * gap, from.y + unit.y * gap],
+        [to.x - unit.x * gap, to.y - unit.y * gap],
+      ];
+    }
 
-    // The checking cycle: each node reaches to the second node along.
+    const related = links
+      ? [links.supports, links.supportedBy, links.checks, links.checkedBy]
+      : [];
+
+    // The feeding cycle, each step drawn in the direction it feeds.
     placed.forEach((node, index) => {
-      const target = placed[(index + 2) % placed.length];
+      const target = placed[(index + 1) % placed.length];
+      const live = node.id === leadId || target.id === leadId;
       figure.appendChild(
         shape("path", {
-          d: path([[node.x, node.y], [target.x, target.y]], false),
-          class: "art-cycle-check",
+          d: path(segment(node, target, 18), false),
+          class: live ? "art-cycle-ring art-cycle-live" : "art-cycle-ring",
+          "marker-end": "url(#art-cycle-feed-head)",
+        }),
+      );
+    });
+
+    // The checking cycle: each node reaches across to the one it restrains.
+    placed.forEach((node, index) => {
+      const target = placed[(index + 2) % placed.length];
+      const live = node.id === leadId || target.id === leadId;
+      figure.appendChild(
+        shape("path", {
+          d: path(segment(node, target, 18), false),
+          class: live ? "art-cycle-check art-cycle-live" : "art-cycle-check",
+          "marker-end": "url(#art-cycle-check-head)",
         }),
       );
     });
 
     placed.forEach((node) => {
       const lead = node.id === leadId;
-      const related =
-        links && [links.supports, links.supportedBy, links.checks, links.checkedBy].includes(node.id);
-      const dot = shape("circle", {
-        cx: node.x.toFixed(1),
-        cy: node.y.toFixed(1),
-        r: lead ? 13 : 9,
-        class: lead ? "art-cycle-node art-cycle-node-lead" : "art-cycle-node",
-        fill: lead || related ? node.colour : "none",
-        stroke: node.colour,
-      });
-      figure.appendChild(dot);
+      const touches = related.includes(node.id);
+      figure.appendChild(
+        shape("circle", {
+          cx: node.x.toFixed(1),
+          cy: node.y.toFixed(1),
+          r: lead ? 13 : 8,
+          class: lead ? "art-cycle-node art-cycle-node-lead" : "art-cycle-node",
+          // Filled is the reader's own; the rest are outlines, so the fill
+          // means something instead of being true for every node.
+          fill: lead ? node.colour : "var(--paper)",
+          stroke: node.colour,
+          "stroke-width": touches ? 2.5 : 1.5,
+        }),
+      );
 
+      /*
+       * Labels are pushed outward along the line from the centre through the
+       * node, and anchored by which side they land on, so no label is ever set
+       * across a stroke.
+       */
+      const out = 30;
+      const x = node.x + Math.cos(node.angle) * out;
+      const y = node.y + Math.sin(node.angle) * out;
+      const horizontal = Math.cos(node.angle);
+      const anchor = Math.abs(horizontal) < 0.35 ? "middle" : horizontal > 0 ? "start" : "end";
       const text = shape("text", {
-        x: node.x.toFixed(1),
-        // Labels sit outside the ring, above or below by which half they are on.
-        y: (node.y + (node.y < centre ? -22 : 30)).toFixed(1),
+        x: x.toFixed(1),
+        y: (y + (Math.sin(node.angle) > 0.3 ? 12 : 4)).toFixed(1),
         class: lead ? "art-cycle-label art-cycle-label-lead" : "art-cycle-label",
-        "text-anchor": "middle",
+        "text-anchor": anchor,
       });
-      text.textContent = node.label;
+      text.textContent = lead ? `${node.label} ·` : node.label;
       figure.appendChild(text);
     });
+
+    return figure;
+  }
+
+  /*
+   * The ground the prelude is composed on: the station seen through its own
+   * observation window, before anything has happened. No aurora — the sky is
+   * empty until Act 09.
+   */
+  function preludeGround() {
+    const width = 1200;
+    const height = 760;
+    const figure = svg(width, height, "art-plate");
+    const seed = seedFrom("prelude");
+
+    const sky = shape("g", { class: "art-sky" });
+    fieldContours(sky, seed, width, height, 7);
+    figure.appendChild(sky);
+
+    horizon(figure, seed, width, height);
+    windowFrame(figure, width, height);
+
+    const marks = shape("g", { transform: `translate(0 ${height * 0.9})` });
+    calibration(marks, width, height * 0.08, 48);
+    figure.appendChild(marks);
 
     return figure;
   }
@@ -471,6 +555,7 @@
   const api = {
     actPlate,
     auroraRibbons,
+    preludeGround,
     calibration,
     coreColumn,
     elementCycle,

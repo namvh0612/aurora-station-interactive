@@ -110,18 +110,25 @@
     context.fillStyle = "#e6eaeb";
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, EXPORT_PAGE_HEIGHT);
 
-    const wash = context.createRadialGradient(
-      EXPORT_PAGE_WIDTH - 250,
-      190,
-      20,
-      EXPORT_PAGE_WIDTH - 250,
-      190,
-      620,
-    );
-    wash.addColorStop(0, `${accent || "#14181a"}24`);
-    wash.addColorStop(1, "rgba(230,234,235,0)");
-    context.fillStyle = wash;
-    context.fillRect(0, 0, EXPORT_PAGE_WIDTH, 1050);
+    /*
+     * A calibration scale in the head margin rather than a gradient wash: a
+     * printed instrument mark, and it says which page this is by how far the
+     * long stroke has travelled along it.
+     */
+    context.strokeStyle = "#c1caca";
+    context.lineWidth = 2;
+    const scaleTop = 150;
+    const scaleWidth = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    const steps = Math.max(1, pageCount || 8);
+    for (let step = 0; step < steps; step += 1) {
+      const at = EXPORT_MARGIN + (scaleWidth * step) / (steps - 1 || 1);
+      const reached = step <= pageNumber - 1;
+      context.strokeStyle = reached ? "#5c6568" : "#c1caca";
+      context.beginPath();
+      context.moveTo(at, scaleTop);
+      context.lineTo(at, scaleTop + (reached ? 16 : 9));
+      context.stroke();
+    }
 
     context.fillStyle = accent || "#14181a";
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, 8);
@@ -154,35 +161,40 @@
     );
   }
 
+  /*
+   * An oversized opening, the way an Act opens on screen. The page is A4 at
+   * 300dpi and the report was using about a third of it, which read as an
+   * unfinished layout rather than a spare one.
+   */
   function drawExportHeading(context, eyebrow, title, introduction, accent) {
-    let y = 220;
+    let y = 300;
     y = drawExportText(context, eyebrow.toUpperCase(), EXPORT_MARGIN, y, 1800, {
-      size: 27,
+      size: 30,
       family: "sans",
       weight: 600,
       colour: accent || "#4b5457",
-      lineHeight: 38,
+      lineHeight: 42,
     });
-    y += 86;
+    y += 150;
     y = drawExportText(context, title, EXPORT_MARGIN, y, EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2, {
-      size: 82,
+      size: 132,
       weight: 500,
       colour: "#14181a",
-      lineHeight: 88,
+      lineHeight: 138,
       maxLines: 2,
     });
     if (introduction) {
-      y += 24;
+      y += 46;
       y = drawExportText(context, introduction, EXPORT_MARGIN, y, 1960, {
-        size: 35,
+        size: 40,
         colour: "#4b5457",
-        lineHeight: 50,
+        lineHeight: 58,
         maxLines: 4,
       });
     }
-    y += 32;
+    y += 54;
     drawExportRule(context, y, "#c1caca", 2);
-    return y + 54;
+    return y + 76;
   }
 
   function drawExportLabel(context, label, x, y, colour) {
@@ -196,15 +208,130 @@
     });
   }
 
+  /*
+   * A reading on a rule, the way the report draws it: the range is a hairline,
+   * the reading is a mark on it. A filled rounded bar is a dashboard idiom and
+   * does not belong in this publication.
+   */
   function drawScoreTrack(context, x, y, width, normalised, colour) {
-    context.fillStyle = "#d3dada";
+    const centre = y + 13;
+    context.strokeStyle = "#c1caca";
+    context.lineWidth = 2;
     context.beginPath();
-    context.roundRect(x, y, width, 26, 13);
-    context.fill();
+    context.moveTo(x, centre);
+    context.lineTo(x + width, centre);
+    context.stroke();
+
+    // Whole scale points, so the mark can be read against the range.
+    context.strokeStyle = "#d3dada";
+    for (let step = 0; step <= 4; step += 1) {
+      const at = x + (width * step) / 4;
+      context.beginPath();
+      context.moveTo(at, centre - 7);
+      context.lineTo(at, centre + 7);
+      context.stroke();
+    }
+
+    const mark = x + width * Math.max(0, Math.min(1, normalised));
+    context.strokeStyle = colour;
+    context.lineWidth = 4;
+    context.beginPath();
+    context.moveTo(mark, centre - 15);
+    context.lineTo(mark, centre + 15);
+    context.stroke();
     context.fillStyle = colour;
     context.beginPath();
-    context.roundRect(x, y, Math.max(26, width * normalised), 26, 13);
+    context.arc(mark, centre, 9, 0, Math.PI * 2);
     context.fill();
+  }
+
+  /*
+   * The five contributions on a ring, drawn the way the report draws them: a
+   * feeding cycle around the outside, checking reaches across the middle, the
+   * reader's own contribution filled and the four it touches picked out.
+   */
+  function drawElementCycle(context, centreX, centreY, radius, nodes, leadId, relations) {
+    const related = relations
+      ? [relations.supports, relations.supportedBy, relations.checks, relations.checkedBy]
+      : [];
+    const placed = nodes.map((node, index) => {
+      const angle = (Math.PI * 2 * index) / nodes.length - Math.PI / 2;
+      return {
+        ...node,
+        angle,
+        x: centreX + Math.cos(angle) * radius,
+        y: centreY + Math.sin(angle) * radius,
+      };
+    });
+
+    function arrow(from, to, live, dashed) {
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const length = Math.hypot(dx, dy) || 1;
+      const unit = { x: dx / length, y: dy / length };
+      const gap = 42;
+      const start = { x: from.x + unit.x * gap, y: from.y + unit.y * gap };
+      const end = { x: to.x - unit.x * gap, y: to.y - unit.y * gap };
+
+      context.save();
+      context.strokeStyle = live ? "#4b5457" : "#c1caca";
+      context.lineWidth = dashed ? 2 : 3;
+      context.setLineDash(dashed ? [8, 12] : []);
+      context.beginPath();
+      context.moveTo(start.x, start.y);
+      context.lineTo(end.x, end.y);
+      context.stroke();
+      context.restore();
+
+      // The head, so the direction is drawn rather than implied.
+      const head = 14;
+      const left = { x: -unit.y, y: unit.x };
+      context.fillStyle = live ? "#4b5457" : "#c1caca";
+      context.beginPath();
+      context.moveTo(end.x, end.y);
+      context.lineTo(end.x - unit.x * head + left.x * head * 0.5, end.y - unit.y * head + left.y * head * 0.5);
+      context.lineTo(end.x - unit.x * head - left.x * head * 0.5, end.y - unit.y * head - left.y * head * 0.5);
+      context.closePath();
+      context.fill();
+    }
+
+    placed.forEach((node, index) => {
+      const target = placed[(index + 1) % placed.length];
+      arrow(node, target, node.id === leadId || target.id === leadId, false);
+    });
+    placed.forEach((node, index) => {
+      const target = placed[(index + 2) % placed.length];
+      arrow(node, target, node.id === leadId || target.id === leadId, true);
+    });
+
+    placed.forEach((node) => {
+      const lead = node.id === leadId;
+      context.beginPath();
+      context.arc(node.x, node.y, lead ? 26 : 17, 0, Math.PI * 2);
+      context.fillStyle = lead ? node.colour : "#e6eaeb";
+      context.fill();
+      context.strokeStyle = node.colour;
+      context.lineWidth = related.includes(node.id) ? 5 : 3;
+      context.stroke();
+
+      const out = 58;
+      const horizontal = Math.cos(node.angle);
+      drawExportText(
+        context,
+        node.label,
+        node.x + horizontal * out,
+        node.y + Math.sin(node.angle) * out + (Math.sin(node.angle) > 0.3 ? 26 : 10),
+        520,
+        {
+          size: 26,
+          family: "sans",
+          weight: lead ? 600 : 400,
+          colour: lead ? "#14181a" : "#4b5457",
+          align: Math.abs(horizontal) < 0.35 ? "center" : horizontal > 0 ? "left" : "right",
+          lineHeight: 34,
+        },
+      );
+    });
   }
 
   /* Page 1: the watchkeeper, the date and the five Aurora Roles. */
@@ -392,18 +519,59 @@
     );
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    const columnWidth = width * 0.52;
+
     y += 10;
     drawExportLabel(context, `${labels.yours} · ${primary.name}`, EXPORT_MARGIN, y, "#14181a");
-    y += 52;
-    y = drawExportText(context, `${labels.keywords} · ${element.keywords}`, EXPORT_MARGIN, y, width, {
-      size: 27,
-      family: "sans",
-      colour: "#4b5457",
-      lineHeight: 38,
+    let column = y + 52;
+    column = drawExportText(
+      context,
+      `${labels.keywords} · ${element.keywords}`,
+      EXPORT_MARGIN,
+      column,
+      columnWidth,
+      { size: 27, family: "sans", colour: "#4b5457", lineHeight: 38 },
+    );
+    column += 16;
+    // The shadow line the report shows under the role name, which the export
+    // used to drop.
+    column = drawExportText(
+      context,
+      `${labels.shadow}: ${element.shadow}`,
+      EXPORT_MARGIN,
+      column,
+      columnWidth,
+      { size: 27, colour: "#4b5457", lineHeight: 40 },
+    );
+
+    // The same figure the report draws, beside the reading rather than absent.
+    const cycleNodes = data.assessment.cycles.generating.map((elementId) => {
+      const role = profile.roles.find(
+        (candidate) => candidate.id === data.assessment.elements[elementId].role,
+      );
+      return { id: role.id, label: role.shortName, colour: role.colourPaper };
     });
-    y += 44;
+    drawElementCycle(
+      context,
+      EXPORT_PAGE_WIDTH - EXPORT_MARGIN - 430,
+      y + 400,
+      270,
+      cycleNodes,
+      primary.id,
+      relations,
+    );
+    drawExportText(
+      context,
+      `${labels.cycleGenerating} — ${labels.cycleControlling} - - -`,
+      EXPORT_PAGE_WIDTH - EXPORT_MARGIN - 430,
+      y + 790,
+      860,
+      { size: 24, family: "sans", colour: "#5c6568", align: "center", lineHeight: 32 },
+    );
+
+    y = Math.max(column, y + 830) + 40;
     drawExportRule(context, y, "#c1caca", 2);
-    y += 60;
+    y += 66;
 
     [
       ["supports", labels.supports],
@@ -413,43 +581,46 @@
     ].forEach(([key, label]) => {
       const other = profile.roles.find((role) => role.id === relations[key]);
       const otherElement = core.elementForRole(data, other.id);
+      // A mark beside the name, not a bar down the side of it.
       context.fillStyle = other.colourPaper;
-      context.fillRect(EXPORT_MARGIN, y - 6, 6, 118);
+      context.beginPath();
+      context.arc(EXPORT_MARGIN + 10, y - 8, 10, 0, Math.PI * 2);
+      context.fill();
 
-      drawExportLabel(context, label, EXPORT_MARGIN + 34, y, other.colourPaper);
-      y += 48;
-      y = drawExportText(context, other.name, EXPORT_MARGIN + 34, y, width - 34, {
-        size: 40,
+      drawExportLabel(context, label, EXPORT_MARGIN + 44, y, other.colourPaper);
+      y += 50;
+      y = drawExportText(context, other.name, EXPORT_MARGIN + 44, y, width - 44, {
+        size: 44,
         colour: "#14181a",
-        lineHeight: 50,
+        lineHeight: 54,
         maxLines: 1,
       });
-      y += 14;
+      y += 16;
       y = drawExportText(
         context,
         copy[key].replace("{role}", other.name),
-        EXPORT_MARGIN + 34,
+        EXPORT_MARGIN + 44,
         y,
-        width - 34,
-        { size: 28, colour: "#262b2d", lineHeight: 41, maxLines: 3 },
+        width - 44,
+        { size: 30, colour: "#262b2d", lineHeight: 44, maxLines: 3 },
       );
-      y += 8;
-      y = drawExportText(context, otherElement.keywords, EXPORT_MARGIN + 34, y, width - 34, {
-        size: 25,
+      y += 10;
+      y = drawExportText(context, otherElement.keywords, EXPORT_MARGIN + 44, y, width - 44, {
+        size: 26,
         family: "sans",
         colour: "#5c6568",
-        lineHeight: 35,
+        lineHeight: 36,
         maxLines: 1,
       });
-      y += 38;
+      y += 46;
     });
 
     drawExportRule(context, y, "#c1caca", 2);
-    y += 56;
+    y += 60;
     drawExportText(context, data.results.relationsNote, EXPORT_MARGIN, y, width, {
-      size: 26,
+      size: 27,
       colour: "#4b5457",
-      lineHeight: 39,
+      lineHeight: 41,
     });
   }
 

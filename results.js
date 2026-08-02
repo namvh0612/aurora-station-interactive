@@ -607,10 +607,12 @@
         art.elementCycle(nodes, primary.id, relations),
       );
     }
-    figure.append(
-      el("p", "mark", `${labels.cycleGenerating} · ${labels.cycleControlling}`),
-      el("p", "mark mark-sentence", COPY.relationsNote),
+    const key = el("p", "mark relations-key");
+    key.append(
+      el("span", "", labels.cycleGenerating),
+      el("span", "", labels.cycleControlling),
     );
+    figure.append(key, el("p", "mark mark-sentence", COPY.relationsNote));
 
     const own = el("div");
     const element = core.elementForRole(data, primary.id);
@@ -620,6 +622,22 @@
       el("p", "mark role-basis", `${labels.keywords} · ${element.keywords}`),
       el("p", "relations-shadow", `${labels.shadow}: ${element.shadow}`),
     );
+
+    // The four relationships, named beside the figure rather than only below it.
+    const summaryList = el("ul", "relations-summary");
+    [
+      ["supports", labels.supports],
+      ["supportedBy", labels.supportedBy],
+      ["checks", labels.checks],
+      ["checkedBy", labels.checkedBy],
+    ].forEach(([relationKey, label]) => {
+      const other = roleFor(relations[relationKey]);
+      const row = el("li");
+      row.style.setProperty("--trace", other.colourPaper);
+      row.append(el("span", "mark", label), el("span", "relations-summary-role", other.shortName));
+      summaryList.appendChild(row);
+    });
+    own.appendChild(summaryList);
 
     lede.append(own, figure);
     body.appendChild(lede);

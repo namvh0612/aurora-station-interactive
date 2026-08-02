@@ -99,7 +99,22 @@
     }
   }
 
-  function phaseForState(data, state, core) {
+  /*
+   * The soundtrack belongs to the Act being read, not to the question being
+   * asked. Those are not the same Act: the reader answers ahead of the story
+   * and the passages arrive afterwards, so keying the track to the pending
+   * item changed the music while an earlier Act was still on the screen.
+   *
+   * The caller passes the Act that is currently being read. Only when it
+   * cannot — before the watch opens, or once the record is closed — does this
+   * fall back to the pending item.
+   */
+  function phaseForState(data, state, core, actNumber) {
+    if (Number.isFinite(actNumber) && actNumber > 0) {
+      const act = data.story.acts.find((candidate) => candidate.number === actNumber);
+      return act ? phaseByAct.get(act.id) || null : null;
+    }
+
     const item = core.currentItem(data, state);
     if (!item) {
       return null;
@@ -109,6 +124,11 @@
       candidate.items.some((entry) => entry.id === item.id),
     );
     return act ? phaseByAct.get(act.id) || null : null;
+  }
+
+  /* Which track an Act belongs to, so the timeline can be checked. */
+  function trackForAct(actNumber) {
+    return phaseByAct.get(`act-${String(actNumber).padStart(2, "0")}`) || null;
   }
 
   function currentTitle() {
@@ -370,8 +390,8 @@
     updateToggle();
   }
 
-  function sync(data, state, core) {
-    const nextKey = phaseForState(data, state, core);
+  function sync(data, state, core, actNumber) {
+    const nextKey = phaseForState(data, state, core, actNumber);
     if (nextKey === desiredKey) {
       return desiredKey;
     }
@@ -424,6 +444,7 @@
     phaseForState,
     setVolume,
     sync,
+    trackForAct,
   };
 
   globalScope.AuroraAudio = api;

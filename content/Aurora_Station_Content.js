@@ -1968,6 +1968,22 @@ window.AURORA_STATION_DATA = {
     "reveal": "Revealed by sentence, short paragraph or narrative beat into one cumulative document. Nothing already revealed is replaced or removed."
   },
   "prelude": {
+    "reading": {
+      "label": "How the story arrives",
+      "options": [
+        {
+          "id": "auto",
+          "name": "Automatic",
+          "note": "The story reveals itself at your reading pace and the page follows it down."
+        },
+        {
+          "id": "manual",
+          "name": "Manual",
+          "note": "Everything up to the next question is already there, and the page never moves on its own."
+        }
+      ],
+      "note": "You can change this at any point during the watch."
+    },
     "steps": [
       {
         "id": "identity",
