@@ -1138,14 +1138,48 @@ check("the crew on the page matches the crew in the station", () => {
       .concat(act.items.flatMap((item) => [item.context, item.convergence, ...Object.values(item.narrative || {})]))
       .filter(Boolean)
       .join(" ");
+    /*
+     * Every act is asserted on, in both directions. An earlier version of this
+     * check tested only the nine acts after the recall and left Acts 1 and 3 —
+     * the two that actually stage her leaving and returning — with no assertion
+     * at all, which is where the risk lives.
+     */
     if (act.number > 3) {
       assert.doesNotMatch(text, headcount, `Act ${act.number} still counts two people`);
-      return;
+    } else if (act.number === 2) {
+      // The only act she is absent for, so she may not act in it.
+      assert.doesNotMatch(text, /\bMira\b(?!'s)/, "Act 2 has Mira in a station she has left");
+    } else {
+      // Acts 1 and 3 stage the departure and the return; both need her on
+      // stage. Act 1 may still say "the three of you" — she has not gone yet.
+      assert.match(text, /\bMira\b/, `Act ${act.number} no longer stages Mira`);
     }
-    // Before the recall she cannot be doing anything but leaving.
-    if (act.number === 2) {
-      assert.doesNotMatch(text, /Mira (?!'s)\w+s\b/, `Act ${act.number} has Mira acting after she left`);
-    }
+  });
+});
+
+check("a role is labelled with the element its relations actually use", () => {
+  /*
+   * Two independent sources. `role.element` is the printed label ("Wood"), and
+   * the Sheng/Ke walk finds the element by searching for the one whose `role`
+   * points back. Nothing keys either off the other, so they can drift and the
+   * report would draw one element while naming another.
+   */
+  Object.values(data.assessment.roles).forEach((role) => {
+    const byCycle = Object.values(data.assessment.elements).find((e) => e.role === role.id);
+    assert.ok(byCycle, `${role.id} is not claimed by any element`);
+    assert.equal(
+      byCycle.name,
+      role.element,
+      `${role.id} is labelled ${role.element} but its relations use ${byCycle.name}`,
+    );
+
+    const relations = core.relationsFor(data, role.id);
+    assert.ok(relations, `${role.id} has no relations`);
+    [relations.supports, relations.supportedBy, relations.checks, relations.checkedBy]
+      .forEach((other) => {
+        assert.ok(other, `${role.id} has a relation that resolves to nothing`);
+        assert.notEqual(other, role.id, `${role.id} feeds or checks itself`);
+      });
   });
 });
 
