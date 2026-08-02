@@ -139,7 +139,7 @@ Aurora Station is a static site with no build step and no dependencies. Open `in
 
 There are two pages: `index.html` carries the Prelude, all twelve Acts and the completion panel; `results.html` is the Watchkeeper Profile. Everything on the Results page is recalculated from your raw responses each time it loads — no score is cached, and an unfinished journey is sent back to the story.
 
-The watch is read by scrolling. The story runs as far as the next unanswered statement and stops there; everything to that point is already on the page, dimmed below the reading line and clearing as you come down to it. Answering opens the next stretch. Nothing advances on a timer and the page never moves itself, so there is no pace to set and nothing to pause.
+The watch is read by scrolling. The story runs as far as the next unanswered statement and stops there; everything to that point is already on the page, dimmed below the reading line and clearing as you come down to it. The fade reaches its floor around four fifths of the way down the screen rather than at the very bottom edge, so the run-up to the next statement reads as a run-up on a wide display as well as a narrow one. Answering opens the next stretch. Nothing advances on a timer and the page never moves itself, so there is no pace to set and nothing to pause.
 
 The report is read one chapter at a time. All six chapters are built into the page; the pager decides which is shown, puts the chapter in the address bar, and works with the browser's own back and forward buttons. The watch itself can be restarted at any point from the masthead, which clears the record and keeps your sound setting. On a phone the station controls collapse behind a single button.
 
@@ -172,7 +172,7 @@ The five behavioural currents carry the five elements — Wood, Fire, Earth, Met
 
 The aurora is a narrative event, not a background. It is absent through onboarding and the whole early and middle watch, enters at Act 09 when the storm breaks, deepens through the remaining acts, and is gone by the time the report opens.
 
-The night's record opens on a spectrum drawn from the sixty responses in the order they were pressed. It carries no axis, no scale, no item numbers and no ruled divisions, and is meant to be taken for the trace a recorder left running overnight — a centre line with bands that open where an answer was decisive and close toward the line where it sat on the middle of the scale. It is raw and unkeyed, because the record is a log of the night rather than a reading of it: two watches that score identically still draw different figures, and the same watch always draws its own.
+The night's record opens on a spectrum drawn from the sixty responses in the order they were pressed. It runs edge to edge and carries no axis, no scale, no item numbers and no ruled divisions, so it reads as the trace a recorder left running overnight and was already making before the paper started — a centre line with evenly spaced bands that open where an answer was decisive and breathe back toward the line where it sat on the middle of the scale. It is raw and unkeyed, because the record is a log of the night rather than a reading of it: two watches that score identically still draw different figures, and the same watch always draws its own.
 
 ### Checks
 

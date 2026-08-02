@@ -32,12 +32,24 @@
 
   const SELECTED_HOLD = 300;
   const SCROLL_SAVE = 250;
-  // Where the reading line sits, how far below it the story fades out, and how
-  // faint it is allowed to get. All fractions of the viewport, so a phone and a
-  // laptop dim over the same share of the screen.
-  const READING_LINE = 0.58;
-  const FADE_ZONE = 0.42;
-  const DIMMEST = 0.14;
+  /*
+   * Where the reading line sits, how far below it the story fades out, and how
+   * faint it is allowed to get. All fractions of the viewport, so a phone and a
+   * laptop dim over the same share of the screen.
+   *
+   * The fade has to finish well above the foot of the screen. Spread over
+   * everything below the line it reached its floor only at the very bottom
+   * edge, so the whole visible run-up sat between 0.6 and 1 — a difference too
+   * small to read as anything on a wide display, where a passage is two lines
+   * tall and only one of them is ever in the band.
+   */
+  const READING_LINE = 0.55;
+  const FADE_ZONE = 0.26;
+  const DIMMEST = 0.1;
+  /* Eased rather than linear: most of the fall happens early, so a passage
+   * reads as receding as soon as it is past, instead of hanging at nearly full
+   * strength for a third of the screen. */
+  const FADE_CURVE = 1.7;
 
   const LABELS = core.responseLabels(data);
   const TOTAL = core.ITEM_COUNT;
@@ -180,7 +192,8 @@
         const top = block.getBoundingClientRect().top;
         let read = 1;
         if (top > line) {
-          read = Math.max(DIMMEST, 1 - (top - line) / fade);
+          const past = Math.min(1, (top - line) / fade);
+          read = DIMMEST + (1 - DIMMEST) * (1 - past) ** FADE_CURVE;
         }
         /*
          * The exemption has to be decided here rather than by a `:focus-within`

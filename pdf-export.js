@@ -1276,6 +1276,8 @@
    * page is far enough apart that straight segments would read as a saw, and
    * the slight overshoot at a reversal is what rounds the peaks.
    */
+  const SPECTRUM_TENSION = 7.4;
+
   function strokeSmoothSeries(context, points) {
     context.beginPath();
     context.moveTo(points[0][0], points[0][1]);
@@ -1285,10 +1287,10 @@
       const to = points[index + 1];
       const after = points[Math.min(index + 2, points.length - 1)];
       context.bezierCurveTo(
-        from[0] + (to[0] - before[0]) / 6,
-        from[1] + (to[1] - before[1]) / 6,
-        to[0] - (after[0] - from[0]) / 6,
-        to[1] - (after[1] - from[1]) / 6,
+        from[0] + (to[0] - before[0]) / SPECTRUM_TENSION,
+        from[1] + (to[1] - before[1]) / SPECTRUM_TENSION,
+        to[0] - (after[0] - from[0]) / SPECTRUM_TENSION,
+        to[1] - (after[1] - from[1]) / SPECTRUM_TENSION,
         to[0],
         to[1],
       );
@@ -1314,22 +1316,32 @@
    * that turned an instrument trace into a chart with a grid behind it.
    */
   const SPECTRUM_BANDS = 9;
-  const SPECTRUM_TOP = 1500;
-  const SPECTRUM_HEIGHT = 760;
+  const SPECTRUM_TOP = 1480;
+  const SPECTRUM_HEIGHT = 800;
 
   function drawResponseSpectrum(context, values, top, height) {
     if (values.length < 2) {
       return;
     }
-    const left = EXPORT_MARGIN;
-    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    /*
+     * Edge to edge rather than inside the margin. The trace gains a sixth of
+     * its length, which is a sixth off every slope, and running out of both
+     * sides of the page reads as a recording that was already going before the
+     * paper started.
+     */
     const middle = top + height / 2;
-    const carry = height * 0.17;
-    const spread = height * 0.26;
-    const at = (index) => left + (index / (values.length - 1)) * width;
+    const carry = height * 0.16;
+    const spread = height * 0.25;
+    const at = (index) => (index / (values.length - 1)) * EXPORT_PAGE_WIDTH;
     /* 3 is the middle of the scale, so it draws on the centre line. */
     const level = (index) => middle - ((values[index] - 3) / 2) * carry;
-    const opening = (index) => 0.28 + 0.72 * (Math.abs(values[index] - 3) / 2);
+    /*
+     * The bands breathe rather than shut. Closing them all the way toward the
+     * line on a run of middling answers packed nineteen strokes into a finger's
+     * width and printed as a moiré screen, which read as a fault on the page
+     * rather than as a quiet stretch of the night.
+     */
+    const opening = (index) => 0.62 + 0.38 * (Math.abs(values[index] - 3) / 2);
 
     context.save();
     context.strokeStyle = "#14181a";
@@ -1343,10 +1355,10 @@
      * hairline at 6% alpha disappears on paper, so even the outermost band
      * carries enough ink to survive the page.
      */
-    context.lineWidth = 2.2;
+    context.lineWidth = 2;
     for (let band = SPECTRUM_BANDS; band >= 1; band -= 1) {
       const reach = (band / SPECTRUM_BANDS) * spread;
-      context.globalAlpha = 0.5 - 0.16 * ((band - 1) / (SPECTRUM_BANDS - 1));
+      context.globalAlpha = 0.54 - 0.16 * ((band - 1) / (SPECTRUM_BANDS - 1));
       [-1, 1].forEach((side) => {
         strokeSmoothSeries(
           context,
@@ -1358,8 +1370,8 @@
       });
     }
 
-    context.globalAlpha = 0.88;
-    context.lineWidth = 4.5;
+    context.globalAlpha = 0.84;
+    context.lineWidth = 4;
     strokeSmoothSeries(
       context,
       values.map((value, index) => [at(index), level(index)]),

@@ -1088,8 +1088,8 @@ function recordingContext() {
   };
 }
 
-const SPECTRUM_TOP = 1500;
-const SPECTRUM_HEIGHT = 760;
+const SPECTRUM_TOP = 1480;
+const SPECTRUM_HEIGHT = 800;
 
 function spectrumFor(state) {
   const context = recordingContext();
@@ -1115,8 +1115,21 @@ check("the record's cover is drawn from the night it records", () => {
     );
   });
 
+  // Edge to edge: the trace was already running before the paper started.
+  const xs = context.knots.map((knot) => knot.x);
+  assert.equal(Math.min(...xs), 0);
+  assert.equal(Math.max(...xs), 2480);
+
   // Every band is legible on paper; nothing is left at a vanishing alpha.
   assert.ok(Math.min(...context.knots.map((knot) => knot.alpha)) >= 0.15);
+  /*
+   * The bands breathe rather than shut. Closed all the way toward the line on
+   * a run of middling answers, nineteen strokes packed into a finger's width
+   * and printed as a moiré screen.
+   */
+  const narrowest = spectrumFor(answerAll(() => 3));
+  const widths = narrowest.knots.map((knot) => Math.abs(knot.y - (SPECTRUM_TOP + SPECTRUM_HEIGHT / 2)));
+  assert.ok(Math.max(...widths) > SPECTRUM_HEIGHT * 0.13, "the bands collapse into a hatch");
   // Bands are evenly spaced, so the figure never reads as a glow round a line.
   const middle = SPECTRUM_TOP + SPECTRUM_HEIGHT / 2;
   const gaps = context.knots
@@ -1665,9 +1678,19 @@ check("the story dims below the reading line and clears as it is reached", () =>
   assert.match(block, /setProperty\("--read"/);
   assert.doesNotMatch(block, /blur|filter/);
   // Fractions of the viewport, so a phone and a laptop dim over the same share.
-  assert.match(appSource, /READING_LINE = 0\.\d+/);
-  assert.match(appSource, /FADE_ZONE = 0\.\d+/);
-  assert.match(appSource, /DIMMEST = 0\.\d+/);
+  const constant = (name) => Number(appSource.match(new RegExp(`${name} = ([\\d.]+)`))[1]);
+  /*
+   * The fade has to reach its floor well above the foot of the screen. Spread
+   * across everything below the reading line it bottomed out only at the very
+   * bottom edge, so the whole visible run-up sat between 0.6 and 1 — a
+   * difference too small to see at all on a wide display, where a passage is
+   * two lines tall and only ever has one of them in the band.
+   */
+  const finishesAt = constant("READING_LINE") + constant("FADE_ZONE");
+  assert.ok(finishesAt <= 0.85, `the fade only reaches its floor at ${finishesAt} of the screen`);
+  // Eased, or most of the fall happens too late in the band to be noticed.
+  assert.ok(constant("FADE_CURVE") > 1);
+  assert.ok(constant("DIMMEST") <= 0.15);
   /*
    * Flat rather than half an experience, for reduced motion and for more
    * contrast alike — dimming a block to a seventh is the opposite of what the
