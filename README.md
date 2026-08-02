@@ -145,7 +145,7 @@ The report is read one chapter at a time. All six chapters are built into the pa
 
 Both exports are named for the watchkeeper and the night the watch closed, so re-exporting the same record replaces it while a second watch keeps its own file.
 
-Your name and responses stay in the browser. Nothing is sent anywhere, and nothing about you is ever put in a URL. The journey and your reading preferences are kept as two separate records, so restarting clears the journey and keeps sound and text speed.
+Your name and responses stay in the browser. Nothing is sent anywhere, and nothing about you is ever put in a URL. The journey and your reading preferences are kept as two separate records, so restarting clears the journey and keeps your sound setting.
 
 ### Project structure
 
@@ -171,6 +171,8 @@ The reading column is centred and its measure grows with the page, so the same d
 The five behavioural currents carry the five elements — Wood, Fire, Earth, Metal and Water — assigned by the tendency each current already reads. The element supplies the colour and the shape of one chapter of the report: which contribution yours tends to feed, which tends to feed yours, and which holds it in check. It is used for that relationship and nothing else. Every reading in the report comes from the sixty recorded responses; no part of it is derived from a date of birth. Each element keeps one hue across the whole product, set light enough to read on the night and deep enough to read on paper.
 
 The aurora is a narrative event, not a background. It is absent through onboarding and the whole early and middle watch, enters at Act 09 when the storm breaks, deepens through the remaining acts, and is gone by the time the report opens.
+
+The night's record opens on a spectrum drawn from the sixty responses in the order they were pressed. It carries no axis, no scale, no item numbers and no ruled divisions, and is meant to be taken for the trace a recorder left running overnight — a centre line with bands that open where an answer was decisive and close toward the line where it sat on the middle of the scale. It is raw and unkeyed, because the record is a log of the night rather than a reading of it: two watches that score identically still draw different figures, and the same watch always draws its own.
 
 ### Checks
 

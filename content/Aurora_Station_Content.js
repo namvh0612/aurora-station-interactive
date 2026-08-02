@@ -2149,7 +2149,7 @@ window.AURORA_STATION_DATA = {
       "returnToStory": "Return to the watch",
       "restart": "Begin a new watch"
     },
-    "restartConfirm": "Begin a new watch?\n\nThis clears the watchkeeper name, every recorded observation, the story and this report. Sound and reading-pace settings are kept.",
+    "restartConfirm": "Begin a new watch?\n\nThis clears the watchkeeper name, every recorded observation, the story and this report. Your sound setting is kept.",
     "privacy": "Your name and your responses stay in this browser. Aurora Station has no backend and sends nothing anywhere.",
     "summaryTemplates": {
       "consistencyAnchored": "Across the watch your pattern stayed anchored in {overall}: {reading}. It was the tendency most available to you at the start and it did not give that position up, even as the conditions around it changed. That kind of consistency is not the same as rigidity. It suggests a way of working you return to by default, and which the rest of your responses arranged themselves around.",

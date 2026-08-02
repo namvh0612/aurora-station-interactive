@@ -1254,40 +1254,132 @@
   }
 
   /*
+   * The responses exactly as they were pressed, in order, still on the scale
+   * they were pressed on. Nothing is keyed and nothing is scored: this is the
+   * log of the night, not a reading of it, so a statement written in the
+   * opposite direction still draws whichever way the reader actually answered.
+   */
+  function responseSeries(state) {
+    const answers = state?.assessment?.answers || {};
+    const values = [];
+    for (;;) {
+      const value = answers[`q${String(values.length + 1).padStart(2, "0")}`];
+      if (!Number.isInteger(value) || value < 1 || value > 5) {
+        return values;
+      }
+      values.push(value);
+    }
+  }
+
+  /*
+   * A Catmull-Rom spline written as cubic Béziers. Sixty points across the
+   * page is far enough apart that straight segments would read as a saw, and
+   * the slight overshoot at a reversal is what rounds the peaks.
+   */
+  function strokeSmoothSeries(context, points) {
+    context.beginPath();
+    context.moveTo(points[0][0], points[0][1]);
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const before = points[index > 0 ? index - 1 : 0];
+      const from = points[index];
+      const to = points[index + 1];
+      const after = points[Math.min(index + 2, points.length - 1)];
+      context.bezierCurveTo(
+        from[0] + (to[0] - before[0]) / 6,
+        from[1] + (to[1] - before[1]) / 6,
+        to[0] - (after[0] - from[0]) / 6,
+        to[1] - (after[1] - from[1]) / 6,
+        to[0],
+        to[1],
+      );
+    }
+    context.stroke();
+  }
+
+  /*
+   * The night as a spectrum rather than a chart: no axis, no scale, no item
+   * numbers, nothing to read off. It is meant to be taken for instrument
+   * output — the trace a recorder left running overnight — and it happens to
+   * be entirely true.
+   *
+   * The centre line is the record itself. The bands around it open where the
+   * answer was decisive and close toward the line where it sat on the middle
+   * of the scale, so a night spent at the ends of the scale looks nothing like
+   * a night spent hedging, without either being labelled as such. Every band
+   * is a pure function of the sixty responses, so the same record always draws
+   * the same figure and no two records draw the same one.
+   *
+   * Nothing is ruled and nothing is marked. A vertical division every five
+   * observations would be true, and would also be the one stroke on the page
+   * that turned an instrument trace into a chart with a grid behind it.
+   */
+  const SPECTRUM_BANDS = 9;
+  const SPECTRUM_TOP = 1500;
+  const SPECTRUM_HEIGHT = 760;
+
+  function drawResponseSpectrum(context, values, top, height) {
+    if (values.length < 2) {
+      return;
+    }
+    const left = EXPORT_MARGIN;
+    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    const middle = top + height / 2;
+    const carry = height * 0.17;
+    const spread = height * 0.26;
+    const at = (index) => left + (index / (values.length - 1)) * width;
+    /* 3 is the middle of the scale, so it draws on the centre line. */
+    const level = (index) => middle - ((values[index] - 3) / 2) * carry;
+    const opening = (index) => 0.28 + 0.72 * (Math.abs(values[index] - 3) / 2);
+
+    context.save();
+    context.strokeStyle = "#14181a";
+    context.lineJoin = "round";
+    context.lineCap = "round";
+
+    /*
+     * Evenly spaced and near enough evenly weighted, because bands that crowd
+     * the centre and fade out of it read as a glow cast by the line rather
+     * than as a spectrum the line sits inside. Printed rather than lit: a
+     * hairline at 6% alpha disappears on paper, so even the outermost band
+     * carries enough ink to survive the page.
+     */
+    context.lineWidth = 2.2;
+    for (let band = SPECTRUM_BANDS; band >= 1; band -= 1) {
+      const reach = (band / SPECTRUM_BANDS) * spread;
+      context.globalAlpha = 0.5 - 0.16 * ((band - 1) / (SPECTRUM_BANDS - 1));
+      [-1, 1].forEach((side) => {
+        strokeSmoothSeries(
+          context,
+          values.map((value, index) => [
+            at(index),
+            level(index) + side * reach * opening(index),
+          ]),
+        );
+      });
+    }
+
+    context.globalAlpha = 0.88;
+    context.lineWidth = 4.5;
+    strokeSmoothSeries(
+      context,
+      values.map((value, index) => [at(index), level(index)]),
+    );
+    context.restore();
+  }
+
+  /*
    * The record is read after the night, so its cover is dawn like every other
    * page: paper, mineral ink and a drawn horizon. No aurora — by the time the
    * record is printed the sky has already gone.
    */
-  function drawStoryCover(context, data, playerName, pageCount) {
+  function drawStoryCover(context, data, state, pageCount) {
+    const playerName = state.participant.name;
     context.fillStyle = "#e6eaeb";
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, EXPORT_PAGE_HEIGHT);
     context.fillStyle = "#14181a";
     context.fillRect(0, 0, EXPORT_PAGE_WIDTH, 8);
 
-    // Twelve field contours, one per act, settling toward the horizon.
-    context.save();
-    context.strokeStyle = "#14181a";
-    // Printed rather than lit: a hairline at 6% alpha vanishes on paper, so
-    // the contours carry enough weight to survive the page.
-    context.lineWidth = 3;
-    for (let index = 0; index < 12; index += 1) {
-      const ratio = index / 11;
-      context.globalAlpha = 0.2 + ratio * 0.4;
-      const base = 1700 + index * 46;
-      context.beginPath();
-      for (let x = EXPORT_MARGIN; x <= EXPORT_PAGE_WIDTH - EXPORT_MARGIN; x += 12) {
-        const span = (x - EXPORT_MARGIN) / (EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2);
-        const swell = Math.sin(span * Math.PI * 2 + index * 0.42) * (108 - index * 7);
-        const y = base + swell * (1 - ratio * 0.55);
-        if (x === EXPORT_MARGIN) {
-          context.moveTo(x, y);
-        } else {
-          context.lineTo(x, y);
-        }
-      }
-      context.stroke();
-    }
-    context.restore();
+    drawResponseSpectrum(context, responseSeries(state), SPECTRUM_TOP, SPECTRUM_HEIGHT);
 
     drawExportRule(context, 2360, "#14181a", 3);
 
@@ -1414,7 +1506,7 @@
     const images = [];
 
     context.clearRect(0, 0, EXPORT_PAGE_WIDTH, EXPORT_PAGE_HEIGHT);
-    drawStoryCover(context, data, safeState.participant.name, totalPages);
+    drawStoryCover(context, data, safeState, totalPages);
     images.push(await canvasToJpegBytes(canvas));
     if (typeof settings.onProgress === "function") {
       settings.onProgress(1, totalPages, `Rendering story page 1 of ${totalPages}`);
@@ -1686,8 +1778,10 @@
 
   const api = {
     buildStoryBlocks,
+    drawResponseSpectrum,
     exportName,
     layoutStoryPages,
+    responseSeries,
     download: downloadStoryPdf,
     downloadStory: downloadStoryPdf,
     downloadProfile,

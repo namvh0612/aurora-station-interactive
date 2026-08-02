@@ -82,6 +82,16 @@
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
+  /*
+   * A flat, fully lit column rather than half an effect. Reduced motion asks
+   * for it, and so does more contrast: raising the palette's contrast and then
+   * multiplying the block by a seventh would cancel out the thing that reader
+   * just asked the system for.
+   */
+  function flatReading() {
+    return stillMotion() || window.matchMedia("(prefers-contrast: more)").matches;
+  }
+
   function el(tag, className, text) {
     const node = document.createElement(tag);
     if (className) {
@@ -152,17 +162,37 @@
     window.cancelAnimationFrame(focusFrame);
     focusFrame = window.requestAnimationFrame(() => {
       focusFrame = 0;
-      if (stillMotion()) {
-        return;
-      }
       const height = window.innerHeight;
       const line = height * READING_LINE;
       const fade = height * FADE_ZONE;
+      const focused = document.activeElement;
+      /*
+       * Clearing rather than returning early, so that turning the preference on
+       * part way through a watch lifts the column that is already dimmed
+       * instead of leaving it wherever the last frame left it.
+       */
+      const flat = flatReading();
       watch.querySelectorAll(".passage, .observation, .act-plate").forEach((block) => {
+        if (flat) {
+          block.style.removeProperty("--read");
+          return;
+        }
         const top = block.getBoundingClientRect().top;
         let read = 1;
         if (top > line) {
           read = Math.max(DIMMEST, 1 - (top - line) / fade);
+        }
+        /*
+         * The exemption has to be decided here rather than by a `:focus-within`
+         * rule in the stylesheet: this writes `--read` as an inline property,
+         * which outranks any stylesheet rule trying to set it back to 1. A
+         * browser usually scrolls focus into view and hides the difference, but
+         * it has no reason to when the block is already on screen — and then a
+         * reader working by keyboard would be answering a statement dimmed to
+         * a seventh of its contrast.
+         */
+        if (focused && block.contains(focused)) {
+          read = 1;
         }
         block.style.setProperty("--read", read.toFixed(3));
       });

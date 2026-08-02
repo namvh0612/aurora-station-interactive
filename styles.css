@@ -92,7 +92,6 @@
   --gutter: clamp(1.25rem, 5vw, 5rem);
   --rule: 1px;
   --tap: 3rem;
-  --pace: 620ms;
 }
 
 *,
@@ -674,7 +673,6 @@ body[data-aurora="present"] .env-aurora {
 .passage {
   max-width: var(--measure);
   margin: 0 auto 1.5em;
-  animation: passage-arrive var(--pace) ease both;
 }
 
 .passage-context {
@@ -686,18 +684,17 @@ body[data-aurora="present"] .env-aurora {
  * from the scroll position: full above the reading line, fading toward the
  * foot of the screen. Opacity only, so it stays on the compositor and costs
  * nothing per frame — and it is a state, not an animation, so nothing moves.
+ *
+ * Nothing here may be animated. A keyframe that touches `opacity` outranks a
+ * normal declaration for as long as it is filling, so an arrival animation on
+ * `.passage` would pin it opaque and `--read` would silently do nothing —
+ * which is exactly what the old timed reveal did.
  */
 .passage,
 .observation,
 .act-plate {
   opacity: var(--read, 1);
   transition: opacity 180ms linear;
-}
-
-/* Reached by keyboard rather than by scrolling: still readable. */
-.observation:focus-within,
-.passage:focus-within {
-  --read: 1;
 }
 
 /*
@@ -742,19 +739,6 @@ body[data-aurora="present"] .env-aurora {
   width: 1px;
   background: var(--trace, var(--signal));
   content: "";
-}
-
-@keyframes passage-arrive {
-  from {
-    transform: translateY(0.6rem);
-    opacity: 0;
-    clip-path: inset(0 0 100% 0);
-  }
-  to {
-    transform: none;
-    opacity: 1;
-    clip-path: inset(0 0 0 0);
-  }
 }
 
 /*
@@ -2136,18 +2120,20 @@ body.report .action-quiet {
  * already changed. Nothing that carries meaning is removed.
  */
 @media (prefers-reduced-motion: reduce) {
-  .passage {
-    animation: none;
-    /* The hover ground still appears; it simply arrives at once. */
-    transition: none;
-  }
-
   .env-drift,
   .art-aurora-band {
     animation: none;
   }
 
+  /*
+   * The hover ground and the reading focus both still appear; they simply
+   * arrive at once. The column itself stays fully lit, because the scroll
+   * focus is never applied under reduced motion.
+   */
   .env-aurora,
+  .passage,
+  .observation,
+  .act-plate,
   .plot-ghost,
   .reading-tip,
   .sequence-tick,

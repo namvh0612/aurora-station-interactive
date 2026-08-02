@@ -929,8 +929,8 @@ check("the page never moves itself", () => {
   assert.match(appSource, /--read/);
   assert.match(stylesSource, /opacity: var\(--read, 1\)/);
   assert.doesNotMatch(stylesSource, /filter: blur\([^)]*\);\s*\n\s*}\s*\n\s*\.passage/);
-  // Reached by keyboard is still readable.
-  assert.match(stylesSource, /:focus-within \{\s*--read: 1;/);
+  // Reached by keyboard is still readable — checked where it is decided.
+  assert.match(appSource, /if \(focused && block\.contains\(focused\)\)/);
 });
 
 /* ----------------------------------------------------------- node stream */
@@ -1045,6 +1045,138 @@ check("a different journey produces a different story PDF", () => {
   const high = pdf.buildStoryBlocks(data, answerAll(() => 5), core);
   assert.notDeepEqual(low, high);
   assert.ok(low.length > 100);
+});
+
+/*
+ * Enough of a 2D context to record what the cover figure draws. Curve knots
+ * and dashed rules are kept apart, because the rules are the only straight
+ * lines on the page and the only ones allowed to be.
+ */
+function recordingContext() {
+  const knots = [];
+  const straight = [];
+  const calls = [];
+  return {
+    globalAlpha: 1,
+    lineWidth: 1,
+    strokeStyle: "",
+    lineJoin: "",
+    lineCap: "",
+    knots,
+    straight,
+    calls,
+    save() {},
+    restore() {},
+    beginPath() {},
+    stroke() {},
+    setLineDash(pattern) {
+      calls.push(`setLineDash:${pattern}`);
+    },
+    moveTo(x, y) {
+      knots.push({ x, y, width: this.lineWidth, alpha: this.globalAlpha });
+    },
+    lineTo(x, y) {
+      straight.push({ x, y });
+    },
+    bezierCurveTo(ax, ay, bx, by, x, y) {
+      knots.push({ x, y, width: this.lineWidth, alpha: this.globalAlpha });
+    },
+    fillText(value) {
+      calls.push(`fillText:${value}`);
+    },
+    fillRect() {},
+  };
+}
+
+const SPECTRUM_TOP = 1500;
+const SPECTRUM_HEIGHT = 760;
+
+function spectrumFor(state) {
+  const context = recordingContext();
+  pdf.drawResponseSpectrum(context, pdf.responseSeries(state), SPECTRUM_TOP, SPECTRUM_HEIGHT);
+  return context;
+}
+
+check("the record's cover is drawn from the night it records", () => {
+  const context = spectrumFor(answerAll((index) => (index % 5) + 1));
+
+  // Nineteen lines of sixty knots: nine bands either side of the record.
+  assert.equal(context.knots.length, 19 * 60);
+  // One line carries the record itself and is drawn heaviest.
+  const heaviest = Math.max(...context.knots.map((knot) => knot.width));
+  assert.equal(context.knots.filter((knot) => knot.width === heaviest).length, 60);
+
+  // It stays inside its band, with room left for the spline to overshoot.
+  context.knots.forEach((knot) => {
+    assert.ok(knot.y > SPECTRUM_TOP + SPECTRUM_HEIGHT * 0.05, `${knot.y} rides above the band`);
+    assert.ok(
+      knot.y < SPECTRUM_TOP + SPECTRUM_HEIGHT * 0.95,
+      `${knot.y} drops below the band`,
+    );
+  });
+
+  // Every band is legible on paper; nothing is left at a vanishing alpha.
+  assert.ok(Math.min(...context.knots.map((knot) => knot.alpha)) >= 0.15);
+  // Bands are evenly spaced, so the figure never reads as a glow round a line.
+  const middle = SPECTRUM_TOP + SPECTRUM_HEIGHT / 2;
+  const gaps = context.knots
+    .filter((knot) => knot.x === context.knots[0].x && knot.y < middle)
+    .map((knot) => knot.y)
+    .sort((a, b) => a - b)
+    .map((y, index, all) => (index ? Number((all[index] - all[index - 1]).toFixed(3)) : null))
+    .filter((gap) => gap !== null);
+  assert.equal(new Set(gaps).size, 1, `uneven band spacing: ${gaps}`);
+
+  // The same record always draws the same figure.
+  assert.deepEqual(spectrumFor(answerAll((index) => (index % 5) + 1)).knots, context.knots);
+});
+
+check("the cover figure is a spectrum, not a chart", () => {
+  const context = spectrumFor(answerAll(() => 4));
+  // No axis, no scale, no item numbers, no ruled grid — nothing to read off,
+  // and not one straight line on the whole figure.
+  assert.deepEqual(context.calls, []);
+  assert.deepEqual(context.straight, []);
+
+  // A record answered entirely on the middle of the scale draws flat, and its
+  // bands close toward the line; decisive answers open them.
+  const middle = spectrumFor(answerAll(() => 3));
+  const centre = SPECTRUM_TOP + SPECTRUM_HEIGHT / 2;
+  const heaviest = Math.max(...middle.knots.map((knot) => knot.width));
+  const line = middle.knots.filter((knot) => knot.width === heaviest);
+  assert.equal(line.length, 60);
+  line.forEach((knot) => assert.equal(knot.y, centre));
+
+  const reach = (context_) =>
+    Math.max(...context_.knots.map((knot) => Math.abs(knot.y - centre)));
+  assert.ok(reach(middle) < reach(spectrumFor(answerAll(() => 5))));
+});
+
+check("the cover figure is the raw record and is never scored", () => {
+  /*
+   * Because the keying is balanced, a watch answered 1 throughout and a watch
+   * answered 5 throughout score 3.0 everywhere. If the cover drew a reading
+   * rather than a record, the two would be the same figure. They are mirrors.
+   */
+  const low = answerAll(() => 1);
+  const high = answerAll(() => 5);
+  const scores = (state) =>
+    core.scoreProfile(data, state).domains.map((domain) => domain.score);
+  assert.deepEqual(scores(low), scores(high));
+
+  const centre = SPECTRUM_TOP + SPECTRUM_HEIGHT / 2;
+  const lowKnots = spectrumFor(low).knots;
+  const highKnots = spectrumFor(high).knots;
+  assert.notDeepEqual(lowKnots, highKnots);
+  // Mirrored as a figure rather than knot for knot: reflecting the page swaps
+  // which side of each band is which.
+  const spread = (knots, sign) =>
+    knots.map((knot) => Number((sign * (knot.y - centre)).toFixed(4))).sort((a, b) => a - b);
+  assert.deepEqual(spread(lowKnots, 1), spread(highKnots, -1));
+
+  // And the cover is handed the record, not just a name to print on it.
+  assert.match(pdfSource, /function drawStoryCover\(context, data, state, pageCount\)/);
+  assert.match(pdfSource, /drawStoryCover\(context, data, safeState, totalPages\)/);
 });
 
 check("both exporters refuse an incomplete journey", async () => {
@@ -1536,11 +1668,47 @@ check("the story dims below the reading line and clears as it is reached", () =>
   assert.match(appSource, /READING_LINE = 0\.\d+/);
   assert.match(appSource, /FADE_ZONE = 0\.\d+/);
   assert.match(appSource, /DIMMEST = 0\.\d+/);
-  // Flat under reduced motion rather than half an experience.
-  assert.match(block, /if \(stillMotion\(\)\) \{\s*return;/);
+  /*
+   * Flat rather than half an experience, for reduced motion and for more
+   * contrast alike — dimming a block to a seventh is the opposite of what the
+   * second reader asked their system for. Cleared rather than skipped, so
+   * turning the preference on mid-watch lifts a column that is already dim.
+   */
+  assert.match(appSource, /prefers-reduced-motion: reduce/);
+  assert.match(appSource, /function flatReading\(\)[^}]*prefers-contrast: more/s);
+  assert.match(block, /if \(flat\) \{\s*block\.style\.removeProperty\("--read"\);/);
+  /*
+   * Whatever holds focus is lit, and that has to be decided here. `--read` is
+   * written as an inline property, so a `:focus-within` rule in the stylesheet
+   * can never win it back — it would be dead code that looks like a guarantee.
+   */
+  assert.match(block, /block\.contains\(focused\)/);
+  assert.doesNotMatch(stylesSource, /:focus-within\s*\{\s*--read/);
   // Driven by the reader, and by nothing else.
   assert.match(appSource, /window\.addEventListener\(\s*"scroll"/);
   assert.match(appSource, /"focusin", focusByScroll/);
+});
+
+check("nothing the reader reads is animated", () => {
+  /*
+   * An animation that touches `opacity` outranks a normal declaration for as
+   * long as it is filling. An arrival animation on `.passage` therefore pinned
+   * the story opaque and `--read` did nothing, while the question panel — which
+   * had no animation — dimmed correctly around it. Only the environment may
+   * animate, and the whole file is checked rather than the one rule, because
+   * the next such animation would break the reading focus just as silently.
+   */
+  const named = [...stylesSource.matchAll(/animation:\s*([\w-]+)/g)]
+    .map((match) => match[1])
+    .filter((name) => name !== "none");
+  assert.deepEqual([...new Set(named)].sort(), ["aurora-breathe", "env-drift"]);
+  assert.doesNotMatch(stylesSource, /passage-arrive|--pace/);
+
+  // The reading focus is a plain declaration on all three reading surfaces.
+  assert.match(
+    stylesSource,
+    /\.passage,\s*\.observation,\s*\.act-plate \{\s*opacity: var\(--read, 1\);/,
+  );
 });
 
 check("a closed act collapses to its record", () => {
