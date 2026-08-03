@@ -1703,18 +1703,21 @@ check("the export prints the report, not a summary of it", () => {
    * Every block the page writes for a current has to land somewhere in the
    * export, or the download is a lesser document than the screen it came from.
    */
-  [
-    "look",
-    "misread",
-    "divides",
-    "firmness",
-    "tryThis",
-    "advantage",
-    "overextension",
-    "reflection",
-    "observations",
-    "notATypeStatement",
-  ].forEach((key) => assert.match(pdfSource, new RegExp(key), `export is missing ${key}`));
+  /*
+   * Derived, not listed. An earlier version of this check named the blocks by
+   * hand and quietly omitted one — the export shipped without the four
+   * relation lines per pole, and this test passed anyway. Whatever the page
+   * labels, the export has to label too.
+   */
+  const onPage = [...new Set([...resultsSource.matchAll(/LABELS\.(\w+)/g)].map((m) => m[1]))];
+  assert.ok(onPage.length >= 8, "the page appears to render no labelled blocks");
+  const inExport = new Set([...pdfSource.matchAll(/labels\.(\w+)/g)].map((m) => m[1]));
+  onPage.forEach((key) => {
+    assert.ok(inExport.has(key), `the page writes ${key} and the export never does`);
+  });
+  ["observations", "notATypeStatement"].forEach((key) =>
+    assert.match(pdfSource, new RegExp(key), `export is missing ${key}`),
+  );
 
   // Overview, the night, five currents, calibration, relations, observations,
   // the record.

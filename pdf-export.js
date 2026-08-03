@@ -909,6 +909,42 @@
     if (current.firmness) {
       block(labels.firmness, current.firmness.copy, 3);
     }
+
+    /*
+     * What this current asks of the other four. The cycle decides the
+     * direction; the pole decides the dialect, so these four lines are written
+     * per pole and belong on the page as much as anything above them.
+     */
+    const relations = current.relations;
+    if (relations) {
+      drawExportLabel(context, labels.asksOf, EXPORT_MARGIN, y, trace);
+      y += 46;
+      [
+        [labels.supports, "supports"],
+        [labels.supportedBy, "supportedBy"],
+        [labels.checks, "checks"],
+        [labels.checkedBy, "checkedBy"],
+      ].forEach(([label, key]) => {
+        const other = relations[key];
+        drawExportText(
+          context,
+          `${label}${other ? ` · ${other.name}` : ""}`,
+          EXPORT_MARGIN,
+          y,
+          width,
+          { size: 24, family: "sans", weight: 600, colour: other ? other.colourPaper : trace, lineHeight: 32, maxLines: 1 },
+        );
+        y += 38;
+        y = drawExportText(context, current.pole[key], EXPORT_MARGIN, y, width, {
+          size: 27,
+          colour: "#262b2d",
+          lineHeight: 39,
+          maxLines: 3,
+        });
+        y += 26;
+      });
+    }
+
     block(labels.tryThis, current.guidance.reflection, 3);
   }
 

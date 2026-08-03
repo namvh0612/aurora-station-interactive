@@ -691,8 +691,34 @@
     };
   }
 
+  /*
+   * The cycle decides which current feeds and checks which; the pole decides
+   * how that lands. Resolved in a second pass because a current cannot point
+   * at its neighbours until all five exist.
+   */
+  function linkCurrents(data, currents) {
+    currents.forEach((current) => {
+      const role = roleDefinitions(data).find((entry) => entry.domain === current.domain);
+      const relations = role ? relationsFor(data, role.id) : null;
+      if (!relations) {
+        return;
+      }
+      const at = (roleId) => {
+        const other = data.assessment.roles[roleId];
+        return other ? currents.find((entry) => entry.domain === other.domain) || null : null;
+      };
+      current.relations = {
+        supports: at(relations.supports),
+        supportedBy: at(relations.supportedBy),
+        checks: at(relations.checks),
+        checkedBy: at(relations.checkedBy),
+      };
+    });
+    return currents;
+  }
+
   function currentsFor(data, domains, state) {
-    return Object.values(spectraDefinitions(data))
+    const built = Object.values(spectraDefinitions(data))
       .map((current) => {
         const domain = domains.find((entry) => entry.code === current.domain);
         if (!domain) {
@@ -726,6 +752,7 @@
         };
       })
       .filter(Boolean);
+    return linkCurrents(data, built);
   }
 
   /*
