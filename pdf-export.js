@@ -410,8 +410,10 @@
     });
     y += 46;
 
-    profile.roles.forEach((role) => {
-      drawExportText(context, role.shortName, EXPORT_MARGIN, y + 42, width - 520, {
+    // The five lines at a glance, each with a name at both ends. A pole and a
+    // distance, never a score out of five.
+    profile.currents.forEach((current) => {
+      drawExportText(context, current.name.toUpperCase(), EXPORT_MARGIN, y + 42, width - 640, {
         size: 42,
         family: "sans",
         weight: 600,
@@ -421,139 +423,48 @@
       });
       drawExportText(
         context,
-        `${role.score.toFixed(1)} / ${profile.scaleMax}`,
+        `${current.pole.name.toUpperCase()} · ${Math.abs(current.magnitude).toFixed(2)}`,
         EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
         y + 42,
-        480,
+        620,
         {
-          size: 42,
+          size: 30,
           family: "sans",
           weight: 600,
-          colour: role.colourPaper,
+          colour: current.colourPaper,
           align: "right",
           lineHeight: 52,
         },
       );
-      drawScoreTrack(context, EXPORT_MARGIN, y + 74, width, role.normalised, role.colourPaper);
-      drawExportText(context, role.contribution, EXPORT_MARGIN, y + 148, width, {
+      drawSpectrum(context, EXPORT_MARGIN, y + 74, width, current, current.colourPaper, {
+        min: profile.scaleMin,
+        max: profile.scaleMax,
+      });
+      drawExportText(context, current.axis, EXPORT_MARGIN, y + 196, width, {
         size: 26,
         family: "sans",
         colour: "#5c6568",
         lineHeight: 36,
         maxLines: 1,
       });
-      y += 208;
+      y += 250;
     });
 
     y += 24;
     drawExportRule(context, y, "#c1caca", 2);
     y += 52;
-    drawExportText(context, data.assessment.roleNote, EXPORT_MARGIN, y, width, {
+    y = drawExportText(context, data.results.notATypeStatement, EXPORT_MARGIN, y, width, {
+      size: 28,
+      colour: "#4b5457",
+      lineHeight: 42,
+      maxLines: 3,
+    });
+    y += 30;
+    drawExportText(context, data.assessment.spectra.note, EXPORT_MARGIN, y, width, {
       size: 28,
       colour: "#4b5457",
       lineHeight: 42,
       maxLines: 4,
-    });
-  }
-
-  /*
-   * Page 2: the contribution in full. The report on screen carries the role's
-   * mission function, what it brings, what to watch for and the mission
-   * action; without this page the export was a scoreboard of the same profile.
-   */
-  function drawProfileRolePage(context, data, profile, summary, pageNumber, pageCount) {
-    const lead = summary.overall;
-    const primary = lead.primary;
-    drawExportPageBase(context, pageNumber, profile.playerName, primary.colourPaper, pageCount);
-
-    let y = drawExportHeading(
-      context,
-      data.results.chapters.find((entry) => entry.id === "role").eyebrow,
-      lead.isBlend ? lead.label : primary.name,
-      data.results.roleIntro,
-      primary.colourPaper,
-    );
-
-    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
-    const labels = data.results.labels;
-
-    y += 8;
-    y = drawExportText(
-      context,
-      `${labels.basis} · ${primary.basis}`,
-      EXPORT_MARGIN,
-      y,
-      width,
-      { size: 26, family: "sans", weight: 600, colour: "#5c6568", lineHeight: 36 },
-    );
-    y += 40;
-    y = drawExportText(context, data.results.notATypeStatement, EXPORT_MARGIN, y, width, {
-      size: 33,
-      style: "italic",
-      colour: "#262b2d",
-      lineHeight: 48,
-    });
-    y += 40;
-
-    // Why this contribution, described the same way the report describes it.
-    const why = data.assessment.whyTemplates;
-    const reasons = [
-      lead.isBlend
-        ? why.blend.replace("{roles}", lead.label)
-        : why.single.replace("{role}", primary.name),
-      primary.facetFloor >= primary.score - 0.6 ? why.supported : why.uneven,
-    ];
-    y = drawExportText(context, reasons.join(" "), EXPORT_MARGIN, y, width, {
-      size: 31,
-      colour: "#262b2d",
-      lineHeight: 46,
-    });
-    y += 36;
-    drawExportRule(context, y, "#c1caca", 2);
-    y += 66;
-
-    [
-      [labels.missionFunction, primary.missionFunction],
-      [labels.brings, primary.brings],
-      [labels.watchFor, primary.watchFor],
-      [labels.action, `${primary.actionTitle} — ${primary.action}`],
-    ].forEach(([label, copy]) => {
-      drawExportLabel(context, label, EXPORT_MARGIN, y, primary.colourPaper);
-      y += 54;
-      y = drawExportText(context, copy, EXPORT_MARGIN, y, width, {
-        size: 30,
-        colour: "#262b2d",
-        lineHeight: 44,
-      });
-      y += 44;
-    });
-
-    const instrument = data.assessment.instruments[primary.domain];
-    drawExportRule(context, y, "#c1caca", 2);
-    y += 64;
-    // The gauge the chapter opens with on screen, which the export was missing.
-    drawInstrumentDial(
-      context,
-      EXPORT_PAGE_WIDTH - EXPORT_MARGIN - 210,
-      y + 190,
-      190,
-      primary.normalised,
-      primary.colourPaper,
-    );
-    drawExportText(
-      context,
-      `${primary.score.toFixed(1)} / ${profile.scaleMax}`,
-      EXPORT_PAGE_WIDTH - EXPORT_MARGIN - 210,
-      y + 268,
-      420,
-      { size: 34, family: "sans", weight: 600, colour: "#14181a", align: "center", lineHeight: 44 },
-    );
-    drawExportLabel(context, `${labels.instrument} · ${instrument.name}`, EXPORT_MARGIN, y, "#14181a");
-    y += 54;
-    drawExportText(context, instrument.reads, EXPORT_MARGIN, y, width - 520, {
-      size: 28,
-      colour: "#4b5457",
-      lineHeight: 42,
     });
   }
 
@@ -610,7 +521,8 @@
       const role = profile.roles.find(
         (candidate) => candidate.id === data.assessment.elements[elementId].role,
       );
-      return { id: role.id, label: role.shortName, colour: role.colourPaper };
+      const named = profile.currents.find((entry) => entry.domain === role.domain);
+      return { id: role.id, label: named ? named.name : role.shortName, colour: role.colourPaper };
     });
     drawElementCycle(
       context,
@@ -650,7 +562,8 @@
 
       drawExportLabel(context, label, EXPORT_MARGIN + 44, y, other.colourPaper);
       y += 50;
-      y = drawExportText(context, other.name, EXPORT_MARGIN + 44, y, width - 44, {
+      const otherCurrent = profile.currents.find((entry) => entry.domain === other.domain);
+      y = drawExportText(context, otherCurrent ? otherCurrent.name : other.name, EXPORT_MARGIN + 44, y, width - 44, {
         size: 44,
         colour: "#14181a",
         lineHeight: 54,
@@ -791,7 +704,8 @@
         entry: phase.roles.find((candidate) => candidate.id === role.id),
       }));
 
-      drawExportText(context, role.shortName, EXPORT_MARGIN, y + 34, 460, {
+      const named = (profile.currents.find((entry) => entry.domain === role.domain) || role).name;
+      drawExportText(context, named, EXPORT_MARGIN, y + 34, 460, {
         size: 34, family: "sans", weight: 600, colour: "#14181a", lineHeight: 44, maxLines: 1,
       });
 
@@ -867,123 +781,224 @@
   }
 
   /* One page per domain: interpretation, its guidance, then its three facets. */
-  function drawProfileDomainPage(context, data, profile, domain, pageNumber, pageCount) {
-    // A current takes the colour of the contribution that reads it, so a page
-    // and the role bars on page 1 agree.
-    const trace =
-      (profile.roles.find((role) => role.domain === domain.code) || {}).colourPaper || "#14181a";
+  /*
+   * The line a current is read on: a name at each end, a tick at the middle,
+   * and a mark where the reading falls. Drawn from the centre outward, because
+   * the reading is a position rather than a quantity and the line has no top.
+   */
+  function drawSpectrum(context, x, y, width, current, trace, scale) {
+    drawExportText(context, current.poles.low.name.toUpperCase(), x, y, width / 2, {
+      size: 26,
+      family: "sans",
+      weight: 600,
+      colour: "#5c6568",
+      lineHeight: 34,
+      maxLines: 1,
+    });
+    drawExportText(context, current.poles.high.name.toUpperCase(), x + width, y, width / 2, {
+      size: 26,
+      family: "sans",
+      weight: 600,
+      colour: "#5c6568",
+      align: "right",
+      lineHeight: 34,
+      maxLines: 1,
+    });
+
+    const line = y + 46;
+    context.save();
+    context.strokeStyle = "#c1caca";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.moveTo(x, line);
+    context.lineTo(x + width, line);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(x + width / 2, line - 16);
+    context.lineTo(x + width / 2, line + 16);
+    context.stroke();
+
+    const share = (current.score - scale.min) / (scale.max - scale.min);
+    context.fillStyle = trace;
+    context.beginPath();
+    context.arc(x + width * share, line, 15, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+
+    return line + 40;
+  }
+
+  function drawProfileCurrentPage(context, data, profile, current, pageNumber, pageCount) {
+    const trace = current.colourPaper || "#14181a";
     drawExportPageBase(context, pageNumber, profile.playerName, trace, pageCount);
     let y = drawExportHeading(
       context,
-      `${String(pageNumber - 2).padStart(2, "0")} - Domain`,
-      domain.name,
-      domain.focus,
+      `${String(pageNumber - 2).padStart(2, "0")} - Current`,
+      current.name.toUpperCase(),
+      current.axis,
       trace,
     );
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
-    drawExportText(
-      context,
-      `${domain.score.toFixed(1)} / ${profile.scaleMax}`,
-      EXPORT_MARGIN,
-      y + 56,
-      700,
-      { size: 74, family: "sans", weight: 600, colour: trace, lineHeight: 84 },
-    );
-    drawExportText(
-      context,
-      domain.bandLabel.toUpperCase(),
-      EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
-      y + 56,
-      1100,
-      {
-        size: 28,
-        family: "sans",
-        weight: 600,
-        colour: "#5c6568",
-        align: "right",
-        lineHeight: 38,
-      },
-    );
-    y += 130;
-    drawScoreTrack(context, EXPORT_MARGIN, y, width, domain.normalised, trace);
-    y += 96;
-
-    y = drawExportText(context, domain.interpretation, EXPORT_MARGIN, y, width, {
-      size: 32,
-      colour: "#262b2d",
-      lineHeight: 47,
-      maxLines: 5,
-    });
-    y += 40;
-
-    // The advantage, the overextension and the reflection the report offers
-    // for this band. Guidance, never a verdict.
     const labels = data.results.labels;
-    const guidance = data.assessment.domains[domain.code].guidance[domain.band];
-    const instrument = data.assessment.instruments[domain.code];
-    drawExportRule(context, y, "#c1caca", 2);
-    y += 58;
-    [
-      [labels.advantage, guidance.advantage],
-      [labels.overextension, guidance.overextension],
-      [labels.reflection, guidance.reflection],
-    ].forEach(([label, copy]) => {
+    y += 30;
+    y = drawSpectrum(context, EXPORT_MARGIN, y, width, current, trace, {
+      min: profile.scaleMin,
+      max: profile.scaleMax,
+    });
+
+    drawExportText(
+      context,
+      `${current.pole.name.toUpperCase()} · ${Math.abs(current.magnitude).toFixed(2)} ${labels.fromCentre.toUpperCase()} · ${current.magnitudeLabel.toUpperCase()}`,
+      EXPORT_MARGIN,
+      y,
+      width,
+      { size: 27, family: "sans", weight: 600, colour: trace, lineHeight: 36, maxLines: 1 },
+    );
+    y += 70;
+
+    const block = (label, copy, maxLines) => {
       drawExportLabel(context, label, EXPORT_MARGIN, y, trace);
-      y += 48;
+      y += 46;
       y = drawExportText(context, copy, EXPORT_MARGIN, y, width, {
         size: 28,
         colour: "#262b2d",
         lineHeight: 41,
-        maxLines: 4,
+        maxLines: maxLines || 4,
       });
-      y += 34;
-    });
+      y += 30;
+    };
 
-    y += 6;
+    block(labels.look, current.pole.look);
+    block(labels.misread, current.pole.misread);
+    block(labels.advantage, current.guidance.advantage);
+    block(labels.overextension, current.guidance.overextension);
+
     drawExportRule(context, y, "#c1caca", 2);
-    y += 62;
-
-    drawExportLabel(
-      context,
-      `${labels.facets} · ${labels.instrument} ${instrument.name}`,
-      EXPORT_MARGIN,
-      y,
-      trace,
-    );
-    y += 62;
-
-    domain.facets.forEach((facet) => {
-      drawExportText(context, facet.name, EXPORT_MARGIN, y + 34, width - 520, {
-        size: 34,
+    y += 56;
+    drawExportLabel(context, labels.divides, EXPORT_MARGIN, y, trace);
+    y += 56;
+    current.facets.forEach((facet) => {
+      drawExportText(context, facet.name, EXPORT_MARGIN, y + 30, width - 520, {
+        size: 30,
         weight: 600,
         colour: "#14181a",
-        lineHeight: 44,
+        lineHeight: 40,
         maxLines: 1,
       });
       drawExportText(
         context,
         `${facet.score.toFixed(1)} / ${profile.scaleMax}`,
         EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
-        y + 34,
+        y + 30,
         480,
-        {
-          size: 34,
+        { size: 30, family: "sans", weight: 600, colour: trace, align: "right", lineHeight: 40 },
+      );
+      drawScoreTrack(context, EXPORT_MARGIN, y + 54, width, facet.normalised, trace);
+      y += 108;
+    });
+    y += 16;
+    y = drawExportText(context, current.divergence.copy, EXPORT_MARGIN, y, width, {
+      size: 28,
+      colour: "#262b2d",
+      lineHeight: 41,
+      maxLines: 3,
+    });
+    y += 34;
+
+    if (current.firmness) {
+      block(labels.firmness, current.firmness.copy, 3);
+    }
+    block(labels.tryThis, current.guidance.reflection, 3);
+  }
+
+  /*
+   * How the scale itself was used, and how much each reading can be leaned on.
+   * It closes the report's own loop: the five pages before it are only as firm
+   * as the answers they were built from.
+   */
+  function drawProfileCalibrationPage(context, data, profile, pageNumber, pageCount) {
+    const trace = "#14181a";
+    drawExportPageBase(context, pageNumber, profile.playerName, trace, pageCount);
+    const copy = data.results.calibration;
+    let y = drawExportHeading(context, "Calibration", copy.scaleHeading, copy.intro, trace);
+    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    y += 40;
+
+    const style = profile.responseStyle;
+    if (style) {
+      [
+        [copy.labels.balance, style.balance.value.toFixed(2), style.balance.copy],
+        [copy.labels.ends, `${Math.round(style.ends.share * 100)}%`, style.ends.copy],
+        [copy.labels.middle, `${Math.round(style.middle.share * 100)}%`, style.middle.copy || ""],
+        [
+          copy.labels.agreement,
+          `${style.agreement.held} / ${style.agreement.total}`,
+          style.agreement.copy,
+        ],
+      ].forEach(([label, value, note]) => {
+        drawExportText(context, label, EXPORT_MARGIN, y + 30, width - 640, {
+          size: 30,
+          weight: 600,
+          colour: "#14181a",
+          lineHeight: 40,
+          maxLines: 1,
+        });
+        drawExportText(context, value, EXPORT_PAGE_WIDTH - EXPORT_MARGIN, y + 30, 600, {
+          size: 30,
           family: "sans",
           weight: 600,
           colour: trace,
           align: "right",
-          lineHeight: 44,
+          lineHeight: 40,
+        });
+        y += 76;
+        if (note) {
+          y = drawExportText(context, note, EXPORT_MARGIN, y, width, {
+            size: 26,
+            colour: "#5c6568",
+            lineHeight: 38,
+            maxLines: 3,
+          });
+        }
+        y += 40;
+        drawExportRule(context, y - 18, "#c1caca", 2);
+      });
+    }
+
+    y += 40;
+    drawExportLabel(context, copy.firmnessHeading, EXPORT_MARGIN, y, trace);
+    y += 60;
+    profile.currents.forEach((current) => {
+      drawExportText(context, current.name, EXPORT_MARGIN, y, width - 900, {
+        size: 30,
+        weight: 600,
+        colour: "#14181a",
+        lineHeight: 40,
+        maxLines: 1,
+      });
+      drawExportText(context, current.pole.name, EXPORT_MARGIN + 420, y, 700, {
+        size: 28,
+        colour: "#5c6568",
+        lineHeight: 40,
+        maxLines: 1,
+      });
+      drawExportText(
+        context,
+        current.firmness ? current.firmness.id.toUpperCase() : "—",
+        EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
+        y,
+        600,
+        {
+          size: 28,
+          family: "sans",
+          weight: 600,
+          colour: current.colourPaper || trace,
+          align: "right",
+          lineHeight: 40,
         },
       );
-      drawScoreTrack(context, EXPORT_MARGIN, y + 62, width, facet.normalised, trace);
-      drawExportText(context, facet.meaning, EXPORT_MARGIN, y + 130, width, {
-        size: 25,
-        colour: "#5c6568",
-        lineHeight: 35,
-        maxLines: 2,
-      });
-      y += 200;
+      y += 62;
     });
   }
 
@@ -1002,7 +1017,9 @@
     y += 20;
     [
       data.results.disclaimer,
-      data.assessment.roleNote,
+      data.assessment.methodNote,
+      data.results.record.limitations,
+      data.results.record.mapping,
       data.assessment.phaseNote,
       data.assessment.bandNote,
     ].forEach((line) => {
@@ -1727,9 +1744,9 @@
 
     const { canvas, context } = exportCanvas();
     const summary = core.summariseProfile(data, profile);
-    // Overview, the contribution in full, the movement, one page per current,
-    // the relationships, the observations, and the reading guidance.
-    const pageCount = profile.domains.length + 6;
+    // Overview, the night, one page per current, calibration, the
+    // relationships, the observations, and the record.
+    const pageCount = profile.currents.length + 6;
     const images = [];
 
     const capture = async (pageNumber, draw) => {
@@ -1746,24 +1763,24 @@
       drawProfileOverviewPage(context, data, profile, summary, dateLabel, pageCount),
     );
     await capture(2, () =>
-      drawProfileRolePage(context, data, profile, summary, 2, pageCount),
+      drawProfilePhasePage(context, data, profile, summary, 2, pageCount),
     );
-    await capture(3, () =>
-      drawProfilePhasePage(context, data, profile, summary, 3, pageCount),
-    );
-    for (let index = 0; index < profile.domains.length; index += 1) {
-      const pageNumber = index + 4;
+    for (let index = 0; index < profile.currents.length; index += 1) {
+      const pageNumber = index + 3;
       await capture(pageNumber, () =>
-        drawProfileDomainPage(
+        drawProfileCurrentPage(
           context,
           data,
           profile,
-          profile.domains[index],
+          profile.currents[index],
           pageNumber,
           pageCount,
         ),
       );
     }
+    await capture(pageCount - 3, () =>
+      drawProfileCalibrationPage(context, data, profile, pageCount - 3, pageCount),
+    );
     await capture(pageCount - 2, () =>
       drawProfileRelationsPage(context, data, profile, summary, core, pageCount - 2, pageCount),
     );

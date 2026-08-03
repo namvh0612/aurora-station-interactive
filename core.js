@@ -580,6 +580,209 @@
    * Results are only produced from a complete set of raw responses. Nothing is
    * imputed and no cached score is trusted.
    */
+  /* ------------------------------------------------------------- spectra */
+
+  /*
+   * A current is one line with a name at each end. Two independent readings
+   * come off it: which pole the position falls on, and how far from the middle
+   * it sits. They are kept apart deliberately — folding distance into the pole
+   * name is what made an earlier version read as more-is-better.
+   */
+  const CENTRE = (MIN_RESPONSE + MAX_RESPONSE) / 2;
+  const MAGNITUDE_CLEAR = 0.5;
+  const MAGNITUDE_PRONOUNCED = 1;
+  /*
+   * Firmness is the spread of a domain's twelve keyed answers, and says
+   * nothing about anyone else. Below 0.8 most answers sit within a point of
+   * their own mean; above 1.2 they are routinely two points apart, and the
+   * mean is then an average of genuinely different answers rather than a
+   * description of one tendency. Display rules, not norms.
+   */
+  const FIRM_LIMIT = 0.8;
+  const PROVISIONAL_LIMIT = 1.2;
+  /* One full point between a domain's highest and lowest facet. Below that the
+   * difference is inside what a four-statement facet can resolve. */
+  const DIVERGENCE_LIMIT = 1;
+
+  function spectraDefinitions(data) {
+    return data.assessment.spectra.currents;
+  }
+
+  function currentForDomain(data, domainCode) {
+    return (
+      Object.values(spectraDefinitions(data)).find(
+        (entry) => entry.domain === domainCode,
+      ) || null
+    );
+  }
+
+  function poleFor(current, score) {
+    return score < CENTRE ? current.poles.low : current.poles.high;
+  }
+
+  function magnitudeFor(score) {
+    return Number.isFinite(score) ? score - CENTRE : null;
+  }
+
+  function magnitudeLabelFor(data, magnitude) {
+    const labels = data.assessment.spectra.magnitudes;
+    const size = Math.abs(magnitude);
+    if (size >= MAGNITUDE_PRONOUNCED) {
+      return labels.pronounced;
+    }
+    return size >= MAGNITUDE_CLEAR ? labels.clear : labels.faint;
+  }
+
+  function spread(values) {
+    if (values.length < 2) {
+      return 0;
+    }
+    const average = mean(values);
+    const variance =
+      values.reduce((sum, value) => sum + (value - average) ** 2, 0) / values.length;
+    return Math.sqrt(variance);
+  }
+
+  function firmnessFor(data, state, domainCode) {
+    const keyed = flattenItems(data)
+      .filter((item) => item.domain === domainCode)
+      .map((item) => getKeyedScore(state.assessment.answers[item.id], item.reverse))
+      .filter((value) => Number.isFinite(value));
+    if (!keyed.length) {
+      return null;
+    }
+    const deviation = spread(keyed);
+    const id =
+      deviation < FIRM_LIMIT ? "firm" : deviation > PROVISIONAL_LIMIT ? "provisional" : "mixed";
+    return { id, deviation, copy: data.assessment.spectra.firmness[id] };
+  }
+
+  /*
+   * A domain of 2.92 built from facets of 2.50, 4.00 and 2.25 is a different
+   * person from one built from three readings of 2.9, and the average alone
+   * cannot tell them apart. Where the facets diverge, the outlier is the one
+   * furthest from the mean of the other two.
+   */
+  function divergenceFor(data, domain) {
+    const current = currentForDomain(data, domain.code);
+    const scores = domain.facets.map((facet) => facet.score);
+    const gap = Math.max(...scores) - Math.min(...scores);
+    if (!current || gap < DIVERGENCE_LIMIT) {
+      return { diverges: false, spread: gap, copy: current ? current.together : null };
+    }
+    let outlier = domain.facets[0];
+    let widest = -Infinity;
+    domain.facets.forEach((facet) => {
+      const others = domain.facets.filter((entry) => entry.name !== facet.name);
+      const distance = Math.abs(facet.score - mean(others.map((entry) => entry.score)));
+      if (distance > widest) {
+        widest = distance;
+        outlier = facet;
+      }
+    });
+    const others = domain.facets.filter((entry) => entry.name !== outlier.name);
+    const direction = outlier.score > mean(others.map((entry) => entry.score)) ? "above" : "below";
+    return {
+      diverges: true,
+      spread: gap,
+      facet: outlier.name,
+      direction,
+      copy: current.facets[outlier.name][direction],
+    };
+  }
+
+  function currentsFor(data, domains, state) {
+    return Object.values(spectraDefinitions(data))
+      .map((current) => {
+        const domain = domains.find((entry) => entry.code === current.domain);
+        if (!domain) {
+          return null;
+        }
+        const definition = roleDefinitions(data).find(
+          (entry) => entry.domain === current.domain,
+        );
+        const magnitude = magnitudeFor(domain.score);
+        return {
+          id: current.id,
+          name: current.name,
+          axis: current.axis,
+          domain: domain.code,
+          domainName: domain.name,
+          element: current.id,
+          colour: definition ? definition.colour : null,
+          colourNight: definition ? definition.colourNight : null,
+          colourPaper: definition ? definition.colourPaper : null,
+          score: domain.score,
+          normalised: domain.normalised,
+          band: domain.band,
+          poles: current.poles,
+          pole: poleFor(current, domain.score),
+          magnitude,
+          magnitudeLabel: magnitudeLabelFor(data, magnitude),
+          firmness: firmnessFor(data, state, domain.code),
+          divergence: divergenceFor(data, domain),
+          guidance: data.assessment.domains[domain.code].guidance[domain.band],
+          facets: domain.facets,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  /*
+   * How the scale itself was used. Because every domain carries six forward
+   * and six reverse statements, a reader with no answering habit centres on
+   * the middle of the scale; a lean away from it is acquiescence rather than
+   * tendency. None of this compares the reader with anybody.
+   */
+  const BALANCE_MILD = 0.2;
+  const ENDS_SPARING = 0.15;
+  const ENDS_FREQUENT = 0.5;
+  const MIDDLE_HEAVY = 0.35;
+  const FACET_AGREEMENT_LIMIT = 1;
+
+  function responseStyleFor(data, state) {
+    const items = flattenItems(data);
+    const raw = items
+      .map((item) => state.assessment.answers[item.id])
+      .filter((value) => Number.isFinite(value));
+    if (raw.length < items.length) {
+      return null;
+    }
+    const copy = data.results.calibration;
+    const average = mean(raw);
+    const lean = average - CENTRE;
+    const balanceId =
+      Math.abs(lean) < BALANCE_MILD ? "none" : lean > 0 ? "agree" : "disagree";
+    const endShare = raw.filter((value) => value === MIN_RESPONSE || value === MAX_RESPONSE).length / raw.length;
+    const endsId =
+      endShare < ENDS_SPARING ? "sparing" : endShare > ENDS_FREQUENT ? "frequent" : "usual";
+    const middleShare = raw.filter((value) => value === CENTRE).length / raw.length;
+
+    const byFacet = {};
+    items.forEach((item) => {
+      (byFacet[item.facet] = byFacet[item.facet] || []).push(
+        getKeyedScore(state.assessment.answers[item.id], item.reverse),
+      );
+    });
+    const facetNames = Object.keys(byFacet);
+    const held = facetNames.filter((name) => spread(byFacet[name]) < FACET_AGREEMENT_LIMIT).length;
+
+    return {
+      balance: { value: average, lean, id: balanceId, copy: copy.balance[balanceId] },
+      ends: { share: endShare, id: endsId, copy: copy.ends[endsId] },
+      middle: {
+        share: middleShare,
+        heavy: middleShare > MIDDLE_HEAVY,
+        copy: middleShare > MIDDLE_HEAVY ? copy.middleNote : null,
+      },
+      agreement: {
+        held,
+        total: facetNames.length,
+        copy: copy.agreementNote.replace("{held}", String(held)),
+      },
+    };
+  }
+
   function scoreProfile(data, state) {
     const safe = sanitiseState(data, state);
     if (!isComplete(safe)) {
@@ -643,6 +846,8 @@
       complete: true,
       domains,
       facets: domains.flatMap((domain) => domain.facets),
+      currents: currentsFor(data, domains, safe),
+      responseStyle: responseStyleFor(data, safe),
       roles,
       phases,
       scaleMin: MIN_RESPONSE,
@@ -662,7 +867,14 @@
     if (!Number.isFinite(domainScore)) {
       return null;
     }
-    return definition.inverse ? REVERSE_CONSTANT - domainScore : domainScore;
+    /*
+     * Every current reads its domain directly, Water included. Water used to
+     * be reported as 6 - Negative Emotionality under the name Emotional
+     * Stability, which meant the same measurement pointed one way in the
+     * domain chapter and the other way on the instrument, with nothing on the
+     * page connecting them. Both ends of the Water line are named instead.
+     */
+    return domainScore;
   }
 
   function roleDefinitions(data) {
@@ -750,8 +962,7 @@
     const facets = data.assessment.domains[definition.domain].facets;
     const supporting = facets
       .map((facet) => facetScores[facet])
-      .filter((value) => Number.isFinite(value))
-      .map((value) => (definition.inverse ? REVERSE_CONSTANT - value : value));
+      .filter((value) => Number.isFinite(value));
     return supporting.length ? Math.min(...supporting) : null;
   }
 
@@ -1063,6 +1274,42 @@
    * The closing summary. Every sentence is conditional, describes a pattern
    * rather than an identity, and never frames a role as a strength or a fault.
    */
+  function labelOfCurrents(data, lead) {
+    return joinList((lead.blended || [lead.primary]).filter(Boolean).map((role) => nameOfCurrentForRole(data, role.id)));
+  }
+
+  function nameOfCurrentForRole(data, roleId) {
+    const role = data.assessment.roles[roleId];
+    const current = role ? currentForDomain(data, role.domain) : null;
+    return current ? current.name : roleId;
+  }
+
+  /*
+   * Did this current change which end of its line describes the reader between
+   * two stretches? Both readings have to be far enough from the middle to mean
+   * anything, or a reading sitting on the centre would "cross" on noise.
+   */
+  function crossingFor(data, fromPhase, toPhase, roleId) {
+    const role = data.assessment.roles[roleId];
+    const current = role ? currentForDomain(data, role.domain) : null;
+    if (!current) {
+      return null;
+    }
+    const at = (phase) => phase.roles.find((entry) => entry.id === roleId);
+    const before = at(fromPhase);
+    const after = at(toPhase);
+    if (!before || !after) {
+      return null;
+    }
+    const from = magnitudeFor(before.score);
+    const to = magnitudeFor(after.score);
+    const floor = data.assessment.shiftThresholds.ignore;
+    if (Math.sign(from) === Math.sign(to) || Math.abs(from) < floor || Math.abs(to) < floor) {
+      return null;
+    }
+    return { current, from: poleFor(current, before.score), to: poleFor(current, after.score) };
+  }
+
   function summariseProfile(data, profile) {
     if (!profile) {
       return null;
@@ -1081,11 +1328,11 @@
     const consistency =
       startingLead.primary?.id === pressureLead.primary?.id
         ? copy.consistencyAnchored
-            .replace("{overall}", overall.label)
+            .replace("{overall}", labelOfCurrents(data, overall))
             .replace("{reading}", overall.primary.reading)
         : copy.consistencyMoved
-            .replace("{starting}", startingLead.label)
-            .replace("{pressure}", pressureLead.label);
+            .replace("{starting}", labelOfCurrents(data, startingLead))
+            .replace("{pressure}", labelOfCurrents(data, pressureLead));
 
     const pressureComparison = compareRoles(data, baseline, pressure);
     const returnKind = describeReturn(data, profile);
@@ -1104,12 +1351,26 @@
      * and half of all watches have a fall at the top of this list.
      */
     const largestShift = pressureComparison.shifts[0];
+    /*
+     * A crossing is a stronger finding than a delta: it changes which end of
+     * the line describes the reader, not merely how far along it they sit. It
+     * is reported by name when the reading passes the middle of the scale in
+     * either direction.
+     */
+    const crossing = largestShift ? crossingFor(data, baseline, pressure, largestShift.id) : null;
     const adaptation = pressureComparison.stable
       ? copy.adaptationStable
-      : (largestShift.direction === "rose" ? copy.adaptationShift : copy.adaptationRecede)
-          .replace("{pressure}", largestShift.name)
-          .replace("{reading}", largestShift.reading)
-          .replace("{recoveryClause}", recoveryClause);
+      : crossing
+        ? copy.adaptationCrossed
+            .replace("{current}", crossing.current.name)
+            .replace("{from}", crossing.from.name)
+            .replace("{to}", crossing.to.name)
+            .replace("{reading}", crossing.to.look)
+            .replace("{recoveryClause}", recoveryClause)
+        : (largestShift.direction === "rose" ? copy.adaptationShift : copy.adaptationRecede)
+            .replace("{pressure}", nameOfCurrentForRole(data, largestShift.id))
+            .replace("{reading}", largestShift.reading)
+            .replace("{recoveryClause}", recoveryClause);
 
     const contribution = copy.contribution.replace(
       "{contribution}",
@@ -1147,8 +1408,18 @@
     buildNodes,
     canGoBack,
     clearJourney,
+    CENTRE,
     compareRoles,
     contextPhaseFor,
+    currentForDomain,
+    currentsFor,
+    divergenceFor,
+    firmnessFor,
+    magnitudeFor,
+    magnitudeLabelFor,
+    poleFor,
+    responseStyleFor,
+    spectraDefinitions,
     currentItem,
     defaultPreferences,
     describeReturn,

@@ -78,9 +78,9 @@ window.AURORA_STATION_DATA = {
         "label": "Lower self-reported expression"
       },
       {
-        "id": "balanced",
+        "id": "situational",
         "max": 3.49,
-        "label": "Context-dependent or balanced expression"
+        "label": "Situational — moves with the circumstance"
       },
       {
         "id": "higher",
@@ -102,7 +102,7 @@ window.AURORA_STATION_DATA = {
         ],
         "interpretation": {
           "higher": "Your responses suggest a generally higher tendency toward social engagement, expression and active energy.",
-          "balanced": "Your responses suggest that social engagement, expression and energy varied with the situation rather than holding at one level.",
+          "situational": "Your responses suggest that social engagement, expression and energy varied with the situation rather than holding at one level.",
           "lower": "Your responses suggest a generally lower tendency toward social engagement, with influence expressed more quietly and energy held in reserve."
         },
         "guidance": {
@@ -111,7 +111,7 @@ window.AURORA_STATION_DATA = {
             "overextension": "Visible energy fills space. The quieter reading in the room may never be offered, and you may not notice it was there.",
             "reflection": "In the last difficult conversation you were part of, who did not speak, and would you have noticed if they had wanted to?"
           },
-          "balanced": {
+          "situational": {
             "advantage": "You move between speaking and listening according to what the moment needs rather than by habit.",
             "overextension": "A flexible setting can become an unclear one. In a room waiting for someone to commit, availability is not the same as direction.",
             "reflection": "When you hold back, is it a reading of the room or a way of staying uncommitted?"
@@ -135,7 +135,7 @@ window.AURORA_STATION_DATA = {
         ],
         "interpretation": {
           "higher": "Your responses suggest a generally higher tendency toward compassion, respectful interaction and trust in others' intentions.",
-          "balanced": "Your responses suggest that compassion, respectfulness and trust were extended selectively rather than uniformly.",
+          "situational": "Your responses suggest that compassion, respectfulness and trust were extended selectively rather than uniformly.",
           "lower": "Your responses suggest a generally lower tendency toward accommodation, with more scepticism and more willingness to hold a position against others."
         },
         "guidance": {
@@ -144,7 +144,7 @@ window.AURORA_STATION_DATA = {
             "overextension": "Protecting the working relationship can postpone a disagreement that the situation actually needs.",
             "reflection": "Which unspoken disagreement are you currently carrying on someone else's behalf?"
           },
-          "balanced": {
+          "situational": {
             "advantage": "You extend cooperation where it is earned rather than uniformly, which keeps trust meaningful.",
             "overextension": "Selective warmth can read as inconsistency to people who do not know the rule you are using.",
             "reflection": "Do the people around you know what earns your trust, or only that some have it?"
@@ -168,7 +168,7 @@ window.AURORA_STATION_DATA = {
         ],
         "interpretation": {
           "higher": "Your responses suggest a generally higher tendency toward structure, sustained effort and dependability.",
-          "balanced": "Your responses suggest that structure and persistence were applied where they mattered and relaxed elsewhere.",
+          "situational": "Your responses suggest that structure and persistence were applied where they mattered and relaxed elsewhere.",
           "lower": "Your responses suggest a generally lower tendency toward formal structure, with more flexibility and less attachment to sequence."
         },
         "guidance": {
@@ -177,7 +177,7 @@ window.AURORA_STATION_DATA = {
             "overextension": "A sequence can outlive the situation it was designed for and become the thing being defended.",
             "reflection": "Which of your current procedures would you keep if you were designing them again today?"
           },
-          "balanced": {
+          "situational": {
             "advantage": "You apply structure where it earns its cost and let it go where it does not.",
             "overextension": "Judgement calls about when structure applies are hard to hand over. Others may not be able to predict you.",
             "reflection": "Could someone else run your work from your notes, or only from you?"
@@ -201,7 +201,7 @@ window.AURORA_STATION_DATA = {
         ],
         "interpretation": {
           "higher": "Your responses suggest more frequent or more intense worry, low mood and emotional reactivity during the watch.",
-          "balanced": "Your responses suggest that worry, low mood and reactivity arrived in some situations and not others.",
+          "situational": "Your responses suggest that worry, low mood and reactivity arrived in some situations and not others.",
           "lower": "Your responses suggest less frequent or less intense worry, low mood and emotional reactivity during the watch."
         },
         "guidance": {
@@ -210,7 +210,7 @@ window.AURORA_STATION_DATA = {
             "overextension": "Early signal is exhausting to carry. Sustained alertness costs something even when nothing arrives.",
             "reflection": "Which of tonight's worries turned out to be signal, and which were the cost of watching?"
           },
-          "balanced": {
+          "situational": {
             "advantage": "Difficulty reaches you without taking the room over. You feel the pressure and can still work inside it.",
             "overextension": "A moderate reading can be misread as indifference by people who need the strain named aloud.",
             "reflection": "When you absorb pressure quietly, does the room read that as steadiness or as distance?"
@@ -234,7 +234,7 @@ window.AURORA_STATION_DATA = {
         ],
         "interpretation": {
           "higher": "Your responses suggest a generally higher tendency toward intellectual, aesthetic and imaginative engagement.",
-          "balanced": "Your responses suggest that curiosity, aesthetic attention and invention appeared in some moments and were set aside in others.",
+          "situational": "Your responses suggest that curiosity, aesthetic attention and invention appeared in some moments and were set aside in others.",
           "lower": "Your responses suggest a generally lower tendency to pursue abstraction, aesthetic detail or invention when a direct route was available."
         },
         "guidance": {
@@ -243,7 +243,7 @@ window.AURORA_STATION_DATA = {
             "overextension": "Exploration can delay closure, and a weak signal can be given more attention than the evidence supports.",
             "reflection": "What evidence would be enough for you to stop looking and commit?"
           },
-          "balanced": {
+          "situational": {
             "advantage": "You open the frame when the situation is genuinely unclear and close it when it is not.",
             "overextension": "The decision to explore or to close is made privately, so others may not see the reasoning that produced it.",
             "reflection": "When you stop exploring, do you say so, or does the room simply notice you have moved on?"
@@ -387,7 +387,6 @@ window.AURORA_STATION_DATA = {
         "shortName": "Pathfinder",
         "domain": "openMindedness",
         "basis": "Open-Mindedness",
-        "inverse": false,
         "element": "Wood",
         "colour": "#3dcd58",
         "colourNight": "#3dcd58",
@@ -407,7 +406,6 @@ window.AURORA_STATION_DATA = {
         "shortName": "Catalyst",
         "domain": "extraversion",
         "basis": "Extraversion",
-        "inverse": false,
         "element": "Fire",
         "colour": "#b10043",
         "colourNight": "#e0175c",
@@ -427,7 +425,6 @@ window.AURORA_STATION_DATA = {
         "shortName": "Steward",
         "domain": "agreeableness",
         "basis": "Agreeableness",
-        "inverse": false,
         "element": "Earth",
         "colour": "#e47f00",
         "colourNight": "#e47f00",
@@ -447,7 +444,6 @@ window.AURORA_STATION_DATA = {
         "shortName": "Architect",
         "domain": "conscientiousness",
         "basis": "Conscientiousness",
-        "inverse": false,
         "element": "Metal",
         "colour": "#9fa0a4",
         "colourNight": "#9fa0a4",
@@ -466,8 +462,7 @@ window.AURORA_STATION_DATA = {
         "name": "The Sentinel",
         "shortName": "Sentinel",
         "domain": "negativeEmotionality",
-        "basis": "Emotional Stability",
-        "inverse": true,
+        "basis": "Negative Emotionality",
         "element": "Water",
         "colour": "#42b4e6",
         "colourNight": "#42b4e6",
@@ -549,7 +544,7 @@ window.AURORA_STATION_DATA = {
       "The Catalyst": "Extraversion",
       "The Steward": "Agreeableness",
       "The Architect": "Conscientiousness",
-      "The Sentinel": "6 - Negative Emotionality"
+      "The Sentinel": "Negative Emotionality"
     },
     "shiftThresholds": {
       "ignore": 0.25,
@@ -571,12 +566,6 @@ window.AURORA_STATION_DATA = {
       "tieTolerance": 0.15,
       "stableChange": 0.25
     },
-    "whyTemplates": {
-      "single": "{role} is the contribution your responses supported most consistently: strongly across the watch as a whole, and still present in the hours when the station was least predictable.",
-      "blend": "{roles} sat close enough together that the record does not separate them. Read them as one contribution with two hands rather than a first and second place.",
-      "supported": "It also held up underneath: the components behind it were present rather than carried by a single strong answer.",
-      "uneven": "One component behind it was noticeably thinner than the others, which is worth knowing before you lean on it."
-    },
     "instruments": {
       "extraversion": {
         "name": "Room Meter",
@@ -597,6 +586,236 @@ window.AURORA_STATION_DATA = {
       "openMindedness": {
         "name": "Aperture Dial",
         "reads": "how wide the frame stays"
+      }
+    },
+    "spectra": {
+      "note": "Each current is one line with a name at both ends. A reading is a position on that line. Neither end is a shortage of the other, and distance from the middle is how pronounced a tendency is, never how good it is.",
+      "magnitudes": {
+        "faint": "faint",
+        "clear": "clear",
+        "pronounced": "pronounced"
+      },
+      "firmness": {
+        "firm": "Firm. Your twelve answers pointed the same way, so the reading above describes all of them.",
+        "mixed": "Mixed. Most of the twelve pointed the same way and a few did not, which is what the facet lines above are showing you.",
+        "provisional": "Provisional. Your twelve answers scattered. This is less a description of you than the midpoint of several different answers — read the three facet lines, not the number."
+      },
+      "currents": {
+        "wood": {
+          "id": "wood",
+          "name": "Wood",
+          "domain": "openMindedness",
+          "axis": "how you meet the unfamiliar",
+          "together": "Curiosity, attention and invention run together. The reading holds.",
+          "poles": {
+            "low": {
+              "id": "orchard",
+              "name": "The Orchard",
+              "look": "You would rather use the route that worked last time than find out whether a better one exists. Not from incuriosity — from the arithmetic of a night that has to end well.",
+              "misread": "As a shortage of imagination. What it usually is, is a preference for methods that have already survived contact with a bad night.",
+              "supports": "You hand Fire proven ground to stand on, so what gets said in the room has something behind it.",
+              "supportedBy": "What Water is carrying decides how much unfamiliar ground you have any appetite for.",
+              "checks": "You hold Earth to what has actually worked, which keeps goodwill from becoming the only reason a plan survives.",
+              "checkedBy": "Metal decides when the known route has to be committed to. Without it, the proven option can be revisited all night."
+            },
+            "high": {
+              "id": "wildwood",
+              "name": "The Wildwood",
+              "look": "You will take the longer road to see what is on it. Given a working answer and an interesting one, you have to choose — and the choosing is not automatic.",
+              "misread": "As restlessness, or as not taking the problem seriously. The interest is usually in the problem rather than away from it.",
+              "supports": "You give Fire something worth saying, so the room gets ideas and not only volume.",
+              "supportedBy": "Water sets how much unmapped ground you can hold at once. When it runs high, the open questions stack up.",
+              "checks": "You keep Earth from settling on the first arrangement everyone can live with.",
+              "checkedBy": "Metal is what stops the search. Without it the frame stays open past the point a decision was needed."
+            }
+          },
+          "facets": {
+            "Intellectual Curiosity": {
+              "above": "Curiosity runs above the rest. You want to know how a thing works more than you want to make something of it or be moved by it.",
+              "below": "Curiosity runs below the rest. You notice and you invent without much appetite for the mechanism underneath."
+            },
+            "Aesthetic Sensitivity": {
+              "above": "Aesthetic attention runs above the rest. Some of what registered tonight will never reduce to a reading.",
+              "below": "Aesthetic attention runs below the rest. You are curious and inventive, and a room is a room."
+            },
+            "Creative Imagination": {
+              "above": "Invention runs above the rest. You build the option that was not on the list sooner than you investigate it or admire it.",
+              "below": "Invention runs below the rest. You want to understand, and you notice a great deal; making something new is not the reflex."
+            }
+          }
+        },
+        "fire": {
+          "id": "fire",
+          "name": "Fire",
+          "domain": "extraversion",
+          "axis": "how you occupy a room",
+          "together": "Company, position and pace run together. The reading holds.",
+          "poles": {
+            "low": {
+              "id": "lantern",
+              "name": "The Lantern",
+              "look": "You do not fill a room and you do not avoid one. You speak when you have something, and people tend to notice that you meant it.",
+              "misread": "As reluctance. A quiet room reads as an uncertain one to anyone who leads with volume, so the moment you do take a position it lands harder than you intended.",
+              "supports": "What you do say lands with weight, and Earth has less to repair afterwards.",
+              "supportedBy": "Wood decides whether your few contributions are new ground or proven ground.",
+              "checks": "You do not press Metal to commit before it is ready. That is patience, and sometimes it is delay.",
+              "checkedBy": "Water decides whether your quiet reads as composure or as withdrawal. The room cannot always tell which."
+            },
+            "high": {
+              "id": "sun",
+              "name": "The Sun",
+              "look": "The room knows where things stand because you put them there. Silence in a working room reads to you as something still waiting to be resolved.",
+              "misread": "As needing the attention. More often it is a low tolerance for a room where nobody has yet said the obvious thing.",
+              "supports": "You keep the room in contact with itself, which is most of what Earth needs in order to work.",
+              "supportedBy": "Wood decides whether the momentum you generate is pointed anywhere.",
+              "checks": "You press Metal for a decision, which is often the only reason one arrives while it still matters.",
+              "checkedBy": "Water sets your pitch. When it runs high the room hears an urgency you did not mean to send."
+            }
+          },
+          "facets": {
+            "Sociability": {
+              "above": "Sociability runs above the rest. You want the room more than you want to lead it or drive it.",
+              "below": "Sociability runs below the rest. You take positions and sustain pace without particularly wanting company while you do it."
+            },
+            "Assertiveness": {
+              "above": "Assertiveness runs above the rest. You take a position without needing the room, and without needing to fill it.",
+              "below": "Assertiveness runs below the rest. You are present and you keep pace without pressing for the lead."
+            },
+            "Energy Level": {
+              "above": "Pace runs above the rest. There is more drive here than there is appetite for company or for leading.",
+              "below": "Pace runs below the rest. What you spend goes on the room and on holding a position, not on speed."
+            }
+          }
+        },
+        "earth": {
+          "id": "earth",
+          "name": "Earth",
+          "domain": "agreeableness",
+          "axis": "how you hold ground with people",
+          "together": "Sympathy, manner and trust run together. The reading holds.",
+          "poles": {
+            "low": {
+              "id": "rampart",
+              "name": "The Rampart",
+              "look": "You will hold a position after it has stopped being comfortable to hold. Agreement is not the thing you are solving for; being right about the risk is.",
+              "misread": "As coldness, or as enjoying the friction. Usually it is a plain refusal to let a decision pass because disagreeing would be awkward.",
+              "supports": "You hand Metal a decision that has already been argued with, so less of it gets rebuilt later.",
+              "supportedBy": "Fire decides whether your objection reaches the room or stays a private reservation.",
+              "checks": "You keep Water from setting the terms. What is felt gets a vote rather than a veto.",
+              "checkedBy": "Wood asks whether the line you are holding still describes the situation."
+            },
+            "high": {
+              "id": "cropland",
+              "name": "The Cropland",
+              "look": "You keep the working relationship intact, on the reasoning that most of what has to happen tonight happens through other people.",
+              "misread": "As avoidance. It is usually a calculation that a room still able to talk to itself at four in the morning is worth more than winning the argument at ten.",
+              "supports": "You give Metal a room that will actually carry the plan out.",
+              "supportedBy": "Fire decides how much of the room you are able to hold together at once.",
+              "checks": "You absorb what Water is carrying, which is why other people's nights go better near you.",
+              "checkedBy": "Wood asks whether keeping the room level is still the most useful thing you could be doing."
+            }
+          },
+          "facets": {
+            "Compassion": {
+              "above": "Sympathy runs above the rest. What a decision costs a person reaches you before what it costs the plan.",
+              "below": "Sympathy runs below the rest. You are courteous and you extend trust; the human cost is not the first thing you weigh."
+            },
+            "Respectfulness": {
+              "above": "Manner runs above the rest. The courtesy holds even where the sympathy and the trust do not.",
+              "below": "Manner runs below the rest. You care about people and you extend trust, and under pressure the delivery gets short."
+            },
+            "Trust": {
+              "above": "Trust runs above the rest. You take people at their word further than you extend sympathy or ceremony.",
+              "below": "Trust runs below the rest. You are warm and you are courteous, and you still verify."
+            }
+          }
+        },
+        "metal": {
+          "id": "metal",
+          "name": "Metal",
+          "domain": "conscientiousness",
+          "axis": "how you commit",
+          "together": "Order, output and obligation run together. The reading holds.",
+          "poles": {
+            "low": {
+              "id": "gold",
+              "name": "The Gold",
+              "look": "You keep the decision open while the facts are still arriving, and you are comfortable a long way into a night without a settled plan.",
+              "misread": "As disorganisation. What it usually is, is an unwillingness to commit to a sequence written before anyone knew what the night was going to be.",
+              "supports": "You hand Water options rather than a settled plan. That is room to move, and it is also something left open.",
+              "supportedBy": "Earth buys you the time you work best in — and, when it is generous, more of it than the decision needed.",
+              "checks": "You do not prune an idea of Wood's; you decline to commit until it has been tried. A real brake, arriving after the effort.",
+              "checkedBy": "Fire is what closes you. In a quiet room nothing forces the call, so the time has to be set by you."
+            },
+            "high": {
+              "id": "blade",
+              "name": "The Blade",
+              "look": "You fix the order before you start, and hold it when the middle step wants to jump the queue. What you leave behind can be used by someone who was not there.",
+              "misread": "As rigidity. More often it is having seen what an unrecorded night costs the person who inherits it.",
+              "supports": "You hand Water a finished plan, which is one fewer open question for it to carry.",
+              "supportedBy": "Earth decides whether your sequence gets followed or merely filed.",
+              "checks": "You prune Wood by sequence and deadline, which is what turns exploring into something that finished.",
+              "checkedBy": "Fire asks whether the sequence still fits the night. Sometimes the answer is no."
+            }
+          },
+          "facets": {
+            "Organization": {
+              "above": "Order runs above the rest. Your systems are in better shape than your output — the shelves are tidy and the list is long.",
+              "below": "Order runs below the rest. You deliver and you keep your word, and the trail you leave is thinner than the work deserves."
+            },
+            "Productiveness": {
+              "above": "Output runs above the rest. You finish things without needing the system that was meant to help you finish them.",
+              "below": "Output runs below the rest. The structure is in place and the commitment is real; the finishing is slower than either suggests."
+            },
+            "Responsibility": {
+              "above": "Obligation runs above the rest. You keep your word even when nothing in your process makes it easy.",
+              "below": "Obligation runs below the rest. You are orderly and productive on your own terms more reliably than on someone else's."
+            }
+          }
+        },
+        "water": {
+          "id": "water",
+          "name": "Water",
+          "domain": "negativeEmotionality",
+          "axis": "how feeling moves",
+          "together": "Worry, low mood and reactivity run together. The reading holds.",
+          "poles": {
+            "low": {
+              "id": "deep-well",
+              "name": "The Deep Well",
+              "look": "Your level does not change much with the surface weather. When the readings move you move with them, rather than ahead of them.",
+              "misread": "As not caring. Steadiness and distance look identical from outside, and a room under strain often needs the strain named before it can be absorbed.",
+              "supports": "You leave Wood free to look at the unfamiliar without first having to manage how it feels.",
+              "supportedBy": "How Metal commits decides how little there is to carry.",
+              "checks": "You keep the room's pitch down. Sometimes that is calm, and sometimes it is the urgency never arriving.",
+              "checkedBy": "Earth asks whether your level reading has been read by anyone else as coldness."
+            },
+            "high": {
+              "id": "open-sea",
+              "name": "The Open Sea",
+              "look": "You feel the change before the panel shows it. What arrives is real information, and it arrives with weight.",
+              "misread": "As instability. The early signal and the cost of carrying it are the same faculty — you do not get one without the other.",
+              "supports": "You bring Wood the sense that something is off before there is evidence for it, which is where the good questions start.",
+              "supportedBy": "How Metal commits decides how much you end up carrying. Open plans are heavier than finished ones.",
+              "checks": "You raise the room's pitch. That is early warning, and it is also urgency the room may not be able to use.",
+              "checkedBy": "Earth is where you put it down. Without that, everything stays carried."
+            }
+          },
+          "facets": {
+            "Anxiety": {
+              "above": "Worry runs above the rest. What moves in you is anticipation rather than low mood or sudden reaction.",
+              "below": "Worry runs below the rest. The night affects you, and little of it arrives ahead of the event."
+            },
+            "Depression": {
+              "above": "Low mood runs above the rest. What the night costs you shows as flatness afterwards rather than alarm during.",
+              "below": "Low mood runs below the rest. You feel the night sharply and it does not settle into flatness."
+            },
+            "Emotional Volatility": {
+              "above": "Reactivity runs above the rest. The movement is quick and it passes; it does not accumulate as worry or as flatness.",
+              "below": "Reactivity runs below the rest. Whatever you carry, you carry evenly. The surface stays level."
+            }
+          }
+        }
       }
     }
   },
@@ -2028,49 +2247,83 @@ window.AURORA_STATION_DATA = {
     "eyebrow": "AURORA STATION",
     "heading": "Observation report",
     "classification": "WATCHKEEPER RECORD · NOT A CLINICAL INSTRUMENT",
-    "openingTitle": "The watch is complete",
-    "openingBridge": "The last signal settles into silence. What remains is not a verdict, but a record of how you moved through uncertainty.",
     "openingBody": "Sixty observations were recorded across twelve hours of a station that stopped behaving predictably. What follows reads them back: what you reached for first, what changed when the situation stopped cooperating, and what returned once it was over.",
     "disclaimer": "This describes self-reported tendencies within one story. It is not a diagnosis, a measure of ability, or a prediction of how you would act anywhere else, and it must not be used for selection or performance decisions.",
     "chapters": [
       {
-        "id": "role",
+        "id": "watch",
         "index": "I",
-        "title": "The contribution",
-        "eyebrow": "SECTION I · CONTRIBUTION"
+        "title": "Who was on the panel",
+        "eyebrow": "SECTION I · THE WATCH"
       },
       {
         "id": "shift",
         "index": "II",
-        "title": "What the night moved",
-        "eyebrow": "SECTION II · MOVEMENT"
-      },
-      {
-        "id": "currents",
-        "index": "III",
-        "title": "The five currents",
-        "eyebrow": "SECTION III · SPECTRUMS"
+        "title": "What the night asked of you",
+        "eyebrow": "SECTION II · THE NIGHT"
       },
       {
         "id": "detail",
-        "index": "IV",
-        "title": "Reading each current",
-        "eyebrow": "SECTION IV · DETAIL"
+        "index": "III",
+        "title": "Five readings, one at a time",
+        "eyebrow": "SECTION III · THE FIVE CURRENTS"
       },
       {
         "id": "relations",
+        "index": "IV",
+        "title": "What feeds and what checks",
+        "eyebrow": "SECTION IV · WHAT HOLDS WHAT"
+      },
+      {
+        "id": "calibration",
         "index": "V",
-        "title": "What supports and what checks",
-        "eyebrow": "SECTION V · RELATIONS"
+        "title": "How this record was made",
+        "eyebrow": "SECTION V · CALIBRATION"
       },
       {
         "id": "close",
         "index": "VI",
-        "title": "Closing the record",
-        "eyebrow": "SECTION VI · CLOSE"
+        "title": "What you leave for the next watch",
+        "eyebrow": "SECTION VI · THE HANDOVER"
       }
     ],
-    "roleIntro": "One contribution the record supports most clearly. It is a reading of this night, not a fixed type.",
+    "orientation": {
+      "eyebrow": "BEFORE YOU READ",
+      "title": "How to read this record",
+      "body": "Five currents, each drawn as a line with a name at both ends. Your reading is a position on that line rather than a score out of five: neither end is a shortage of the other, and sitting far from the middle is how pronounced a tendency is, never how good it is.\n\nNothing here is a type. The five readings are separate, they do not total, and no combination of them has a name.\n\nWhere a reading is uncertain, the record says so rather than rounding it off."
+    },
+    "calibration": {
+      "intro": "Two things decide how far the five readings can be leaned on: how you used the scale, and how much your own answers agreed with each other. Both are recorded here so the rest of the report can be read at its proper strength.",
+      "scaleHeading": "How you used the scale",
+      "firmnessHeading": "How firm each reading is",
+      "labels": {
+        "balance": "Balance",
+        "ends": "Ends of the scale",
+        "middle": "The middle",
+        "agreement": "Agreement within facets"
+      },
+      "balance": {
+        "none": "No measurable lean. You neither agreed nor disagreed out of habit.",
+        "agree": "A lean toward agreeing. Because the statements run in both directions in equal number, this moves the readings less than it looks like it should — but your middle band is wider than most.",
+        "disagree": "A lean toward disagreeing. Because the statements run in both directions in equal number, this moves the readings less than it looks like it should — but your middle band is wider than most."
+      },
+      "ends": {
+        "sparing": "You stayed near the middle of the scale. The five currents read flatter than they would for someone who used the ends — the order among them is unaffected, only how far from centre they sit.",
+        "usual": "You used the whole scale.",
+        "frequent": "You used the ends of the scale often. The five currents read as more pronounced than they would for someone who stayed near the middle. That is a difference in how the scale was used, not in how strong the tendencies are."
+      },
+      "middleNote": "You chose the midpoint frequently. Some readings land in the situational band for that reason rather than because the tendency itself is genuinely even-handed.",
+      "agreementNote": "{held} of fifteen facets held together. Where a facet's four statements disagreed, the current above it is marked accordingly."
+    },
+    "record": {
+      "eyebrow": "THE RECORD",
+      "title": "What this is, and what it is not",
+      "whatHeading": "What this is",
+      "notHeading": "What this is not",
+      "structureHeading": "Where the structure comes from",
+      "mapping": "Wood, Fire, Earth, Metal and Water correspond to Open-Mindedness, Extraversion, Agreeableness, Conscientiousness and Negative Emotionality. Negative Emotionality is read as itself throughout: on the Water line, more feeling in motion sits toward The Open Sea.",
+      "limitations": "This record must not be used as the sole or determining basis for recruitment or selection, promotion, pay or performance decisions, disciplinary decisions, clinical or psychological assessment, educational admission, or any other high-stakes judgement about a person."
+    },
     "notATypeStatement": "Your Aurora Role is the contribution your profile is best placed to make. It is not a fixed personality type, and it is not a limit on what you are able to do.",
     "labels": {
       "missionFunction": "Mission function",
@@ -2084,11 +2337,21 @@ window.AURORA_STATION_DATA = {
       "reflection": "Reflection",
       "instrument": "Instrument",
       "facets": "Facets",
-      "observations": "Observations"
+      "observations": "Observations",
+      "look": "What this looks like",
+      "divides": "Where the current divides",
+      "misread": "How this is often misread",
+      "firmness": "How firm this reading is",
+      "asksOf": "What this asks of your other currents",
+      "tryThis": "One thing to try",
+      "fromCentre": "from centre",
+      "supports": "Feeds",
+      "supportedBy": "Fed by",
+      "checks": "Checks",
+      "checkedBy": "Checked by"
     },
     "shiftIntro": "The same five contributions, read separately across three stretches of the watch. The instrument holds one scale throughout; only the distance along each axis changes.",
     "shiftStableCopy": "Little moved. Across the three stretches no contribution shifted far enough to read as a change, which suggests your approach was not especially sensitive to how difficult the night became.",
-    "currentsIntro": "Five behavioural currents, each a range rather than a score to win. Neither end is better, and the centre is a real position rather than a missing answer.",
     "detailIntro": "Each current read in full: what it was doing, what it is likely to give you, what it can cost, and one question worth sitting with.",
     "relationsIntro": "Contributions do not sit apart from one another. Read from the one your record supports most clearly, this is which contribution yours tends to feed, which one tends to feed yours, and which one holds it in check when it runs long. None of it is a compatibility rating, and none of it says who to work with.",
     "relationsNote": "These relationships come from the five elements: an old way of describing how forces feed and restrain one another, used here only for the shape of the relationship. Everything about you in this report comes from your own sixty responses.",
@@ -2156,6 +2419,7 @@ window.AURORA_STATION_DATA = {
       "consistencyMoved": "Across the watch the most available tendency changed hands. You opened anchored in {starting}, and by the hardest hours {pressure} had moved ahead of it. That does not mean one replaced the other. It suggests that what you reach for first is sensitive to what the situation is asking, and that more than one way of working was genuinely available to you.",
       "adaptationShift": "Reading the routine stretch against the worst of the night, {pressure} became more visible in your responses: {reading}. This reads as an adjustment rather than a personality change—the kind of shift that shows what you lean on when the ordinary approach stops being enough. {recoveryClause}",
       "adaptationRecede": "Reading the routine stretch against the worst of the night, {pressure} receded furthest from your responses: {reading}. This reads as an adjustment rather than a personality change—the kind of shift that shows what gives way first when the ordinary approach stops being enough. {recoveryClause}",
+      "adaptationCrossed": "Between the routine stretch and the worst of the night, your {current} changed ends. It read as {from} while the watch was ordinary and as {to} once it was not: {reading} This is an adjustment rather than a personality change — it is the clearest kind, because it is not a matter of degree but of which end of the line was describing you. {recoveryClause}",
       "adaptationStable": "Pressure did not move you far. Through the worst of the night your responses stayed close to the pattern you began with, and they stayed close to it again once the situation became bounded. That steadiness is a finding in itself: it suggests your approach is not especially reactive to how difficult conditions become, for better and for worse.",
       "recoveryReturned": "Once the pressure eased, the pattern came back towards where it started.",
       "recoveryRetained": "Once the pressure eased, the adjustment mostly stayed.",

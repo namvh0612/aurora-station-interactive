@@ -352,8 +352,8 @@ check("chart normalisation is (score - 1) / 4", () => {
 check("interpretation bands use the specified edges", () => {
   assert.equal(core.bandForScore(data, 1).id, "lower");
   assert.equal(core.bandForScore(data, 2.49).id, "lower");
-  assert.equal(core.bandForScore(data, 2.5).id, "balanced");
-  assert.equal(core.bandForScore(data, 3.49).id, "balanced");
+  assert.equal(core.bandForScore(data, 2.5).id, "situational");
+  assert.equal(core.bandForScore(data, 3.49).id, "situational");
   assert.equal(core.bandForScore(data, 3.5).id, "higher");
   assert.equal(core.bandForScore(data, 5).id, "higher");
   assert.match(data.assessment.bandNote, /not norms/i);
@@ -406,20 +406,19 @@ check("the five roles map onto the five domains as specified", () => {
     "The Catalyst": "Extraversion",
     "The Steward": "Agreeableness",
     "The Architect": "Conscientiousness",
-    "The Sentinel": "6 - Negative Emotionality",
+    "The Sentinel": "Negative Emotionality",
   });
 
   const expected = {
-    pathfinder: { domain: "openMindedness", inverse: false, basis: "Open-Mindedness" },
-    catalyst: { domain: "extraversion", inverse: false, basis: "Extraversion" },
-    steward: { domain: "agreeableness", inverse: false, basis: "Agreeableness" },
-    architect: { domain: "conscientiousness", inverse: false, basis: "Conscientiousness" },
-    sentinel: { domain: "negativeEmotionality", inverse: true, basis: "Emotional Stability" },
+    pathfinder: { domain: "openMindedness", basis: "Open-Mindedness" },
+    catalyst: { domain: "extraversion", basis: "Extraversion" },
+    steward: { domain: "agreeableness", basis: "Agreeableness" },
+    architect: { domain: "conscientiousness", basis: "Conscientiousness" },
+    sentinel: { domain: "negativeEmotionality", basis: "Negative Emotionality" },
   };
   Object.entries(expected).forEach(([id, definition]) => {
     const role = data.assessment.roles[id];
     assert.equal(role.domain, definition.domain, `${id} domain`);
-    assert.equal(role.inverse, definition.inverse, `${id} inverse`);
     assert.equal(role.basis, definition.basis, `${id} basis`);
     assert.ok(role.contribution, `${id} contribution`);
     assert.match(role.colour, /^#[0-9a-f]{6}$/i, `${id} colour`);
@@ -428,28 +427,42 @@ check("the five roles map onto the five domains as specified", () => {
   assert.match(data.assessment.roleNote, /not fixed personality types/i);
 });
 
-check("Sentinel inverts Negative Emotionality and the others are direct", () => {
+check("every current reads its own domain directly, Water included", () => {
+  /*
+   * Water was reported as 6 - Negative Emotionality under the name Emotional
+   * Stability, so the same measurement pointed one way in the domain chapter
+   * and the other way on the instrument, with nothing on the page connecting
+   * them. Both ends of the Water line are named instead, and nothing inverts.
+   */
   const profile = core.scoreProfile(
     data,
     answerAll((index, item) =>
       item.domain === "negativeEmotionality" ? (item.reverse ? 1 : 5) : 3,
     ),
   );
-  const byId = Object.fromEntries(profile.roles.map((role) => [role.id, role.score]));
   const domains = Object.fromEntries(
     profile.domains.map((domain) => [domain.code, domain.score]),
   );
   assert.equal(domains.negativeEmotionality, 5);
-  assert.equal(byId.sentinel, 1, "6 - 5");
-  assert.equal(byId.steward, domains.agreeableness);
-  assert.equal(byId.pathfinder, domains.openMindedness);
-  assert.equal(byId.catalyst, domains.extraversion);
-  assert.equal(byId.architect, domains.conscientiousness);
-  assert.equal(core.roleScoreFor({ inverse: true }, 2), 4);
-  assert.equal(core.roleScoreFor({ inverse: false }, 2), 2);
+
+  profile.currents.forEach((current) => {
+    assert.equal(
+      current.score,
+      domains[current.domain],
+      `${current.name} does not read ${current.domain} directly`,
+    );
+  });
+  const water = profile.currents.find((current) => current.id === "water");
+  assert.equal(water.score, 5);
+  assert.equal(water.pole.name, water.poles.high.name, "high Water is not the far pole");
+  assert.equal(core.roleScoreFor({}, 2), 2);
+  // The flag that used to carry the inversion is gone from the data entirely.
+  Object.values(data.assessment.roles).forEach((role) => {
+    assert.equal("inverse" in role, false, `${role.id} still carries an inverse flag`);
+  });
 });
 
-check("the facet floor is the lowest supporting facet, inverted for Sentinel", () => {
+check("the facet floor is the lowest supporting facet", () => {
   const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
   const facets = Object.fromEntries(
     profile.facets.map((facet) => [facet.name, facet.score]),
@@ -457,9 +470,7 @@ check("the facet floor is the lowest supporting facet, inverted for Sentinel", (
 
   profile.roles.forEach((role) => {
     const names = data.assessment.domains[role.domain].facets;
-    const supporting = names.map((name) =>
-      role.inverse ? 6 - facets[name] : facets[name],
-    );
+    const supporting = names.map((name) => facets[name]);
     assert.equal(role.facetFloor, Math.min(...supporting), `${role.shortName} floor`);
     // The floor can never exceed the role's own score.
     assert.ok(role.facetFloor <= role.score + 1e-9, `${role.shortName} floor above score`);
@@ -469,7 +480,7 @@ check("the facet floor is the lowest supporting facet, inverted for Sentinel", (
   const neFacets = data.assessment.domains.negativeEmotionality.facets.map(
     (name) => facets[name],
   );
-  assert.equal(sentinel.facetFloor, 6 - Math.max(...neFacets));
+  assert.equal(sentinel.facetFloor, Math.min(...neFacets));
 });
 
 check("profile suitability weights overall, pressure and the facet floor", () => {
@@ -748,8 +759,10 @@ check("the pressure observation names which way the contribution moved", () => {
       return item.reverse ? 6 - want : want;
     });
 
-  const fell = core.scoreProfile(data, swing(5, 1));
-  const rose = core.scoreProfile(data, swing(1, 5));
+  // 4 -> 5 and 5 -> 4 move without passing the middle, so they are described
+  // as movement along the line rather than as a change of end.
+  const fell = core.scoreProfile(data, swing(5, 4));
+  const rose = core.scoreProfile(data, swing(4, 5));
   const reading = (profile) => {
     const phase = (id) => profile.phases.find((entry) => entry.id === id);
     const steward = (id) => phase(id).roles.find((role) => role.id === "steward").score;
@@ -769,6 +782,17 @@ check("the pressure observation names which way the contribution moved", () => {
   // Both name the two stretches being compared, so the sentence cannot be read
   // against whichever tab of the instrument happens to be open above it.
   [fallText, riseText].forEach((text) => assert.match(text, /routine stretch against the worst/));
+
+  /*
+   * A reading that passes the middle of the scale changes which end of the line
+   * describes the reader, which is a stronger finding than a distance and is
+   * reported as one.
+   */
+  const crossed = core.summariseProfile(data, core.scoreProfile(data, swing(5, 1))).adaptation;
+  assert.match(crossed, /changed ends/, "a crossing is reported as a distance");
+  assert.match(crossed, /The Cropland/);
+  assert.match(crossed, /The Rampart/);
+  assert.doesNotMatch(crossed, /receded|became more visible/);
 });
 
 /* ---------------------------------------------------------- aurora state */
@@ -1631,17 +1655,17 @@ check("the debrief is read one chapter at a time, and loses nothing", () => {
   assert.equal(data.results.chapters.length, 6);
   assert.deepEqual(
     data.results.chapters.map((entry) => entry.id),
-    ["role", "shift", "currents", "detail", "relations", "close"],
+    ["watch", "shift", "detail", "relations", "calibration", "close"],
   );
   // Every chapter is still built and put in the page in one pass; paging only
   // decides which one is shown.
   assert.match(resultsSource, /shell\.replaceChildren\(/);
   [
-    "buildRoleChapter",
+    "buildWatchChapter",
     "buildShiftChapter",
-    "buildCurrentsChapter",
     "buildDetailChapter",
     "buildRelationsChapter",
+    "buildCalibrationChapter",
     "buildCloseChapter",
   ].forEach((name) => assert.match(resultsSource, new RegExp(name), name));
   assert.match(resultsSource, /buildPager\(/);
@@ -1675,25 +1699,34 @@ check("a role carries its written copy, not only its score", () => {
 });
 
 check("the export prints the report, not a summary of it", () => {
-  // Everything the page writes out must have somewhere to land in the export.
+  /*
+   * Every block the page writes for a current has to land somewhere in the
+   * export, or the download is a lesser document than the screen it came from.
+   */
   [
-    "missionFunction",
-    "brings",
-    "watchFor",
-    "actionTitle",
-    "notATypeStatement",
+    "look",
+    "misread",
+    "divides",
+    "firmness",
+    "tryThis",
     "advantage",
     "overextension",
     "reflection",
     "observations",
-    "whyTemplates",
-    "instruments",
+    "notATypeStatement",
   ].forEach((key) => assert.match(pdfSource, new RegExp(key), `export is missing ${key}`));
-  // Overview, contribution, movement, five currents, relationships,
-  // observations, guidance.
-  assert.match(pdfSource, /profile\.domains\.length \+ 6/);
-  assert.match(pdfSource, /drawProfileRolePage/);
-  assert.match(pdfSource, /drawProfileObservationPage/);
+
+  // Overview, the night, five currents, calibration, relations, observations,
+  // the record.
+  assert.match(pdfSource, /profile\.currents\.length \+ 6/);
+  ["drawProfileCurrentPage", "drawProfileCalibrationPage", "drawProfileObservationPage"].forEach(
+    (name) => assert.match(pdfSource, new RegExp(name), name),
+  );
+  // The retired contribution page is gone rather than merely unreferenced.
+  assert.doesNotMatch(pdfSource, /drawProfileRolePage/);
+  // Both ends of every line are drawn, so the export cannot imply a maximum.
+  assert.match(pdfSource, /poles\.low\.name/);
+  assert.match(pdfSource, /poles\.high\.name/);
 });
 
 check("an export names itself by watchkeeper and by night", () => {
@@ -1871,7 +1904,6 @@ check("the relationships chapter suggests, and never rates", () => {
   assert.match(data.assessment.cycles.note, /date of birth/i);
   // The export carries the same page.
   assert.match(pdfSource, /drawProfileRelationsPage/);
-  assert.match(pdfSource, /profile\.domains\.length \+ 6/);
 });
 
 check("a chapter index is a numeral, not a padded number", () => {
@@ -2072,19 +2104,155 @@ check("the phone controls are reachable and the bar carries the reading", () => 
   assert.match(indexSource, /id="controls-toggle"[\s\S]*?aria-label="Station controls"/);
 });
 
+check("every export page gets its own number, and the last one is the count", () => {
+  /*
+   * The page slots are written by hand around a computed total, so a page
+   * added or removed silently collides with a neighbour: calibration and the
+   * fifth current both claimed slot seven, and every page then printed a count
+   * one lower than the file actually had.
+   */
+  const currents = 5;
+  const total = currents + 6;
+  const slot = (expression) =>
+    Function("pageCount", "index", `"use strict"; return ${expression};`);
+
+  const fixed = [...pdfSource.matchAll(/await capture\(\s*([^,]+?),\s*\(\)/g)].map((match) =>
+    match[1].trim(),
+  );
+  assert.ok(fixed.length >= 4, "the export captures no fixed pages");
+  const loop = pdfSource.match(/const pageNumber = (index \+ \d+);/);
+  assert.ok(loop, "the per-current loop does not number its pages");
+
+  const numbers = fixed
+    .filter((expression) => expression !== "pageNumber")
+    .map((expression) => slot(expression)(total, 0));
+  for (let index = 0; index < currents; index += 1) {
+    numbers.push(slot(loop[1])(total, index));
+  }
+
+  assert.equal(new Set(numbers).size, numbers.length, `pages collide: ${numbers.sort((a, b) => a - b)}`);
+  assert.equal(numbers.length, total, "the page slots do not add up to the printed count");
+  assert.equal(Math.min(...numbers), 1);
+  assert.equal(Math.max(...numbers), total, "the last page is not the printed count");
+});
+
+check("both ends of every current carry their own writing", () => {
+  /*
+   * The whole design rests on neither pole being a shortage of the other, so
+   * a pole missing its own recognition, misreading or relations would quietly
+   * reintroduce a favoured end.
+   */
+  const currents = Object.values(data.assessment.spectra.currents);
+  assert.equal(currents.length, 5);
+  const required = ["name", "look", "misread", "supports", "supportedBy", "checks", "checkedBy"];
+  currents.forEach((current) => {
+    assert.ok(current.axis, `${current.id} has no axis description`);
+    assert.ok(current.together, `${current.id} has no undivided reading`);
+    ["low", "high"].forEach((end) => {
+      required.forEach((key) => {
+        assert.ok(current.poles[end][key], `${current.id}.${end} is missing ${key}`);
+      });
+    });
+    // Both ends must also have guidance to draw on, from either band.
+    ["lower", "higher"].forEach((band) => {
+      const guidance = data.assessment.domains[current.domain].guidance[band];
+      ["advantage", "overextension", "reflection"].forEach((key) => {
+        assert.ok(guidance[key], `${current.domain}.${band} is missing ${key}`);
+      });
+    });
+    // Every facet of the domain can be named as an outlier in either direction.
+    data.assessment.domains[current.domain].facets.forEach((facet) => {
+      assert.ok(current.facets[facet], `${current.id} cannot describe ${facet}`);
+      assert.ok(current.facets[facet].above, `${facet} has no reading when it runs high`);
+      assert.ok(current.facets[facet].below, `${facet} has no reading when it runs low`);
+    });
+  });
+});
+
+check("the report never prints the five readings as one thing", () => {
+  /*
+   * Five axes with two ends each is thirty-two combinations, and naming them
+   * is the difference between a spectrum report and a type indicator. No
+   * surface may join the readings into a single label.
+   */
+  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
+  assert.equal(profile.currents.length, 5);
+  [resultsSource, pdfSource].forEach((source) => {
+    assert.doesNotMatch(source, /currents\s*\.\s*map\([^)]*\)\s*\.join\(""\)/, "currents joined into one string");
+    assert.doesNotMatch(source, /\btypeCode\b|\btypeString\b|\bacronym\b/i);
+  });
+  const copy = JSON.stringify(data.results) + JSON.stringify(data.assessment.spectra);
+  assert.doesNotMatch(copy, /your type\b/i);
+  // Each current is reported on its own, with its own pole and distance.
+  profile.currents.forEach((current) => {
+    assert.ok(current.pole.name, `${current.id} has no pole`);
+    assert.ok(Number.isFinite(current.magnitude), `${current.id} has no distance`);
+  });
+});
+
+check("firmness and distance are separate readings, and both tile", () => {
+  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
+  profile.currents.forEach((current) => {
+    assert.ok(["firm", "mixed", "provisional"].includes(current.firmness.id));
+    assert.ok(current.firmness.copy, `${current.id} firmness has no copy`);
+  });
+
+  /*
+   * Which side of the middle decides the pole, and nothing else. If distance
+   * were allowed a say, a pronounced reading and a faint one on the same side
+   * would be given different names.
+   */
+  const definition = core.spectraDefinitions(data).metal;
+  [1, 2.4, 2.99].forEach((score) =>
+    assert.equal(core.poleFor(definition, score).id, definition.poles.low.id, `${score} is not low`),
+  );
+  [3.01, 3.6, 5].forEach((score) =>
+    assert.equal(core.poleFor(definition, score).id, definition.poles.high.id, `${score} is not high`),
+  );
+  const labels = data.assessment.spectra.magnitudes;
+  assert.deepEqual(
+    [0, 0.5, 1.4].map((value) => core.magnitudeLabelFor(data, value)),
+    [labels.faint, labels.clear, labels.pronounced],
+  );
+  assert.deepEqual(
+    [-0.1, -0.6, -2].map((value) => core.magnitudeLabelFor(data, value)),
+    [labels.faint, labels.clear, labels.pronounced],
+    "distance is read the same on both sides of the middle",
+  );
+});
+
+check("the record says how the scale itself was used", () => {
+  const style = core.responseStyleFor(data, answerAll(() => 5));
+  assert.ok(style, "response style is not computable from a complete record");
+  // Answering 5 to everything is the clearest possible lean.
+  assert.equal(style.balance.id, "agree");
+  assert.equal(style.ends.id, "frequent");
+  assert.equal(style.middle.share, 0);
+  const even = core.responseStyleFor(data, answerAll(() => 3));
+  assert.equal(even.balance.id, "none");
+  assert.equal(even.middle.share, 1);
+  assert.equal(even.ends.id, "sparing");
+  // Nothing here compares the reader with anybody.
+  const copy = JSON.stringify(data.results.calibration);
+  assert.doesNotMatch(copy, /percentile|average person|compared with others|norm\b/i);
+});
+
 check("the export finds its chapters by name, not by position", () => {
   /*
    * Inserting the relations chapter shifted every index after it, and the
    * closing page went on printing the heading that had moved into slot four.
-   * Nothing in the export may address a chapter by its position again.
+   * Nothing in the export may address a chapter by its position again — and
+   * no chapter it names may have been retired out from under it.
    */
   assert.doesNotMatch(pdfSource, /results\.chapters\[\d+\]/);
-  ["role", "close", "relations"].forEach((id) => {
-    assert.match(
-      pdfSource,
-      new RegExp(`chapters\\.find\\(\\(entry\\) => entry\\.id === "${id}"\\)`),
-      `${id} is not looked up by id`,
-    );
+
+  const looked = [
+    ...pdfSource.matchAll(/chapters\.find\(\(entry\) => entry\.id === "([\w-]+)"\)/g),
+  ].map((match) => match[1]);
+  assert.ok(looked.length > 0, "the export addresses no chapter by name at all");
+  const known = data.results.chapters.map((entry) => entry.id);
+  looked.forEach((id) => {
+    assert.ok(known.includes(id), `the export names a chapter "${id}" that no longer exists`);
   });
 });
 
@@ -2098,10 +2266,12 @@ check("the export draws the figures the report opens with", () => {
    * land on top of each other and no two labels can collide, and joins the
    * marks down the rows so the shift is drawn rather than inferred.
    */
-  const phasePage = pdfSource.slice(
-    pdfSource.indexOf("function drawProfilePhasePage("),
-    pdfSource.indexOf("function drawProfileDomainPage("),
-  );
+  const phaseStart = pdfSource.indexOf("function drawProfilePhasePage(");
+  const phaseEnd = pdfSource.indexOf("function drawSpectrum(");
+  // A boundary that no longer exists slices to the end of the file and makes
+  // every assertion below it meaningless, so both ends are checked.
+  assert.ok(phaseStart >= 0 && phaseEnd > phaseStart, "the movement page cannot be located");
+  const phasePage = pdfSource.slice(phaseStart, phaseEnd);
   assert.match(phasePage, /Three rules per contribution/);
   assert.match(phasePage, /The travel, joined down the rows/);
   assert.doesNotMatch(phasePage, /drawScoreTrack/);
@@ -2179,7 +2349,7 @@ check("the report carries every required piece of the record", () => {
   // Advantage, overextension and reflection for every band of every current.
   core.DOMAIN_ORDER.forEach((code) => {
     const guidance = data.assessment.domains[code].guidance;
-    ["higher", "balanced", "lower"].forEach((band) => {
+    ["higher", "situational", "lower"].forEach((band) => {
       ["advantage", "overextension", "reflection"].forEach((key) => {
         assert.ok(guidance[band][key], `${code} ${band} ${key}`);
       });
@@ -2259,10 +2429,25 @@ check("progress reads as an observation sequence, not a percentage", () => {
   assert.match(stylesSource, /\.sequence-tick/);
 });
 
-check("readings are shown out of five on both surfaces", () => {
+check("a facet reads out of five, and a current reads as a position", () => {
+  /*
+   * A facet is a quantity and is still shown out of five. A current is not:
+   * it is a line with a name at each end, so it is reported as a pole and a
+   * distance from the middle. Printing it out of five would put a maximum on
+   * a spectrum and quietly restore more-is-better.
+   */
   assert.match(resultsSource, /\$\{reading\(value\)\} \/ \$\{core\.MAX_RESPONSE\}/);
-  assert.match(pdfSource, /role\.score\.toFixed\(1\)\} \/ \$\{profile\.scaleMax\}/);
   assert.match(pdfSource, /facet\.score\.toFixed\(1\)\} \/ \$\{profile\.scaleMax\}/);
+
+  [resultsSource, pdfSource].forEach((source) => {
+    assert.doesNotMatch(source, /current\.score\.toFixed\(1\)\} \/ /, "a current is scored out of five");
+    assert.doesNotMatch(source, /role\.score\.toFixed\(1\)\} \/ /, "a current is scored out of five");
+  });
+  // Both surfaces name the pole and the distance instead.
+  [resultsSource, pdfSource].forEach((source) => {
+    assert.match(source, /current\.pole\.name/);
+    assert.match(source, /current\.magnitude/);
+  });
 });
 
 for (const [label, run] of registered) {

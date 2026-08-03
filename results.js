@@ -84,14 +84,6 @@
       .toUpperCase();
   }
 
-  function roleFor(id) {
-    return profile.roles.find((role) => role.id === id);
-  }
-
-  function domainFor(code) {
-    return profile.domains.find((domain) => domain.code === code);
-  }
-
   function chapter(id) {
     return COPY.chapters.find((entry) => entry.id === id);
   }
@@ -108,65 +100,68 @@
     return { node, body };
   }
 
-  /* ----------------------------------------------------------- I: contribution */
+  /* ------------------------------------------------------------- spectra */
 
-  function buildRoleChapter() {
-    const { node, body } = section("role");
-    const lead = summary.overall;
-    const primary = lead.primary;
+  function currentForRoleId(id) {
+    const role = data.assessment.roles[id];
+    return role ? profile.currents.find((entry) => entry.domain === role.domain) : null;
+  }
 
-    const lede = el("div", "role-lede");
+  /*
+   * One line with a name at each end and a mark where the reading falls. The
+   * mark carries distance from the middle rather than a score out of five,
+   * because a spectrum has no top.
+   */
+  function spectrumLine(current, options) {
+    const settings = options || {};
+    const line = el("div", "spectrum");
+    line.style.setProperty("--trace", current.colourPaper);
 
-    const left = el("div");
-    left.append(
-      el("p", "mark mark-sentence", COPY.roleIntro),
-      el("h3", "role-name", lead.isBlend ? lead.label : primary.name),
-      el("p", "mark role-basis", `${LABELS.basis} · ${primary.basis}`),
-      el("p", "role-statement", COPY.notATypeStatement),
+    const ends = el("div", "spectrum-ends");
+    ends.append(
+      el("p", "spectrum-pole", current.poles.low.name),
+      el("p", "spectrum-pole spectrum-pole-high", current.poles.high.name),
     );
 
-    // Why, described without exposing any mechanism.
-    const why = data.assessment.whyTemplates;
-    const reasons = [];
-    reasons.push(
-      lead.isBlend
-        ? why.blend.replace("{roles}", lead.label)
-        : why.single.replace("{role}", primary.name),
-    );
-    const supported = primary.facetFloor >= primary.score - 0.6;
-    reasons.push(supported ? why.supported : why.uneven);
-    left.appendChild(el("p", "role-why", reasons.join(" ")));
+    const track = el("div", "spectrum-track");
+    const mark = el("span", "spectrum-mark");
+    const place = ((current.score - profile.scaleMin) / (profile.scaleMax - profile.scaleMin)) * 100;
+    mark.style.setProperty("--at", `${place.toFixed(2)}%`);
+    track.append(el("span", "spectrum-centre"), mark);
 
-    const right = el("div");
-    if (art) {
-      const dial = art.instrumentDial(primary.normalised, primary.colourPaper, primary.name);
-      dial.style.setProperty("--trace", primary.colourPaper);
-      right.appendChild(dial);
+    const readout = el("p", "spectrum-readout");
+    readout.textContent = `${current.pole.name} · ${Math.abs(current.magnitude).toFixed(2)} ${LABELS.fromCentre} · ${current.magnitudeLabel}`;
+
+    line.append(ends, track, readout);
+    if (settings.firmness && current.firmness) {
+      line.appendChild(el("p", "spectrum-firmness", current.firmness.id));
     }
-    const instrument = data.assessment.instruments[primary.domain];
-    right.append(
-      el("p", "mark", `${LABELS.instrument} · ${instrument.name.toUpperCase()}`),
-      el("p", "mark mark-sentence", instrument.reads),
-    );
+    return line;
+  }
 
-    lede.append(left, right);
-    body.appendChild(lede);
+  /* --------------------------------------------------------- I: the watch */
 
-    const lines = el("div", "role-lines");
-    [
-      [LABELS.missionFunction, primary.missionFunction],
-      [LABELS.brings, primary.brings],
-      [LABELS.watchFor, primary.watchFor],
-      [LABELS.action, `${primary.actionTitle} — ${primary.action}`],
-    ].forEach(([label, copy]) => {
-      const line = el("div", "role-line");
-      line.append(el("p", "mark", label), el("p", "", copy));
-      lines.appendChild(line);
+  function buildWatchChapter() {
+    const { node, body } = section("watch");
+    body.appendChild(el("p", "chapter-intro", data.assessment.spectra.note));
+
+    const board = el("div", "constellation");
+    profile.currents.forEach((current) => {
+      const row = el("article", "constellation-row");
+      row.style.setProperty("--trace", current.colourPaper);
+      const head = el("div", "constellation-head");
+      head.append(
+        el("h3", "current-title", current.name.toUpperCase()),
+        el("p", "mark mark-sentence", current.axis),
+      );
+      row.append(head, spectrumLine(current, { firmness: true }));
+      board.appendChild(row);
     });
-    body.appendChild(lines);
-
+    body.appendChild(board);
+    body.appendChild(el("p", "role-statement", COPY.notATypeStatement));
     return node;
   }
+
 
   /* ------------------------------------------------- II: what the night moved */
 
@@ -275,7 +270,7 @@
         "text-anchor",
         Math.abs(anchor.x - PLOT_CENTRE) < 12 ? "middle" : anchor.x > PLOT_CENTRE ? "start" : "end",
       );
-      label.textContent = data.assessment.roles[id].shortName;
+      label.textContent = (currentForRoleId(id) || { name: "" }).name.toUpperCase();
       plot.appendChild(label);
     });
 
@@ -293,7 +288,7 @@
       const swatch = el("span", "reading-swatch");
       swatch.setAttribute("aria-hidden", "true");
       swatch.style.setProperty("--trace", role.colourPaper);
-      const name = el("span", "reading-name", role.shortName);
+      const name = el("span", "reading-name", (currentForRoleId(id) || { name: role.shortName }).name);
       const value = el("span", "reading-value", "—");
       const change = el("span", "reading-change", "");
       const tip = el("span", "reading-tip");
@@ -382,21 +377,22 @@
         row.value.textContent = outOf(role.score);
         row.change.textContent = change.text;
         row.change.dataset.steady = String(change.steady);
+        const named = (currentForRoleId(role.id) || role).name;
         row.tip.textContent = earlier
-          ? `${role.name}: ${reading(role.score)} of ${core.MAX_RESPONSE}, ${change.spoken} from ${earlier.label} (${reading(before)}).`
-          : `${role.name}: ${reading(role.score)} of ${core.MAX_RESPONSE} at ${stateAt.label}.`;
+          ? `${named}: ${reading(role.score)} of ${core.MAX_RESPONSE}, ${change.spoken} from ${earlier.label} (${reading(before)}).`
+          : `${named}: ${reading(role.score)} of ${core.MAX_RESPONSE} at ${stateAt.label}.`;
       });
 
       plot.setAttribute(
         "aria-label",
         `${copy.heading}. ${stateAt.label}. Each contribution reads from one to five. ${stateAt.roles
-          .map((role) => `${role.shortName} ${reading(role.score)}`)
+          .map((role) => `${(currentForRoleId(role.id) || role).name} ${reading(role.score)}`)
           .join(". ")}.`,
       );
 
       travel(stateAt.roles.map((role) => role.normalised));
       if (settings.announce) {
-        say(`${stateAt.label}. ${stateAt.roles.map((role) => `${role.shortName} ${reading(role.score)}`).join(", ")}.`);
+        say(`${stateAt.label}. ${stateAt.roles.map((role) => `${(currentForRoleId(role.id) || role).name} ${reading(role.score)}`).join(", ")}.`);
       }
     };
 
@@ -470,47 +466,6 @@
 
   /* -------------------------------------------------- III: the five currents */
 
-  function buildCurrentsChapter() {
-    const { node, body } = section("currents");
-    body.appendChild(el("p", "chapter-intro", COPY.currentsIntro));
-
-    profile.domains.forEach((domain) => {
-      const role = profile.roles.find((entry) => entry.domain === domain.code);
-      const row = el("article", "spectrum");
-      row.style.setProperty("--trace", role.colourPaper);
-
-      const left = el("div");
-      left.append(
-        el("h3", "spectrum-name", domain.name),
-        el("p", "spectrum-reading", outOf(domain.score)),
-        el("p", "mark", domain.bandLabel),
-      );
-
-      const right = el("div");
-      const track = el("div", "spectrum-track");
-      track.setAttribute("role", "img");
-      track.setAttribute(
-        "aria-label",
-        `${domain.name}: ${reading(domain.score)} out of ${core.MAX_RESPONSE}, ${domain.bandLabel}`,
-      );
-      track.appendChild(el("span", "spectrum-centre"));
-      const marker = el("span", "spectrum-node");
-      marker.style.left = `${domain.normalised * 100}%`;
-      track.appendChild(marker);
-
-      const poles = el("div", "spectrum-poles");
-      poles.append(
-        el("p", "mark mark-sentence", data.assessment.instruments[domain.code].reads),
-        el("p", "mark", `${role.shortName} · ${outOf(role.score)}`),
-      );
-
-      right.append(track, poles, el("p", "spectrum-copy", domain.interpretation));
-      row.append(left, right);
-      body.appendChild(row);
-    });
-
-    return node;
-  }
 
   /* ------------------------------------------------ IV: reading each current */
 
@@ -518,94 +473,120 @@
     const { node, body } = section("detail");
     body.appendChild(el("p", "chapter-intro", COPY.detailIntro));
 
-    profile.domains.forEach((domain) => {
-      const role = profile.roles.find((entry) => entry.domain === domain.code);
-      const instrument = data.assessment.instruments[domain.code];
-      const guidance = data.assessment.domains[domain.code].guidance[domain.band];
-
-      const current = el("article", "current");
-      current.style.setProperty("--trace", role.colourPaper);
+    profile.currents.forEach((current) => {
+      const page = el("article", "current");
+      page.style.setProperty("--trace", current.colourPaper);
 
       const head = el("div", "current-head");
-      const title = el("div");
-      title.append(
-        el("h3", "current-title", domain.name),
-        el("p", "mark mark-sentence", `${domain.focus}`),
+      head.append(
+        el("h3", "current-title", current.name.toUpperCase()),
+        el("p", "mark mark-sentence", current.axis),
       );
-      const dial = el("div", "current-instrument");
-      if (art) {
-        const face = art.instrumentDial(domain.normalised, role.colourPaper, domain.name);
-        face.style.setProperty("--trace", role.colourPaper);
-        dial.appendChild(face);
-      }
-      dial.append(
-        el("p", "mark", instrument.name.toUpperCase()),
-        el("p", "mark", outOf(domain.score)),
-      );
-      head.append(title, dial);
-      current.appendChild(head);
+      page.append(head, spectrumLine(current));
 
-      const facets = el("div");
-      facets.appendChild(el("p", "mark", LABELS.facets));
-      domain.facets.forEach((facet) => {
+      const say = (label, copy, className) => {
+        const block = el("div", className || "guidance-block");
+        block.append(el("p", "mark", label), el("p", "", copy));
+        page.appendChild(block);
+      };
+
+      say(LABELS.look, current.pole.look);
+
+      /*
+       * The facet lines are where a mid reading earns its keep: a domain built
+       * from three readings that disagree is a different person from one built
+       * from three that agree, and the average alone cannot tell them apart.
+       */
+      const divides = el("div", "guidance-block");
+      divides.appendChild(el("p", "mark", LABELS.divides));
+      const facets = el("div", "facet-set");
+      current.facets.forEach((facet) => {
         const row = el("div", "facet-row");
+        const bar = el("span", "facet-bar");
+        bar.style.setProperty("--at", `${(facet.normalised * 100).toFixed(1)}%`);
         row.append(
           el("p", "reading-name", facet.name),
           el("p", "facet-value", outOf(facet.score)),
-          el("p", "", facet.meaning),
+          bar,
         );
         facets.appendChild(row);
       });
-      current.appendChild(facets);
+      divides.append(facets, el("p", "", current.divergence.copy));
+      page.appendChild(divides);
 
-      const blocks = el("div", "guidance");
+      say(LABELS.misread, current.pole.misread);
+      say(LABELS.advantage, current.guidance.advantage);
+      say(LABELS.overextension, current.guidance.overextension);
+      if (current.firmness) {
+        say(LABELS.firmness, current.firmness.copy);
+      }
+
+      const asks = el("div", "guidance-block");
+      asks.appendChild(el("p", "mark", LABELS.asksOf));
+      const relations = core.relationsFor(data, roleIdForCurrent(current));
+      const lines = el("div", "role-lines");
       [
-        [LABELS.advantage, guidance.advantage],
-        [LABELS.overextension, guidance.overextension],
-        [LABELS.reflection, guidance.reflection],
-      ].forEach(([label, copy]) => {
-        const block = el("div", "guidance-block");
-        block.append(el("p", "mark", label), el("p", "", copy));
-        blocks.appendChild(block);
+        ["supports", LABELS.supports],
+        ["supportedBy", LABELS.supportedBy],
+        ["checks", LABELS.checks],
+        ["checkedBy", LABELS.checkedBy],
+      ].forEach(([key, label]) => {
+        const other = currentForRoleId(relations[key]);
+        const row = el("div", "role-line");
+        row.style.setProperty("--trace", other ? other.colourPaper : current.colourPaper);
+        row.append(
+          el("p", "mark", `${label} · ${other ? other.name : ""}`),
+          el("p", "", current.pole[key]),
+        );
+        lines.appendChild(row);
       });
-      current.appendChild(blocks);
+      asks.appendChild(lines);
+      page.appendChild(asks);
 
-      body.appendChild(current);
+      say(LABELS.tryThis, current.guidance.reflection);
+      body.appendChild(page);
     });
 
     return node;
   }
 
-  /* --------------------------------------------- V: what supports and checks */
+  /* ------------------------------------------------- IV: what holds what */
+
+  function roleIdForCurrent(current) {
+    const role = Object.values(data.assessment.roles).find(
+      (entry) => entry.domain === current.domain,
+    );
+    return role ? role.id : null;
+  }
 
   /*
-   * Read outward from the contribution the record supports most clearly: which
-   * contribution yours tends to feed, which tends to feed yours, and which
-   * holds it in check when it runs long. It is a reading of relationships
-   * between contributions, never a rating of people or a suggestion about who
-   * to work with.
+   * The cycle read inward. Each current feeds one of your own and holds
+   * another in check, which is what makes five readings a system rather than
+   * five separate bars. It suggests, and never rates.
    */
   function buildRelationsChapter() {
     const { node, body } = section("relations");
-    const primary = summary.overall.primary;
-    const relations = core.relationsFor(data, primary.id);
     const labels = COPY.relationsLabels;
-    const copy = COPY.relationsCopy;
-
     body.appendChild(el("p", "chapter-intro", COPY.relationsIntro));
 
-    const lede = el("div", "role-lede");
+    const lead = profile.currents.reduce(
+      (best, entry) => (Math.abs(entry.magnitude) > Math.abs(best.magnitude) ? entry : best),
+      profile.currents[0],
+    );
+    const leadRole = roleIdForCurrent(lead);
 
     const figure = el("div", "relations-figure");
     if (art) {
       const nodes = data.assessment.cycles.generating.map((elementId) => {
         const element = data.assessment.elements[elementId];
-        const role = roleFor(element.role);
-        return { id: element.role, label: role.shortName, colour: role.colourPaper };
+        const entry = currentForRoleId(element.role);
+        return {
+          id: element.role,
+          label: entry ? entry.name : element.name,
+          colour: entry ? entry.colourPaper : null,
+        };
       });
-      figure.appendChild(
-        art.elementCycle(nodes, primary.id, relations),
-      );
+      figure.appendChild(art.elementCycle(nodes, leadRole, core.relationsFor(data, leadRole)));
     }
     const key = el("p", "mark relations-key");
     key.append(
@@ -613,70 +594,92 @@
       el("span", "", labels.cycleControlling),
     );
     figure.append(key, el("p", "mark mark-sentence", COPY.relationsNote));
+    body.appendChild(figure);
 
-    const own = el("div");
-    const element = core.elementForRole(data, primary.id);
-    own.append(
-      el("p", "mark", labels.yours),
-      el("h3", "role-name", primary.name),
-      el("p", "mark role-basis", `${labels.keywords} · ${element.keywords}`),
-      el("p", "relations-shadow", `${labels.shadow}: ${element.shadow}`),
-    );
-
-
-    lede.append(own, figure);
-    body.appendChild(lede);
-
-    const lines = el("div", "role-lines");
-    [
-      ["supports", labels.supports],
-      ["supportedBy", labels.supportedBy],
-      ["checks", labels.checks],
-      ["checkedBy", labels.checkedBy],
-    ].forEach(([key, label]) => {
-      const other = roleFor(relations[key]);
-      const otherElement = core.elementForRole(data, other.id);
-      const line = el("div", "role-line relations-line");
-      line.style.setProperty("--trace", other.colourPaper);
-
-      const head = el("div");
-      head.append(el("p", "mark", label), el("p", "relations-role", other.name));
-
-      const detail = el("div");
-      detail.append(
-        el("p", "", copy[key].replace("{role}", other.name)),
-        el("p", "mark mark-sentence relations-keywords", otherElement.keywords),
+    const grid = el("div", "relations-grid");
+    profile.currents.forEach((current) => {
+      const relations = core.relationsFor(data, roleIdForCurrent(current));
+      const feeds = currentForRoleId(relations.supports);
+      const checks = currentForRoleId(relations.checks);
+      const block = el("article", "relations-block");
+      block.style.setProperty("--trace", current.colourPaper);
+      block.append(
+        el("h3", "current-title", `${current.name.toUpperCase()} · ${current.pole.name}`),
+        el("p", "mark", `${labels.supports} ${feeds ? feeds.name : ""} · ${labels.checks} ${checks ? checks.name : ""}`),
+        el("p", "", current.pole.supports),
+        el("p", "", current.pole.checks),
       );
-
-      line.append(head, detail);
-      lines.appendChild(line);
+      grid.appendChild(block);
     });
-    body.appendChild(lines);
+    body.appendChild(grid);
 
     return node;
   }
 
-  /* ------------------------------------------------------------ VI: closing */
+  /* ------------------------------------------------------- V: calibration */
 
-  function exportButton(label, className, run) {
-    const button = el("button", className, label);
-    button.type = "button";
-    button.addEventListener("click", async () => {
-      const original = button.textContent;
-      button.disabled = true;
-      button.textContent = "Preparing";
-      try {
-        await run();
-        say(`${label} complete.`);
-      } catch {
-        say(`${label} could not be prepared.`);
-      } finally {
-        button.textContent = original;
-        button.disabled = false;
-      }
+  /*
+   * How much weight the other five sections can carry. Because every domain
+   * runs six forward and six reverse statements, a reader with no answering
+   * habit centres on the middle of the scale — so a lean away from it is a
+   * habit rather than a tendency, and worth saying out loud.
+   */
+  function buildCalibrationChapter() {
+    const { node, body } = section("calibration");
+    const copy = COPY.calibration;
+    const style = profile.responseStyle;
+    body.appendChild(el("p", "chapter-intro", copy.intro));
+
+    if (style) {
+      const scale = el("div", "guidance-block");
+      scale.appendChild(el("p", "mark", copy.scaleHeading));
+      const table = el("div", "calibration-table");
+      [
+        [copy.labels.balance, style.balance.value.toFixed(2), style.balance.copy],
+        [copy.labels.ends, `${Math.round(style.ends.share * 100)}%`, style.ends.copy],
+        [
+          copy.labels.middle,
+          `${Math.round(style.middle.share * 100)}%`,
+          style.middle.copy || "",
+        ],
+        [
+          copy.labels.agreement,
+          `${style.agreement.held} / ${style.agreement.total}`,
+          style.agreement.copy,
+        ],
+      ].forEach(([label, value, note]) => {
+        const row = el("div", "calibration-row");
+        row.append(
+          el("p", "reading-name", label),
+          el("p", "facet-value", value),
+          el("p", "", note),
+        );
+        table.appendChild(row);
+      });
+      scale.appendChild(table);
+      body.appendChild(scale);
+    }
+
+    const firm = el("div", "guidance-block");
+    firm.appendChild(el("p", "mark", copy.firmnessHeading));
+    const index = el("div", "calibration-table");
+    profile.currents.forEach((current) => {
+      const row = el("div", "calibration-row");
+      row.style.setProperty("--trace", current.colourPaper);
+      row.append(
+        el("p", "reading-name", current.name),
+        el("p", "facet-value", current.firmness ? current.firmness.id : "—"),
+        el("p", "", current.pole.name),
+      );
+      index.appendChild(row);
     });
-    return button;
+    firm.appendChild(index);
+    body.appendChild(firm);
+
+    return node;
   }
+
+  /* --------------------------------------------------------- VI: handover */
 
   function buildCloseChapter() {
     const { node, body } = section("close");
@@ -716,11 +719,25 @@
     actions.appendChild(restart);
     body.appendChild(actions);
 
+    /*
+     * The back matter. The five domain names appear here and nowhere else in
+     * the report: the reading is carried entirely by the currents, and the
+     * credit has to stay attached to something the reader can look up.
+     */
+    const record = COPY.record;
     const colophon = el("div", "colophon");
+    colophon.append(el("p", "mark", record.eyebrow), el("h3", "current-title", record.title));
+    [
+      [record.whatHeading, data.assessment.methodNote],
+      [record.notHeading, `${data.instrument.status}. ${data.instrument.statusNote} ${record.limitations}`],
+      [record.structureHeading, `${data.instrument.attribution} ${record.mapping}`],
+    ].forEach(([label, copy]) => {
+      const block = el("div", "guidance-block");
+      block.append(el("p", "mark", label), el("p", "", copy));
+      colophon.appendChild(block);
+    });
     [
       COPY.disclaimer,
-      `${data.instrument.status}. ${data.instrument.statusNote}`,
-      data.instrument.attribution,
       data.instrument.permission,
       data.assessment.bandNote,
       data.assessment.phaseNote,
@@ -737,7 +754,45 @@
     return node;
   }
 
+  /* ------------------------------------------------------------ VI: closing */
+
+  function exportButton(label, className, run) {
+    const button = el("button", className, label);
+    button.type = "button";
+    button.addEventListener("click", async () => {
+      const original = button.textContent;
+      button.disabled = true;
+      button.textContent = "Preparing";
+      try {
+        await run();
+        say(`${label} complete.`);
+      } catch {
+        say(`${label} could not be prepared.`);
+      } finally {
+        button.textContent = original;
+        button.disabled = false;
+      }
+    });
+    return button;
+  }
+
+
   /* ---------------------------------------------------------- the masthead */
+
+  /*
+   * Front matter: how to read a line that has a name at both ends. It stays
+   * outside the pager so it is read once, before the first chapter, and it
+   * interprets no data — every reading belongs to the chapter that owns it.
+   */
+  function buildOrientation() {
+    const copy = COPY.orientation;
+    const node = el("section", "orientation");
+    node.append(el("p", "mark", copy.eyebrow), el("h2", "chapter-title", copy.title));
+    core.splitParagraphs(copy.body).forEach((line) => {
+      node.appendChild(el("p", "", line));
+    });
+    return node;
+  }
 
   function buildMasthead() {
     const masthead = el("header", "report-masthead");
@@ -892,14 +947,14 @@
     }
 
     const chapters = [
-      buildRoleChapter(),
+      buildWatchChapter(),
       buildShiftChapter(),
-      buildCurrentsChapter(),
       buildDetailChapter(),
       buildRelationsChapter(),
+      buildCalibrationChapter(),
       buildCloseChapter(),
     ];
-    shell.replaceChildren(buildMasthead(), ...buildPager(chapters));
+    shell.replaceChildren(buildMasthead(), buildOrientation(), ...buildPager(chapters));
 
     document.title = `${profile.playerName} — Observation Report`;
     say("The observation report is ready.");
