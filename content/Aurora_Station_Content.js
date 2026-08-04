@@ -2234,6 +2234,7 @@ window.AURORA_STATION_DATA = {
       "checks": "Checks",
       "checkedBy": "Checked by"
     },
+    "overviewLabel": "The five currents at a glance",
     "shiftIntro": "The same five lines, read separately across three stretches of the watch. The instrument holds one scale throughout; only the distance along each axis changes.",
     "shiftStableCopy": "Little moved. Across the three stretches no current shifted far enough to read as a change, which suggests your approach was not especially sensitive to how difficult the night became.",
     "returnCopy": {

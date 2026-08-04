@@ -2097,6 +2097,30 @@ check("firmness and distance are separate readings, and both tile", () => {
   );
 });
 
+check("no end is named for a reading that sits in the middle", () => {
+  /*
+   * `poleFor` has to answer for every score, so a reading of exactly 3.00 is
+   * assigned the high pole and the readout printed "The Wildwood · 0.00 from
+   * centre". That names a side the responses did not take. Both surfaces name
+   * an end only once the reading has cleared the band the line shades.
+   */
+  const middle = new RegExp(
+    `magnitude\\)? *>=? *(core\\.)?MAGNITUDE_CLEAR|>= *core\\.MAGNITUDE_CLEAR`,
+  );
+  assert.match(resultsSource, middle, "the report names a pole unconditionally");
+  assert.match(pdfSource, /distance >= clear/, "the export names a pole unconditionally");
+
+  // The shaded band is that same distance, so the drawing and the wording
+  // cannot disagree about where the middle ends.
+  assert.match(resultsSource, /core\.MAGNITUDE_CLEAR \/ span/);
+  assert.match(pdfSource, /centreBand: core\.MAGNITUDE_CLEAR/);
+  assert.match(pdfSource, /settings\.centreBand \/ span/);
+
+  // And the readout is written once per surface rather than per page.
+  assert.equal((pdfSource.match(/function spectrumReadout/g) || []).length, 1);
+  assert.equal((resultsSource.match(/function spectrumReadout/g) || []).length, 1);
+});
+
 check("the record says how the scale itself was used", () => {
   const style = core.responseStyleFor(data, answerAll(() => 5));
   assert.ok(style, "response style is not computable from a complete record");

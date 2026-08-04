@@ -1701,118 +1701,72 @@ body.report .art-grain {
 
 /* ---- spectrums ---- */
 
-.spectrum {
-  display: grid;
-  gap: 1rem 3rem;
-  padding: 2.5rem 0;
-  border-bottom: var(--rule) solid var(--paper-line);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-}
-
-.spectrum-name {
-  font-size: var(--step-section);
-}
-
-.spectrum-reading {
-  margin-top: 0.5rem;
-  font-family: var(--type-operational);
-  font-size: var(--step-lead);
-  font-variant-numeric: tabular-nums;
-}
-
-.spectrum-track {
-  position: relative;
-  height: 1px;
-  margin: 2rem 0 0.75rem;
-  background: var(--paper-line);
-}
-
-.spectrum-centre {
-  position: absolute;
-  top: -0.4rem;
-  bottom: -0.4rem;
-  left: 45%;
-  width: 10%;
-  background: rgba(25, 23, 19, 0.07);
-}
-
-.spectrum-node {
-  position: absolute;
-  top: 50%;
-  width: 0.7rem;
-  height: 0.7rem;
-  transform: translate(-50%, -50%);
-  background: var(--trace, var(--ink));
-  border-radius: 50%;
-}
-
-.spectrum-poles {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.spectrum-copy {
-  max-width: var(--measure-wide);
-  margin-top: 1.25rem;
-}
-
 /* ---- current detail ---- */
 
 /*
  * A current is one line with a name at each end. The mark carries distance
- * from the middle rather than a score out of five, so the track is drawn from
- * its centre outward and neither end is given the weight of a maximum.
+ * from the middle rather than a score out of five, so the middle of the scale
+ * is shaded rather than ticked and neither end is given the weight of a
+ * maximum. Slim on purpose: this is a rule with a point on it, not a bar
+ * chart, and five of them sit one under another.
  */
 .spectrum {
-  margin: 1.5rem 0 0;
-}
-
-.spectrum-ends {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.spectrum-pole {
-  font-family: var(--type-operational);
-  font-size: var(--step-mark);
-  letter-spacing: 0.08em;
-  color: var(--ink-dim);
-  text-transform: uppercase;
-}
-
-.spectrum-pole-high {
-  text-align: right;
+  margin: 1.25rem 0 0;
 }
 
 .spectrum-track {
   position: relative;
-  height: 1.75rem;
-  margin: 0.5rem 0;
-  border-bottom: var(--rule) solid var(--paper-line);
+  height: 0.85rem;
+  /* The rule itself, centred in the track's own height, so the mark can
+   * overhang it on both sides without the line moving. */
+  background: linear-gradient(var(--paper-line), var(--paper-line)) center / 100% var(--rule)
+    no-repeat;
 }
 
+/*
+ * The middle of the scale. A reading inside this band is not describing either
+ * end, which is why it is a band rather than a tick — its width is the
+ * distance a reading has to travel before the report will name a pole.
+ */
 .spectrum-centre {
   position: absolute;
-  top: 0.35rem;
+  top: 0;
   bottom: 0;
-  left: 50%;
-  width: var(--rule);
-  background: var(--paper-line);
+  left: calc(50% - var(--band, 12.5%));
+  width: calc(var(--band, 12.5%) * 2);
+  background: rgba(25, 23, 19, 0.06);
 }
 
+/*
+ * Clamped by its own radius so that a reading at either extreme still sits
+ * fully on the line. At 1.0 or 5.0 the mark was half outside the track and
+ * read as clipped, which is not what an end of the scale should look like.
+ */
 .spectrum-mark {
   position: absolute;
-  bottom: -0.34rem;
-  left: var(--at, 50%);
-  width: 0.68rem;
-  height: 0.68rem;
+  top: 50%;
+  left: clamp(0.31rem, var(--at, 50%), calc(100% - 0.31rem));
+  width: 0.62rem;
+  height: 0.62rem;
   border-radius: 50%;
   background: var(--trace, var(--ink));
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
 }
 
+/*
+ * Both names under the line, each under the end it belongs to, with how firm
+ * the reading is centred between them. Three columns rather than a flex row,
+ * so the middle stays in the middle whatever the two names are called.
+ */
+.spectrum-ends {
+  display: grid;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  margin-top: 0.55rem;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.spectrum-pole,
 .spectrum-readout,
 .spectrum-firmness {
   font-family: var(--type-operational);
@@ -1822,9 +1776,23 @@ body.report .art-grain {
   text-transform: uppercase;
 }
 
+.spectrum-pole-high {
+  text-align: right;
+}
+
 .spectrum-firmness {
-  margin-top: 0.35rem;
+  text-align: center;
   color: var(--ink-faint);
+}
+
+/*
+ * The finding, set under the current's name rather than under its line. Left
+ * in ink rather than the element's colour: the traces are held to the contrast
+ * a heading needs, and this is set at mark size.
+ */
+.spectrum-readout {
+  flex-basis: 100%;
+  font-variant-numeric: tabular-nums;
 }
 
 .constellation-row {
@@ -1908,8 +1876,14 @@ body.report .art-grain {
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
 }
 
+/*
+ * The element's own colour, which every other mark on its row already carries.
+ * Set in ink, the five headings were the one part of the page that gave no
+ * clue which line you were reading.
+ */
 .current-title {
   font-size: var(--step-chapter);
+  color: var(--trace, var(--ink));
 }
 
 .current-instrument {
@@ -1939,9 +1913,35 @@ body.report .art-grain {
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
 }
 
-.guidance-block p {
-  margin-top: 0.6rem;
-  max-width: 42ch;
+/*
+ * Label at the left, copy at the right, ruled off from the next block. Set as
+ * a stack with a 42-character measure, every block on a current's page put its
+ * copy in a narrow left column with two thirds of the page empty beside it —
+ * which read as an unfinished layout rather than as air.
+ */
+.guidance-block {
+  display: grid;
+  gap: 0.4rem 3rem;
+  padding: 1.4rem 0;
+  border-bottom: var(--rule) solid var(--paper-line);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr);
+}
+
+.guidance-block > :first-child {
+  padding-top: 0.2rem;
+}
+
+.guidance-block > * {
+  grid-column: 2;
+}
+
+.guidance-block > .mark {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.guidance-block p:last-child {
+  max-width: var(--measure);
 }
 
 /* ---- close ---- */
@@ -2000,6 +2000,20 @@ body.report .action-quiet {
   .spectrum,
   .current-head {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* One column, so the label sits above its copy rather than beside it. */
+  .guidance-block {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .guidance-block > *,
+  .guidance-block > .mark {
+    grid-column: 1;
+  }
+
+  .guidance-block > .mark {
+    grid-row: auto;
   }
 
   .current-instrument {

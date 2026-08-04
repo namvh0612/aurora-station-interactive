@@ -1256,6 +1256,7 @@
     canGoBack,
     clearJourney,
     CENTRE,
+    MAGNITUDE_CLEAR,
     STEADY_CHANGE,
     compareCurrents,
     contextPhaseFor,

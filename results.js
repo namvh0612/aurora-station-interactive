@@ -106,35 +106,68 @@
     return profile.currents.find((entry) => entry.id === id) || null;
   }
 
+  /* The share of the line a reading has to leave before it describes an end. */
+  function centreBand() {
+    const span = profile.scaleMax - profile.scaleMin;
+    return (core.MAGNITUDE_CLEAR / span) * 100;
+  }
+
+  /*
+   * Where a reading sits on its line, as a percentage. The line runs the whole
+   * scale, so the middle of the scale is the middle of the line.
+   */
+  function placeOn(score) {
+    const span = profile.scaleMax - profile.scaleMin;
+    return Math.max(0, Math.min(100, ((score - profile.scaleMin) / span) * 100));
+  }
+
+  /*
+   * The readout: which end the reading is nearer, how far from the middle it
+   * sits, and how firmly that reads. It belongs under the current's name
+   * rather than under the line, so the eye takes the name and the finding
+   * together and the line below is left to be a line.
+   *
+   * Inside the middle band no end is named. Naming one there would put "The
+   * Wildwood" against a distance of 0.04, which claims a side the responses
+   * did not take.
+   */
+  function spectrumReadout(current) {
+    const node = el("p", "spectrum-readout");
+    const distance = Math.abs(current.magnitude);
+    const named = distance >= core.MAGNITUDE_CLEAR ? `${current.pole.name} · ` : "";
+    node.textContent = `${named}${distance.toFixed(2)} ${LABELS.fromCentre} · ${current.magnitudeLabel}`;
+    return node;
+  }
+
   /*
    * One line with a name at each end and a mark where the reading falls. The
    * mark carries distance from the middle rather than a score out of five,
-   * because a spectrum has no top.
+   * because a spectrum has no top — so the middle is shaded rather than
+   * ticked, and the two names sit under the ends they belong to.
    */
   function spectrumLine(current, options) {
     const settings = options || {};
     const line = el("div", "spectrum");
     line.style.setProperty("--trace", current.colourPaper);
+    line.style.setProperty("--band", `${centreBand().toFixed(2)}%`);
+
+    const track = el("div", "spectrum-track");
+    const mark = el("span", "spectrum-mark");
+    mark.style.setProperty("--at", `${placeOn(current.score).toFixed(2)}%`);
+    track.append(el("span", "spectrum-centre"), mark);
 
     const ends = el("div", "spectrum-ends");
     ends.append(
       el("p", "spectrum-pole", current.poles.low.name),
+      el(
+        "p",
+        "spectrum-firmness",
+        settings.firmness && current.firmness ? current.firmness.id : "",
+      ),
       el("p", "spectrum-pole spectrum-pole-high", current.poles.high.name),
     );
 
-    const track = el("div", "spectrum-track");
-    const mark = el("span", "spectrum-mark");
-    const place = ((current.score - profile.scaleMin) / (profile.scaleMax - profile.scaleMin)) * 100;
-    mark.style.setProperty("--at", `${place.toFixed(2)}%`);
-    track.append(el("span", "spectrum-centre"), mark);
-
-    const readout = el("p", "spectrum-readout");
-    readout.textContent = `${current.pole.name} · ${Math.abs(current.magnitude).toFixed(2)} ${LABELS.fromCentre} · ${current.magnitudeLabel}`;
-
-    line.append(ends, track, readout);
-    if (settings.firmness && current.firmness) {
-      line.appendChild(el("p", "spectrum-firmness", current.firmness.id));
-    }
+    line.append(track, ends);
     return line;
   }
 
@@ -152,6 +185,7 @@
       head.append(
         el("h3", "current-title", current.name.toUpperCase()),
         el("p", "mark mark-sentence", current.axis),
+        spectrumReadout(current),
       );
       row.append(head, spectrumLine(current, { firmness: true }));
       board.appendChild(row);
@@ -479,8 +513,9 @@
       head.append(
         el("h3", "current-title", current.name.toUpperCase()),
         el("p", "mark mark-sentence", current.axis),
+        spectrumReadout(current),
       );
-      page.append(head, spectrumLine(current));
+      page.append(head, spectrumLine(current, { firmness: true }));
 
       const say = (label, copy, className) => {
         const block = el("div", className || "guidance-block");

@@ -173,7 +173,13 @@
    * 300dpi and the report was using about a third of it, which read as an
    * unfinished layout rather than a spare one.
    */
-  function drawExportHeading(context, eyebrow, title, introduction, accent) {
+  /*
+   * `titleAccent` is for the five pages that carry an element: there the title
+   * *is* the element, and setting it in ink made the one word that says which
+   * line you are reading the only mark on the page without its colour. The
+   * section pages keep an ink title, because a section is not an element.
+   */
+  function drawExportHeading(context, eyebrow, title, introduction, accent, titleAccent) {
     let y = 300;
     y = drawExportText(context, eyebrow.toUpperCase(), EXPORT_MARGIN, y, 1800, {
       size: 30,
@@ -186,7 +192,7 @@
     y = drawExportText(context, title, EXPORT_MARGIN, y, EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2, {
       size: 132,
       weight: 500,
-      colour: "#14181a",
+      colour: titleAccent ? accent : "#14181a",
       lineHeight: 138,
       maxLines: 2,
     });
@@ -386,7 +392,7 @@
   }
 
   /* Page 1: the watchkeeper, the date and the five Aurora Roles. */
-  function drawProfileOverviewPage(context, data, profile, summary, dateLabel, pageCount) {
+  function drawProfileOverviewPage(context, data, profile, summary, core, dateLabel, pageCount) {
     drawExportPageBase(context, 1, profile.playerName, "#14181a", pageCount);
     let y = drawExportHeading(
       context,
@@ -407,7 +413,7 @@
     });
     y += 30;
 
-    drawExportLabel(context, "Most available across the watch", EXPORT_MARGIN, y, "#14181a");
+    drawExportLabel(context, data.results.overviewLabel, EXPORT_MARGIN, y, "#14181a");
     y += 62;
     y = drawExportText(context, data.results.heading, EXPORT_MARGIN, y, width, {
       size: 62,
@@ -415,46 +421,51 @@
       lineHeight: 74,
       maxLines: 1,
     });
-    y += 46;
+    y += 40;
 
-    // The five lines at a glance, each with a name at both ends. A pole and a
-    // distance, never a score out of five.
+    /*
+     * The five lines at a glance, each with a name at both ends: the element,
+     * what it reads, the finding, the line, then the two names. The same order
+     * the report sets them in — the finding used to sit out to the right of
+     * the name, where it wrapped onto a second line and landed on the track.
+     */
     profile.currents.forEach((current) => {
-      drawExportText(context, current.name.toUpperCase(), EXPORT_MARGIN, y + 42, width - 640, {
+      drawExportText(context, current.name.toUpperCase(), EXPORT_MARGIN, y + 40, 700, {
         size: 42,
         family: "sans",
         weight: 600,
-        colour: "#14181a",
+        // The element's own colour, as the report sets it.
+        colour: current.colourPaper,
         lineHeight: 52,
+        maxLines: 1,
+      });
+      drawExportText(context, current.axis, EXPORT_PAGE_WIDTH - EXPORT_MARGIN, y + 46, width - 740, {
+        size: 27,
+        family: "sans",
+        colour: "#5c6568",
+        align: "right",
+        lineHeight: 36,
         maxLines: 1,
       });
       drawExportText(
         context,
-        `${current.pole.name.toUpperCase()} · ${Math.abs(current.magnitude).toFixed(2)}`,
-        EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
-        y + 42,
-        620,
-        {
-          size: 30,
-          family: "sans",
-          weight: 600,
-          colour: current.colourPaper,
-          align: "right",
-          lineHeight: 52,
-        },
+        spectrumReadout(current, data.results.labels, core.MAGNITUDE_CLEAR).toUpperCase(),
+        EXPORT_MARGIN,
+        y + 100,
+        width,
+        { size: 27, family: "sans", weight: 600, colour: "#4b5457", lineHeight: 36, maxLines: 1 },
       );
-      drawSpectrum(context, EXPORT_MARGIN, y + 74, width, current, current.colourPaper, {
-        min: profile.scaleMin,
-        max: profile.scaleMax,
-      });
-      drawExportText(context, current.axis, EXPORT_MARGIN, y + 196, width, {
-        size: 26,
-        family: "sans",
-        colour: "#5c6568",
-        lineHeight: 36,
-        maxLines: 1,
-      });
-      y += 250;
+      drawSpectrum(
+        context,
+        EXPORT_MARGIN,
+        y + 148,
+        width,
+        current,
+        current.colourPaper,
+        { min: profile.scaleMin, max: profile.scaleMax },
+        { centreBand: core.MAGNITUDE_CLEAR },
+      );
+      y += 268;
     });
 
     y += 24;
@@ -792,12 +803,57 @@
 
   /* One page per domain: interpretation, its guidance, then its three facets. */
   /*
-   * The line a current is read on: a name at each end, a tick at the middle,
-   * and a mark where the reading falls. Drawn from the centre outward, because
-   * the reading is a position rather than a quantity and the line has no top.
+   * Which end the reading is nearer, how far from the middle, and how firmly
+   * that reads. Inside the middle band no end is named: naming one there would
+   * put a pole against a distance of 0.04, which claims a side the responses
+   * did not take. The report writes the same line the same way.
    */
-  function drawSpectrum(context, x, y, width, current, trace, scale) {
-    drawExportText(context, current.poles.low.name.toUpperCase(), x, y, width / 2, {
+  function spectrumReadout(current, labels, clear) {
+    const distance = Math.abs(current.magnitude);
+    const named = distance >= clear && current.pole ? `${current.pole.name} · ` : "";
+    return `${named}${distance.toFixed(2)} ${labels.fromCentre} · ${current.magnitudeLabel}`;
+  }
+
+  /*
+   * The line a current is read on: a shaded middle, a mark where the reading
+   * falls, and a name under each end. The reading is a position rather than a
+   * quantity and the line has no top, so nothing here is drawn as a length.
+   *
+   * The same composition as the report: line first, names under it, the middle
+   * shaded to the width a reading has to clear before an end is named. A
+   * single tick at the centre said only "here is the middle"; a band says how
+   * far from it a reading has to be before it means anything.
+   */
+  function drawSpectrum(context, x, y, width, current, trace, scale, options) {
+    const settings = options || {};
+    const span = scale.max - scale.min;
+    const line = y + 20;
+    const band = (settings.centreBand / span) * width;
+
+    context.save();
+    if (band > 0) {
+      context.fillStyle = "rgba(20, 24, 26, 0.06)";
+      context.fillRect(x + width / 2 - band, line - 22, band * 2, 44);
+    }
+    context.strokeStyle = "#c1caca";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.moveTo(x, line);
+    context.lineTo(x + width, line);
+    context.stroke();
+
+    // Held one radius inside each end, so a reading of 1.0 or 5.0 still draws
+    // a whole mark on the line rather than half of one over its edge.
+    const radius = 14;
+    const share = Math.max(0, Math.min(1, (current.score - scale.min) / span));
+    context.fillStyle = trace;
+    context.beginPath();
+    context.arc(x + radius + (width - radius * 2) * share, line, radius, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+
+    const names = line + 46;
+    drawExportText(context, current.poles.low.name.toUpperCase(), x, names, width * 0.36, {
       size: 26,
       family: "sans",
       weight: 600,
@@ -805,7 +861,17 @@
       lineHeight: 34,
       maxLines: 1,
     });
-    drawExportText(context, current.poles.high.name.toUpperCase(), x + width, y, width / 2, {
+    if (settings.firmness) {
+      drawExportText(context, settings.firmness.toUpperCase(), x + width / 2, names, width * 0.26, {
+        size: 26,
+        family: "sans",
+        colour: "#5c6568",
+        align: "center",
+        lineHeight: 34,
+        maxLines: 1,
+      });
+    }
+    drawExportText(context, current.poles.high.name.toUpperCase(), x + width, names, width * 0.36, {
       size: 26,
       family: "sans",
       weight: 600,
@@ -815,30 +881,10 @@
       maxLines: 1,
     });
 
-    const line = y + 46;
-    context.save();
-    context.strokeStyle = "#c1caca";
-    context.lineWidth = 3;
-    context.beginPath();
-    context.moveTo(x, line);
-    context.lineTo(x + width, line);
-    context.stroke();
-    context.beginPath();
-    context.moveTo(x + width / 2, line - 16);
-    context.lineTo(x + width / 2, line + 16);
-    context.stroke();
-
-    const share = (current.score - scale.min) / (scale.max - scale.min);
-    context.fillStyle = trace;
-    context.beginPath();
-    context.arc(x + width * share, line, 15, 0, Math.PI * 2);
-    context.fill();
-    context.restore();
-
-    return line + 40;
+    return names + 44;
   }
 
-  function drawProfileCurrentPage(context, data, profile, current, pageNumber, pageCount) {
+  function drawProfileCurrentPage(context, data, profile, current, core, pageNumber, pageCount) {
     const trace = current.colourPaper || "#14181a";
     drawExportPageBase(context, pageNumber, profile.playerName, trace, pageCount);
     let y = drawExportHeading(
@@ -847,25 +893,35 @@
       current.name.toUpperCase(),
       current.axis,
       trace,
+      true,
     );
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
     const labels = data.results.labels;
-    y += 30;
-    y = drawSpectrum(context, EXPORT_MARGIN, y, width, current, trace, {
-      min: profile.scaleMin,
-      max: profile.scaleMax,
-    });
 
+    // The finding under the heading, the line under the finding, both names
+    // under the line: the order the report reads them in.
+    y += 8;
     drawExportText(
       context,
-      `${current.pole.name.toUpperCase()} · ${Math.abs(current.magnitude).toFixed(2)} ${labels.fromCentre.toUpperCase()} · ${current.magnitudeLabel.toUpperCase()}`,
+      spectrumReadout(current, labels, core.MAGNITUDE_CLEAR).toUpperCase(),
       EXPORT_MARGIN,
       y,
       width,
-      { size: 27, family: "sans", weight: 600, colour: trace, lineHeight: 36, maxLines: 1 },
+      { size: 27, family: "sans", weight: 600, colour: "#4b5457", lineHeight: 36, maxLines: 1 },
     );
-    y += 70;
+    y += 62;
+    y = drawSpectrum(
+      context,
+      EXPORT_MARGIN,
+      y,
+      width,
+      current,
+      trace,
+      { min: profile.scaleMin, max: profile.scaleMax },
+      { centreBand: core.MAGNITUDE_CLEAR, firmness: current.firmness ? current.firmness.id : "" },
+    );
+    y += 30;
 
     const block = (label, copy, maxLines) => {
       drawExportLabel(context, label, EXPORT_MARGIN, y, trace);
@@ -1795,7 +1851,7 @@
     };
 
     await capture(1, () =>
-      drawProfileOverviewPage(context, data, profile, summary, dateLabel, pageCount),
+      drawProfileOverviewPage(context, data, profile, summary, core, dateLabel, pageCount),
     );
     await capture(2, () =>
       drawProfilePhasePage(context, data, profile, summary, core, 2, pageCount),
@@ -1808,6 +1864,7 @@
           data,
           profile,
           profile.currents[index],
+          core,
           pageNumber,
           pageCount,
         ),
