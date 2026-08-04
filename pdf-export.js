@@ -453,7 +453,7 @@
       });
       drawExportText(
         context,
-        spectrumReadout(current, data.results.labels).toUpperCase(),
+        spectrumReadout(current, data.results.labels, core.intensityFor(data, current.magnitude)).toUpperCase(),
         EXPORT_MARGIN,
         y + 100,
         width,
@@ -721,8 +721,7 @@
     drawExportLabel(context, labels.observations, EXPORT_MARGIN, y, "#14181a");
     y += 58;
 
-    const returned = core.describeReturn(data, profile);
-    [summary.adaptation, returned ? data.results.returnCopy[returned] : null]
+    [summary.adaptation]
       .filter(Boolean)
       .forEach((line) => {
         y = drawExportText(context, line, EXPORT_MARGIN, y, width, {
@@ -750,11 +749,13 @@
         lineHeight: 38,
         maxLines: 1,
       });
+      // Room for the longest case — a crossing that also settled somewhere
+      // new runs to three lines, and was being cut off mid-clause.
       y = drawExportText(context, entry.copy, EXPORT_MARGIN + 300, y, width - 300, {
         size: 27,
         colour: "#262b2d",
         lineHeight: 38,
-        maxLines: 2,
+        maxLines: 4,
       });
       y += 16;
     });
@@ -874,11 +875,16 @@
     return current.situational || !current.pole ? "" : current.pole.name;
   }
 
-  function spectrumReadout(current, labels) {
+  /*
+   * One vocabulary for one quantity, as the report sets it. This said
+   * "pronounced" while the movement chapter said "strongly toward" about the
+   * same distance on the same line.
+   */
+  function spectrumReadout(current, labels, degree) {
     const distance = Math.abs(current.magnitude);
     const named = poleNameFor(current);
-    const prefix = named ? `${named} · ` : "";
-    return `${prefix}${distance.toFixed(2)} ${labels.fromCentre} · ${current.magnitudeLabel}`;
+    const reading = named ? `${degree} ${named}` : degree;
+    return `${reading} · ${distance.toFixed(2)} ${labels.fromCentre}`;
   }
 
   /*
@@ -983,7 +989,7 @@
     y += 8;
     drawExportText(
       context,
-      spectrumReadout(current, labels).toUpperCase(),
+      spectrumReadout(current, labels, core.intensityFor(data, current.magnitude)).toUpperCase(),
       EXPORT_MARGIN,
       y,
       width,

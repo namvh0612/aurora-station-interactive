@@ -486,11 +486,6 @@ window.AURORA_STATION_DATA = {
     "spectra": {
       "order": ["wood", "fire", "earth", "metal", "water"],
       "note": "Each current is one line with a name at both ends. A reading is a position on that line. Neither end is a shortage of the other, and distance from the middle is how pronounced a tendency is, never how good it is.",
-      "magnitudes": {
-        "faint": "faint",
-        "clear": "clear",
-        "pronounced": "pronounced"
-      },
       "intensities": {
         "balanced": "evenly balanced",
         "slight": "leaning slightly toward",
@@ -2356,8 +2351,10 @@ window.AURORA_STATION_DATA = {
         "usual": "You used the whole scale.",
         "frequent": "You used the ends of the scale often. The five currents read as more pronounced than they would for someone who stayed near the middle. That is a difference in how the scale was used, not in how strong the tendencies are."
       },
-      "middleNote": "You chose the midpoint frequently. Some readings land in the situational band for that reason rather than because the tendency itself is genuinely even-handed.",
-      "agreementNote": "{held} of fifteen facets held together. Where a facet's four statements disagreed, the current above it is marked accordingly."
+      "middleNote": "You chose the midpoint often. Some of the five sit near the centre of their line for that reason rather than because the tendency itself is genuinely even-handed.",
+      "agreementNote": "{held} of the fifteen facets held together, meaning their four statements pointed the same way. Where they did not, the current above them is marked accordingly.",
+      "agreementAll": "All fifteen facets held together: within each one, the four statements pointed the same way.",
+      "agreementNone": "None of the fifteen facets held together — within every one of them, the four statements pointed different ways. Read the facet lines rather than the reading above them."
     },
     "record": {
       "eyebrow": "THE RECORD",
@@ -2389,15 +2386,20 @@ window.AURORA_STATION_DATA = {
     },
     "overviewLabel": "The five currents at a glance",
     "shiftIntro": "The same five lines, read separately across three stretches of the watch. The instrument holds one scale throughout; only the distance along each axis changes.",
-    "shiftStableCopy": "Little moved. Across the three stretches no current shifted far enough to read as a change, which suggests your approach was not especially sensitive to how difficult the night became.",
+    "shiftLede": {
+      "none": "None of the five moved far enough to read as a change. That is a finding rather than an absence of one: through the worst of the night you were reading much as you had been at the start of it, which suggests your approach is not especially sensitive to how hard conditions become.",
+      "one": "One of the five moved far enough to read as a change. The other four held their position through the worst of the night.",
+      "some": "{count} of the five moved far enough to read as a change. The rest held their position through the worst of the night.",
+      "all": "All five moved far enough to read as a change. Nothing you were reading at the start of the watch was still reading the same way at the worst of it, which is a wide response to pressure rather than a deep one."
+    },
     "movementHeading": "Line by line",
     "movementNote": "Each line named where it sat, where the worst of the night put it, and where it was by the handover. A line that did not move is a finding as much as one that swung.",
     "movementCopy": {
       "openBalanced": "You began the night evenly balanced between {low} and {high} — neither one describing you more than the other.",
       "open": "You began the night {fromIntensity} {from}: {fromGloss}.",
-      "heldSteady": "Pressure did not move it. You were reading the same way through the worst of the night and again at the handover.",
+      "heldSteady": "Pressure did not move it.",
       "deepened": "Under pressure it went further that way — {toIntensity} {to} by the hardest hours. {recoveryClause}",
-      "eased": "Under pressure it eased back, still {to} but {toIntensity} it rather than the reading you started with. {recoveryClause}",
+      "eased": "Under pressure it eased back toward the middle — still {to}, but less firmly so by the hardest hours. {recoveryClause}",
       "crossed": "Under pressure it changed sides, reading {toIntensity} {to}: {toGloss}. That is the clearest kind of shift, because it is not a question of how much but of which of the two was describing you. {recoveryClause}",
       "crossedFromBalance": "Under pressure the balance broke, and you read {toIntensity} {to}: {toGloss}. {recoveryClause}",
       "toBalance": "Under pressure it came to rest evenly between the two, which reads as {from} being available rather than automatic. {recoveryClause}",
@@ -2405,11 +2407,6 @@ window.AURORA_STATION_DATA = {
       "stayed": "By the handover you were still reading that way.",
       "settled": "By the handover it had settled {afterIntensity} {after}: {afterGloss}. That is neither of the two readings before it.",
       "settledBalanced": "By the handover it had come to rest evenly between {low} and {high}."
-    },
-    "returnCopy": {
-      "returned": "By the closing Acts the pattern had come back towards the one you began with.",
-      "retained": "By the closing Acts the pattern still sat nearer the pressure reading than the one you began with.",
-      "new": "By the closing Acts the pattern had settled somewhere that matches neither the opening nor the worst of it."
     },
     "detailIntro": "Each current read in full: what it was doing, what it is likely to give you, what it can cost, and one question worth sitting with.",
     "relationsIntro": "The five currents do not sit apart from one another. Each one creates conditions the next needs, and each one restrains another when that one runs long — read here for all five, in the writing of the end each of yours was read at. None of it is a compatibility rating, and none of it says who to work with.",
@@ -2465,15 +2462,6 @@ window.AURORA_STATION_DATA = {
     },
     "restartConfirm": "Begin a new watch?\n\nThis clears the watchkeeper name, every recorded observation, the story and this report. Your sound setting is kept.",
     "privacy": "Your name and your responses stay in this browser. Aurora Station has no backend and sends nothing anywhere.",
-    "summaryTemplates": {
-      "adaptationShift": "Reading the routine stretch against the worst of the night, {pressure} became more visible in your responses: {reading}. This reads as an adjustment rather than a personality change—the kind of shift that shows what you lean on when the ordinary approach stops being enough. {recoveryClause}",
-      "adaptationRecede": "Reading the routine stretch against the worst of the night, {pressure} receded furthest from your responses: {reading}. This reads as an adjustment rather than a personality change—the kind of shift that shows what gives way first when the ordinary approach stops being enough. {recoveryClause}",
-      "adaptationCrossed": "Between the routine stretch and the worst of the night, your {current} changed ends. It read as {from} while the watch was ordinary and as {to} once it was not: {reading}. This is an adjustment rather than a personality change — it is the clearest kind, because it is not a matter of degree but of which end of the line was describing you. {recoveryClause}",
-      "adaptationStable": "Pressure did not move you far. Through the worst of the night your responses stayed close to the pattern you began with, and they stayed close to it again once the situation became bounded. That steadiness is a finding in itself: it suggests your approach is not especially reactive to how difficult conditions become, for better and for worse.",
-      "recoveryReturned": "Once the pressure eased, the pattern came back towards where it started.",
-      "recoveryRetained": "Once the pressure eased, the adjustment mostly stayed.",
-      "recoveryNew": "Once the pressure eased, the pattern settled somewhere new."
-    },
     "reflectionPrompt": "When the next situation stops behaving predictably, which of these do you want to reach for first, and which one would you rather not lose while you do?"
   },
   "observation": {

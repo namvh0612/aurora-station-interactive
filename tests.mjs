@@ -577,7 +577,7 @@ check("the summary describes patterns, never a type or a verdict", () => {
      */
     assert.equal("overall" in summary, false, "the summary still names a lead");
     const words = summary.adaptation.trim().split(/\s+/).length;
-    assert.ok(words >= 40 && words <= 110, `adaptation is ${words} words`);
+    assert.ok(words >= 15 && words <= 60, `adaptation is ${words} words`);
     assert.doesNotMatch(summary.adaptation, /\byour type\b/i);
     assert.doesNotMatch(summary.adaptation, /\bstrength|weakness\b/i);
     assert.doesNotMatch(summary.adaptation, /\bsuccessful|unsuccessful\b/i);
@@ -586,14 +586,14 @@ check("the summary describes patterns, never a type or a verdict", () => {
   });
 });
 
-check("the pressure observation names which way the contribution moved", () => {
+check("the movement chapter never says a reading rose or receded", () => {
   /*
-   * The shifts are sorted by size and the sign was thrown away, so the largest
-   * mover was always described as having "became more visible" — including
-   * when it had fallen. Across three thousand simulated watches, half of them
-   * had a fall at the top of that list, so half of all reports asserted the
-   * opposite of the reader's own responses. `compareCurrents` had been computing
-   * the direction all along and the summary never read it.
+   * A bipolar line has no more and no less. A score that falls has moved
+   * toward the other named end, and calling that "receded furthest from your
+   * responses" describes a quantity going away — which is what the report
+   * spent five sections explaining these readings are not. Worse, the sentence
+   * sat directly above the per-current line saying the opposite: Fire read as
+   * having "receded" over a line reading "went further that way".
    */
   const swing = (early, late) =>
     answerAll((index, item) => {
@@ -604,40 +604,49 @@ check("the pressure observation names which way the contribution moved", () => {
       return item.reverse ? 6 - want : want;
     });
 
-  // 4 -> 5 and 5 -> 4 move without passing the middle, so they are described
-  // as movement along the line rather than as a change of end.
   const fell = core.scoreProfile(data, swing(5, 4));
   const rose = core.scoreProfile(data, swing(4, 5));
+  const crossed = core.scoreProfile(data, swing(5, 1));
   const reading = (profile) => {
-    const phase = (id) => profile.phases.find((entry) => entry.id === id);
-    const steward = (id) => phase(id).currents.find((role) => role.id === "earth").score;
-    return steward("pressure") - steward("baseline");
+    const at = (id) => profile.phases.find((entry) => entry.id === id).currents.find((c) => c.id === "earth").score;
+    return at("pressure") - at("baseline");
   };
+  assert.ok(reading(fell) < 0, "the probe did not make Earth fall");
+  assert.ok(reading(rose) > 0, "the probe did not make Earth rise");
 
-  assert.ok(reading(fell) < 0, "the probe did not make the Steward fall");
-  assert.ok(reading(rose) > 0, "the probe did not make the Steward rise");
-
-  const fallText = core.summariseProfile(data, fell).adaptation;
-  const riseText = core.summariseProfile(data, rose).adaptation;
-  assert.match(fallText, /receded/, "a contribution that fell is described as rising");
-  assert.doesNotMatch(fallText, /became more visible/);
-  assert.match(riseText, /became more visible/, "a contribution that rose is described as falling");
-  assert.doesNotMatch(riseText, /receded/);
-
-  // Both name the two stretches being compared, so the sentence cannot be read
-  // against whichever tab of the instrument happens to be open above it.
-  [fallText, riseText].forEach((text) => assert.match(text, /routine stretch against the worst/));
+  const banned = /receded|became more visible|more of it|less of it/i;
+  [fell, rose, crossed].forEach((profile) => {
+    assert.doesNotMatch(core.summariseProfile(data, profile).adaptation, banned);
+    core.movementPerCurrent(data, profile).forEach((entry) => {
+      assert.doesNotMatch(entry.copy, banned, `${entry.id} describes a quantity`);
+    });
+  });
 
   /*
-   * A reading that passes the middle of the scale changes which end of the line
-   * describes the reader, which is a stronger finding than a distance and is
-   * reported as one.
+   * What each of the five did is said by the line for that current, and the
+   * lede over them only counts. Naming the biggest mover twice, in two
+   * vocabularies, is how the two came to disagree.
    */
-  const crossed = core.summariseProfile(data, core.scoreProfile(data, swing(5, 1))).adaptation;
-  assert.match(crossed, /changed ends/, "a crossing is reported as a distance");
-  assert.match(crossed, /The Cropland/);
-  assert.match(crossed, /The Rampart/);
-  assert.doesNotMatch(crossed, /receded|became more visible/);
+  const moved = (profile) => core.movementPerCurrent(data, profile).filter((e) => e.moved).length;
+  [fell, rose, crossed].forEach((profile) => {
+    const lede = core.summariseProfile(data, profile).adaptation;
+    const count = moved(profile);
+    const said = count === 0 ? /^None/ : count === 1 ? /^One/ : count === 5 ? /^All/ : new RegExp(`^${count}\\b`);
+    assert.match(lede, said, `${count} moved, and the lede does not say so`);
+    data.assessment.spectra.order.forEach((id) => {
+      const current = data.assessment.spectra.currents[id];
+      assert.equal(lede.includes(current.name), false, `the lede names ${id}`);
+      ["low", "high"].forEach((end) =>
+        assert.equal(lede.includes(current.poles[end].name), false, `the lede names a pole`),
+      );
+    });
+  });
+
+  // A crossing is still reported as a crossing, on the line it happened to.
+  const earth = core.movementPerCurrent(data, crossed).find((entry) => entry.id === "earth");
+  assert.match(earth.copy, /changed sides/, "a crossing is reported as a distance");
+  assert.match(earth.copy, /The Cropland/);
+  assert.match(earth.copy, /The Rampart/);
 });
 
 /* ---------------------------------------------------------- aurora state */
@@ -2120,15 +2129,17 @@ check("firmness and distance are separate readings, and both tile", () => {
   [3.01, 3.6, 5].forEach((score) =>
     assert.equal(core.poleFor(definition, score).id, definition.poles.high.id, `${score} is not high`),
   );
-  const labels = data.assessment.spectra.magnitudes;
-  assert.deepEqual(
-    [0, 0.5, 1.4].map((value) => core.magnitudeLabelFor(data, value)),
-    [labels.faint, labels.clear, labels.pronounced],
-  );
-  assert.deepEqual(
-    [-0.1, -0.6, -2].map((value) => core.magnitudeLabelFor(data, value)),
-    [labels.faint, labels.clear, labels.pronounced],
-    "distance is read the same on both sides of the middle",
+  /*
+   * One word-set for distance, everywhere. There were two — faint / clear /
+   * pronounced in the readout and the degree words in the movement chapter —
+   * describing the same measurement on the same line, which left a reader
+   * matching them up. The retired one is gone from the data, not merely
+   * unprinted.
+   */
+  assert.equal("magnitudes" in data.assessment.spectra, false, "two word-sets for one distance");
+  assert.equal(typeof core.magnitudeLabelFor, "undefined");
+  [resultsSource, pdfSource].forEach((source) =>
+    assert.doesNotMatch(source, /magnitudeLabel/, "a surface still prints the retired word-set"),
   );
 });
 
@@ -2523,6 +2534,47 @@ check("the export advances by what it drew, not by a guess", () => {
    */
   assert.doesNotMatch(resultsSource, /block\.scrollIntoView/);
   assert.match(resultsSource, /\(hover: hover\)/);
+});
+
+check("the report never mixes a numeral and a spelled number in one phrase", () => {
+  /*
+   * "15 of fifteen facets held together" and "3 of the five moved" both read
+   * as a slip rather than a style. Counts the reader is meant to take in as
+   * prose are spelled out; the ones that are measurements — a distance from
+   * centre, a page number — stay as figures.
+   */
+  const phrases = [];
+  [
+    core.responseStyleFor(data, answerAll(() => 5)),
+    core.responseStyleFor(data, answerAll((index) => (index % 5) + 1)),
+  ].forEach((style) => phrases.push(style.agreement.copy));
+  [
+    answerAll(() => 3),
+    answerAll((index) => (index % 5) + 1),
+    answerAll((index, item) =>
+      item.domain === "conscientiousness" && item.contextPhase === "pressure"
+        ? item.reverse
+          ? 1
+          : 5
+        : 3,
+    ),
+  ].forEach((state) => {
+    phrases.push(core.summariseProfile(data, core.scoreProfile(data, state)).adaptation);
+  });
+
+  const words = "one|two|three|four|five|six|ten|fifteen|sixty";
+  phrases.forEach((phrase) => {
+    assert.doesNotMatch(
+      phrase,
+      new RegExp(`\\b\\d+\\b[^.]{0,20}\\b(${words})\\b`, "i"),
+      `numeral beside a spelled number: ${phrase}`,
+    );
+    assert.doesNotMatch(
+      phrase,
+      new RegExp(`\\b(${words})\\b[^.]{0,20}\\b\\d+\\b`, "i"),
+      `spelled number beside a numeral: ${phrase}`,
+    );
+  });
 });
 
 check("calibration shows the shape it is describing", () => {

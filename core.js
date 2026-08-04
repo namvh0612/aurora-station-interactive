@@ -728,13 +728,19 @@
     return Number.isFinite(score) ? score - CENTRE : null;
   }
 
-  function magnitudeLabelFor(data, magnitude) {
-    const labels = data.assessment.spectra.magnitudes;
-    const size = Math.abs(magnitude);
-    if (size >= MAGNITUDE_PRONOUNCED) {
-      return labels.pronounced;
-    }
-    return size >= MAGNITUDE_CLEAR ? labels.clear : labels.faint;
+  /*
+   * A count the reader takes in as prose, spelled. Measurements — a distance
+   * from centre, a page number — stay as figures; it is mixing the two inside
+   * one phrase that reads as a slip, as "15 of fifteen facets held together"
+   * and "3 of the five moved" both did.
+   */
+  const NUMBER_WORDS = [
+    "none", "one", "two", "three", "four", "five", "six", "seven",
+    "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+  ];
+
+  function spellNumber(value) {
+    return NUMBER_WORDS[value] || String(value);
   }
 
   function spread(values) {
@@ -852,7 +858,6 @@
            */
           situational: bandedPoleFor(data, current, domain.score) === current.poles.middle,
           magnitude,
-          magnitudeLabel: magnitudeLabelFor(data, magnitude),
           firmness: firmnessFor(data, state, domain.code),
           divergence: divergenceFor(data, domain),
           guidance: data.assessment.domains[domain.code].guidance[domain.band],
@@ -936,7 +941,16 @@
       agreement: {
         held,
         total: facetNames.length,
-        copy: copy.agreementNote.replace("{held}", String(held)),
+        /*
+         * "15 of fifteen facets held together" mixed a numeral with a word in
+         * one phrase, and both ends of the range read better said outright.
+         */
+        copy:
+          held === facetNames.length
+            ? copy.agreementAll
+            : held === 0
+              ? copy.agreementNone
+              : copy.agreementNote.replace("{held}", spellNumber(held)),
       },
     };
   }
@@ -1222,8 +1236,15 @@
     if (!Number.isFinite(toBaseline) || !Number.isFinite(toPressure)) {
       return null;
     }
+    /*
+     * The three answers are the three keys the copy is written under. This
+     * returned "new-balance" for the equidistant case while the copy was
+     * filed under "new", so a record that settled between its two earlier
+     * readings — which is common — had its recovery sentence silently drop out
+     * of the report rather than fail visibly.
+     */
     if (Math.abs(toBaseline - toPressure) < thresholds.ignore) {
-      return "new-balance";
+      return "new";
     }
     return toBaseline < toPressure ? "returned" : "retained";
   }
@@ -1441,62 +1462,44 @@
     });
   }
 
+  /*
+   * One sentence over the five lines: how many the night moved.
+   *
+   * This used to be a paragraph naming the reading that travelled furthest and
+   * saying it "became more visible" or "receded furthest" — the vocabulary of a
+   * scale with a top, printed directly above five lines that say a reading is a
+   * position between two named ends. On a bipolar line a falling score is not a
+   * receding tendency, it is a move toward the other end, so the paragraph
+   * routinely contradicted the line under it. It also ended with the same
+   * sentence about recovery that the next paragraph then repeated.
+   *
+   * The five lines carry the findings. This says how many there are.
+   */
+  function movementLede(data, profile) {
+    const copy = data.results.shiftLede;
+    const moved = movementPerCurrent(data, profile).filter((entry) => entry.moved).length;
+    if (moved === 0) {
+      return copy.none;
+    }
+    if (moved === profile.currents.length) {
+      return copy.all;
+    }
+    // Spelled out. "3 of the five moved" mixes a numeral with a word in one
+    // phrase, which is the same fault the facet count had.
+    const word = spellNumber(moved);
+    return (moved === 1 ? copy.one : copy.some).replace(
+      "{count}",
+      word.charAt(0).toUpperCase() + word.slice(1),
+    );
+  }
+
   function summariseProfile(data, profile) {
     if (!profile) {
       return null;
     }
-    const copy = data.results.summaryTemplates;
-    const baseline = phaseByld(profile, "baseline");
-    const pressure = phaseByld(profile, "pressure");
-    const recovery = phaseByld(profile, "recovery");
-
-    const pressureComparison = compareCurrents(data, baseline, pressure);
-    const returnKind = describeReturn(data, profile);
-    const recoveryClause =
-      returnKind === "returned"
-        ? copy.recoveryReturned
-        : returnKind === "retained"
-          ? copy.recoveryRetained
-          : copy.recoveryNew;
-
-    /*
-     * The shifts are sorted by size, so the first is the contribution that
-     * moved furthest — which is the finding, whichever way it went. Its
-     * direction decides how it is described. Saying "became more visible" of a
-     * contribution that fell states the opposite of the reader's own responses,
-     * and half of all watches have a fall at the top of this list.
-     */
-    const largestShift = pressureComparison.shifts[0];
-    /*
-     * A crossing is a stronger finding than a delta: it changes which end of
-     * the line describes the reader, not merely how far along it they sit. It
-     * is reported by name when the reading passes the middle of the scale in
-     * either direction.
-     */
-    const crossing = largestShift ? crossingFor(data, baseline, pressure, largestShift.id) : null;
-    /*
-     * The pole copy is written as whole sentences, and every template that
-     * quotes one already closes the clause itself. Inserted raw, that printed
-     * "…the choosing is not automatic.. This reads as an adjustment".
-     */
-    const clause = (look) => (look || "").replace(/\.\s*$/, "");
-    const adaptation = pressureComparison.stable
-      ? copy.adaptationStable
-      : crossing
-        ? copy.adaptationCrossed
-            .replace("{current}", crossing.current.name)
-            .replace("{from}", crossing.from.name)
-            .replace("{to}", crossing.to.name)
-            .replace("{reading}", clause(crossing.to.look))
-            .replace("{recoveryClause}", recoveryClause)
-        : (largestShift.direction === "rose" ? copy.adaptationShift : copy.adaptationRecede)
-            .replace("{pressure}", largestShift.name)
-            .replace("{reading}", clause(largestShift.pole ? largestShift.pole.look : ""))
-            .replace("{recoveryClause}", recoveryClause);
-
     return {
-      adaptation,
-      recovery: returnKind,
+      adaptation: movementLede(data, profile),
+      recovery: describeReturn(data, profile),
       reflection: data.results.reflectionPrompt,
     };
   }
@@ -1531,7 +1534,7 @@
     divergenceFor,
     firmnessFor,
     magnitudeFor,
-    magnitudeLabelFor,
+
     poleFor,
     bandedPoleFor,
     situationalReach,

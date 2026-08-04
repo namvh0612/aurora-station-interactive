@@ -140,11 +140,20 @@
     return current.situational || !current.pole ? "" : current.pole.name;
   }
 
+  /*
+   * One vocabulary for one quantity. The readout said "pronounced" while
+   * Section II said "strongly toward" about the same distance on the same
+   * line, which is two word-sets for one measurement and leaves a reader
+   * matching them up. The degree words win: they are the ones that read as a
+   * sentence, and they carry the direction with them.
+   */
   function spectrumReadout(current) {
     const node = el("p", "spectrum-readout");
     const distance = Math.abs(current.magnitude);
+    const degree = core.intensityFor(data, current.magnitude);
     const named = poleNameFor(current);
-    node.textContent = `${named ? `${named} · ` : ""}${distance.toFixed(2)} ${LABELS.fromCentre} · ${current.magnitudeLabel}`;
+    const reading = named ? `${degree} ${named}` : degree;
+    node.textContent = `${reading} · ${distance.toFixed(2)} ${LABELS.fromCentre}`;
     return node;
   }
 
@@ -498,15 +507,14 @@
     notes.appendChild(el("p", "mark", LABELS.observations));
 
     const observations = [];
-    if (intoPressure.stable && outOfPressure.stable) {
-      observations.push(COPY.shiftStableCopy);
-    } else {
-      observations.push(summary.adaptation);
-    }
-    const returned = core.describeReturn(data, profile);
-    if (returned && COPY.returnCopy[returned]) {
-      observations.push(COPY.returnCopy[returned]);
-    }
+    /*
+     * One sentence, counting. It used to be a paragraph naming the biggest
+     * mover in the vocabulary of a scale with a top, followed by a second
+     * sentence about recovery that the paragraph's own last clause had already
+     * said. Both are covered, per current and without contradiction, by the
+     * five lines below.
+     */
+    observations.push(summary.adaptation);
     observations.forEach((copy) => {
       notes.appendChild(el("p", "chapter-intro", copy));
     });
