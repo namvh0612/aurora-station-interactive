@@ -1853,20 +1853,87 @@ body.report .art-grain {
   border-top: var(--rule) solid var(--paper-line);
 }
 
+/*
+ * Composed like a chapter and aligned with them, but ruled off underneath
+ * rather than titled with a numeral: it precedes the six sections instead of
+ * being the first of them.
+ */
 .orientation {
-  max-width: var(--measure);
-  margin: 0 auto 4rem;
   padding-bottom: 3rem;
-  border-bottom: var(--rule) solid var(--paper-line);
+  border-bottom: 2px solid var(--ink);
 }
 
-.orientation p:not(.mark) {
-  margin-top: 1em;
+/* Two columns of standing copy, so the notice reads as a masthead note and
+ * not as the report's opening argument. */
+.orientation-body {
+  columns: 2 var(--measure);
+  column-gap: 3rem;
+}
+
+.orientation-body p {
+  margin-bottom: 1em;
+  break-inside: avoid;
+}
+
+/*
+ * The switcher for the five currents. One row of names, each in its own
+ * element colour, the selected one underscored in that colour — the same
+ * grammar as the chapter rail above it, one level down and scrolling
+ * sideways on a phone rather than wrapping into three rows.
+ */
+.current-rail {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  margin-top: 2.5rem;
+  border-bottom: var(--rule) solid var(--paper-line);
+  scrollbar-width: none;
+}
+
+.current-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.current-tab {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem 1.1rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--ink-dim);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.current-tab-name {
+  font-family: var(--type-operational);
+  font-size: var(--step-mark);
+  letter-spacing: 0.1em;
+}
+
+.current-tab-pole {
+  font-size: var(--step-note);
+  color: var(--ink-faint);
+}
+
+.current-tab[aria-selected="true"] {
+  border-bottom-color: var(--trace, var(--ink));
+  color: var(--trace, var(--ink));
+}
+
+.current-tab[aria-selected="true"] .current-tab-pole {
+  color: var(--ink-dim);
+}
+
+.current-tab:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
 }
 
 .current {
-  padding: 4rem 0;
-  border-bottom: var(--rule) solid var(--paper-line);
+  padding: 3rem 0 4rem;
 }
 
 .current-head {
@@ -2005,6 +2072,11 @@ body.report .action-quiet {
   /* One column, so the label sits above its copy rather than beside it. */
   .guidance-block {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* And the notice reads down the page rather than across it. */
+  .orientation-body {
+    columns: auto;
   }
 
   .guidance-block > *,

@@ -2097,6 +2097,39 @@ check("firmness and distance are separate readings, and both tile", () => {
   );
 });
 
+check("the five currents are switched inside their own section", () => {
+  /*
+   * Five full pages of writing stacked in one chapter is more than a reader
+   * will scroll through to reach the fifth. They are switched rather than
+   * stacked — but inside Section III, not promoted to five chapters of their
+   * own, because they are one section's worth of material.
+   */
+  assert.match(resultsSource, /function buildDetailSwitcher/);
+  assert.match(resultsSource, /current-rail/);
+  assert.match(resultsSource, /"tablist"/);
+  // A tablist a keyboard cannot cross is four unreachable panels.
+  assert.match(resultsSource, /ArrowRight/);
+  assert.match(resultsSource, /aria-controls/);
+  // Still six chapters, and the currents are not among them.
+  assert.equal(data.results.chapters.length, 6);
+  assert.equal(
+    data.results.chapters.some((entry) => data.assessment.spectra.order.includes(entry.id)),
+    false,
+    "a current has been promoted to a chapter",
+  );
+
+  /*
+   * The standing notice is composed like a section and aligned with them, but
+   * it is not one: it carries no numeral and it does not join the pager, which
+   * would make it chapter zero.
+   */
+  assert.match(resultsSource, /"chapter orientation"/);
+  assert.match(resultsSource, /node\.id = "orientation"/);
+  assert.doesNotMatch(JSON.stringify(data.results.orientation), /section|chapter/i);
+  assert.ok(data.results.orientation.eyebrow);
+  assert.ok(data.results.orientation.title);
+});
+
 check("no end is named for a reading that sits in the middle", () => {
   /*
    * `poleFor` has to answer for every score, so a reading of exactly 3.00 is

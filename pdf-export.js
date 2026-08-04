@@ -658,7 +658,8 @@
       const x = EXPORT_MARGIN + index * (columnWidth + 40);
       const lead = furthest(phase);
       drawExportLabel(context, label, x, y, "#14181a");
-      drawExportText(context, lead && lead.pole ? lead.pole.name : "—", x, y + 74, columnWidth, {
+      const named = lead ? poleNameFor(lead, core.MAGNITUDE_CLEAR) : "";
+      drawExportText(context, named || "—", x, y + 74, columnWidth, {
         size: 40,
         colour: lead ? lead.colourPaper : "#14181a",
         lineHeight: 50,
@@ -808,10 +809,15 @@
    * put a pole against a distance of 0.04, which claims a side the responses
    * did not take. The report writes the same line the same way.
    */
+  function poleNameFor(current, clear) {
+    const distance = Math.abs(current.magnitude);
+    return distance >= clear && current.pole ? current.pole.name : "";
+  }
+
   function spectrumReadout(current, labels, clear) {
     const distance = Math.abs(current.magnitude);
-    const named = distance >= clear && current.pole ? `${current.pole.name} · ` : "";
-    return `${named}${distance.toFixed(2)} ${labels.fromCentre} · ${current.magnitudeLabel}`;
+    const named = poleNameFor(current, clear);
+    return `${named ? `${named} · ` : ""}${distance.toFixed(2)} ${labels.fromCentre} · ${current.magnitudeLabel}`;
   }
 
   /*
@@ -989,7 +995,7 @@
    * It closes the report's own loop: the five pages before it are only as firm
    * as the answers they were built from.
    */
-  function drawProfileCalibrationPage(context, data, profile, pageNumber, pageCount) {
+  function drawProfileCalibrationPage(context, data, profile, core, pageNumber, pageCount) {
     const trace = "#14181a";
     drawExportPageBase(context, pageNumber, profile.playerName, trace, pageCount);
     const copy = data.results.calibration;
@@ -1049,7 +1055,7 @@
         lineHeight: 40,
         maxLines: 1,
       });
-      drawExportText(context, current.pole.name, EXPORT_MARGIN + 420, y, 700, {
+      drawExportText(context, poleNameFor(current, core.MAGNITUDE_CLEAR) || "—", EXPORT_MARGIN + 420, y, 700, {
         size: 28,
         colour: "#5c6568",
         lineHeight: 40,
@@ -1871,7 +1877,7 @@
       );
     }
     await capture(pageCount - 2, () =>
-      drawProfileCalibrationPage(context, data, profile, pageCount - 2, pageCount),
+      drawProfileCalibrationPage(context, data, profile, core, pageCount - 2, pageCount),
     );
     await capture(pageCount - 1, () =>
       drawProfileRelationsPage(context, data, profile, summary, core, pageCount - 1, pageCount),

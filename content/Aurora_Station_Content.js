@@ -2179,7 +2179,7 @@ window.AURORA_STATION_DATA = {
       }
     ],
     "orientation": {
-      "eyebrow": "BEFORE YOU READ",
+      "eyebrow": "THE NOTICE",
       "title": "How to read this record",
       "body": "Five currents, each drawn as a line with a name at both ends. Your reading is a position on that line rather than a score out of five: neither end is a shortage of the other, and sitting far from the middle is how pronounced a tendency is, never how good it is.\n\nNothing here is a type. The five readings are separate, they do not total, and no combination of them has a name.\n\nWhere a reading is uncertain, the record says so rather than rounding it off."
     },

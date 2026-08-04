@@ -131,11 +131,17 @@
    * Wildwood" against a distance of 0.04, which claims a side the responses
    * did not take.
    */
+  function poleNameFor(current) {
+    return Math.abs(current.magnitude) >= core.MAGNITUDE_CLEAR && current.pole
+      ? current.pole.name
+      : "";
+  }
+
   function spectrumReadout(current) {
     const node = el("p", "spectrum-readout");
     const distance = Math.abs(current.magnitude);
-    const named = distance >= core.MAGNITUDE_CLEAR ? `${current.pole.name} · ` : "";
-    node.textContent = `${named}${distance.toFixed(2)} ${LABELS.fromCentre} · ${current.magnitudeLabel}`;
+    const named = poleNameFor(current);
+    node.textContent = `${named ? `${named} · ` : ""}${distance.toFixed(2)} ${LABELS.fromCentre} · ${current.magnitudeLabel}`;
     return node;
   }
 
@@ -501,12 +507,82 @@
 
   /* ------------------------------------------------ IV: reading each current */
 
+  /*
+   * Five full pages of writing in one chapter is more than a reader will scroll
+   * through to reach the fifth. The five are switched rather than stacked, on a
+   * rail that names each line in its own colour so the choice is the reading
+   * rather than a number — and everything stays inside Section III, because
+   * these are one section's worth of material and not five chapters.
+   */
+  function buildDetailSwitcher(pages) {
+    const rail = el("div", "current-rail");
+    rail.setAttribute("role", "tablist");
+    rail.setAttribute("aria-label", chapter("detail").title);
+
+    const tabs = pages.map(({ current, page }, index) => {
+      const tab = el("button", "current-tab");
+      tab.type = "button";
+      tab.id = `tab-current-${current.id}`;
+      tab.setAttribute("role", "tab");
+      tab.setAttribute("aria-controls", page.id);
+      tab.style.setProperty("--trace", current.colourPaper);
+      tab.append(
+        el("span", "current-tab-name", current.name.toUpperCase()),
+        // Blank inside the middle band, for the same reason the readout is.
+        el("span", "current-tab-pole", poleNameFor(current)),
+      );
+      page.setAttribute("role", "tabpanel");
+      page.setAttribute("aria-labelledby", tab.id);
+      page.tabIndex = -1;
+      tab.addEventListener("click", () => show(index));
+      rail.appendChild(tab);
+      return tab;
+    });
+
+    function show(index, options) {
+      const to = Math.max(0, Math.min(index, pages.length - 1));
+      pages.forEach(({ page }, at) => {
+        page.hidden = at !== to;
+      });
+      tabs.forEach((tab, at) => {
+        tab.setAttribute("aria-selected", String(at === to));
+        tab.tabIndex = at === to ? 0 : -1;
+      });
+      if (options && options.silent) {
+        return;
+      }
+      say(`${pages[to].current.name}. ${to + 1} of ${pages.length}.`);
+    }
+
+    /*
+     * Arrow keys move between the five, as they do on the chapter rail. The
+     * switcher is a tablist, and a tablist a keyboard cannot cross is a set of
+     * five panels four of which are unreachable.
+     */
+    rail.addEventListener("keydown", (event) => {
+      const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+      if (!step) {
+        return;
+      }
+      event.preventDefault();
+      const at = tabs.indexOf(document.activeElement);
+      const to = (Math.max(0, at) + step + tabs.length) % tabs.length;
+      show(to);
+      tabs[to].focus();
+    });
+
+    show(0, { silent: true });
+    return rail;
+  }
+
   function buildDetailChapter() {
     const { node, body } = section("detail");
     body.appendChild(el("p", "chapter-intro", COPY.detailIntro));
 
+    const pages = [];
     profile.currents.forEach((current) => {
       const page = el("article", "current");
+      page.id = `current-${current.id}`;
       page.style.setProperty("--trace", current.colourPaper);
 
       const head = el("div", "current-head");
@@ -560,9 +636,10 @@
        * thing twice, once without the other side of the relationship.
        */
       say(LABELS.tryThis, current.guidance.reflection);
-      body.appendChild(page);
+      pages.push({ current, page });
     });
 
+    body.append(buildDetailSwitcher(pages), ...pages.map((entry) => entry.page));
     return node;
   }
 
@@ -613,7 +690,10 @@
       const block = el("article", "relations-block");
       block.style.setProperty("--trace", current.colourPaper);
       block.append(
-        el("h3", "current-title", `${current.name.toUpperCase()} · ${current.pole.name}`),
+        el("h3", "current-title", current.name.toUpperCase()),
+        // The end and the distance, written the way Section I writes them, so
+        // no chapter claims a pole another chapter says was not taken.
+        spectrumReadout(current),
         el("p", "mark", `${labels.supports} ${feeds ? feeds.name : ""} · ${labels.checks} ${checks ? checks.name : ""}`),
         el("p", "", current.pole.supports),
         el("p", "", current.pole.checks),
@@ -678,7 +758,7 @@
       row.append(
         el("p", "reading-name", current.name),
         el("p", "facet-value", current.firmness ? current.firmness.id : "—"),
-        el("p", "", current.pole.name),
+        el("p", "", poleNameFor(current) || "—"),
       );
       index.appendChild(row);
     });
@@ -789,13 +869,24 @@
    * outside the pager so it is read once, before the first chapter, and it
    * interprets no data — every reading belongs to the chapter that owns it.
    */
+  /*
+   * The standing notice, set as a named section rather than as loose copy
+   * above the pager. It is not chapter zero — it carries no numeral, and it
+   * stays on screen whichever chapter is open — but it is composed like one,
+   * so its eyebrow and title line up with every heading below it instead of
+   * sitting centred in a column of their own.
+   */
   function buildOrientation() {
     const copy = COPY.orientation;
-    const node = el("section", "orientation");
-    node.append(el("p", "mark", copy.eyebrow), el("h2", "chapter-title", copy.title));
+    const node = el("section", "chapter orientation");
+    node.id = "orientation";
+    const head = el("div", "chapter-head");
+    head.append(el("p", "mark", copy.eyebrow), el("h2", "chapter-title", copy.title));
+    const body = el("div", "chapter-body orientation-body");
     core.splitParagraphs(copy.body).forEach((line) => {
-      node.appendChild(el("p", "", line));
+      body.appendChild(el("p", "", line));
     });
+    node.append(head, body);
     return node;
   }
 
