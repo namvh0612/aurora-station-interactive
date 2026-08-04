@@ -140,10 +140,10 @@
     if (!item) {
       return "var(--signal)";
     }
-    const roleId = data.assessment.roleOrder.find(
-      (id) => data.assessment.roles[id].domain === item.domain,
+    const currentId = data.assessment.spectra.order.find(
+      (id) => data.assessment.spectra.currents[id].domain === item.domain,
     );
-    return roleId ? data.assessment.roles[roleId].colourNight : "var(--signal)";
+    return currentId ? data.assessment.spectra.currents[currentId].colourNight : "var(--signal)";
   }
 
   function persist() {

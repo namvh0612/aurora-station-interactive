@@ -1,9 +1,16 @@
 (function attachAuroraPdf(globalScope) {
   "use strict";
 
+  /*
+   * The export's face has no dash glyphs, so every dash becomes a hyphen. It
+   * has to take the surrounding spacing with it: an unspaced em dash set as an
+   * unspaced hyphen printed "a personality change-the kind of shift", which
+   * reads as a compound word rather than a break in the sentence. A dash that
+   * was already spaced keeps its single spaces rather than gaining more.
+   */
   function cleanText(value) {
     return String(value || "")
-      .replace(/[\u2010\u2011\u2012\u2013\u2014]/g, "-")
+      .replace(/[ \t]*[\u2010\u2011\u2012\u2013\u2014][ \t]*/g, " - ")
       .trim();
   }
 
@@ -402,7 +409,7 @@
 
     drawExportLabel(context, "Most available across the watch", EXPORT_MARGIN, y, "#14181a");
     y += 62;
-    y = drawExportText(context, summary.overall.label, EXPORT_MARGIN, y, width, {
+    y = drawExportText(context, data.results.heading, EXPORT_MARGIN, y, width, {
       size: 62,
       colour: "#14181a",
       lineHeight: 74,
@@ -474,9 +481,12 @@
    * relationships between contributions, never a rating of people.
    */
   function drawProfileRelationsPage(context, data, profile, summary, core, pageNumber, pageCount) {
-    const primary = summary.overall.primary;
+    const primary = profile.currents.reduce(
+      (best, entry) => (Math.abs(entry.magnitude) > Math.abs(best.magnitude) ? entry : best),
+      profile.currents[0],
+    );
     const relations = core.relationsFor(data, primary.id);
-    const element = core.elementForRole(data, primary.id);
+    const element = core.elementForCurrent(data, primary.id);
     const copy = data.results.relationsCopy;
     const labels = data.results.relationsLabels;
     const chapter = data.results.chapters.find((entry) => entry.id === "relations");
@@ -505,7 +515,7 @@
       { size: 27, family: "sans", colour: "#4b5457", lineHeight: 38 },
     );
     column += 16;
-    // The shadow line the report shows under the role name, which the export
+    // The shadow line the report shows under the current name, which the export
     // used to drop.
     column = drawExportText(
       context,
@@ -518,11 +528,10 @@
 
     // The same figure the report draws, beside the reading rather than absent.
     const cycleNodes = data.assessment.cycles.generating.map((elementId) => {
-      const role = profile.roles.find(
-        (candidate) => candidate.id === data.assessment.elements[elementId].role,
+      const named = profile.currents.find(
+        (entry) => entry.id === data.assessment.elements[elementId].current,
       );
-      const named = profile.currents.find((entry) => entry.domain === role.domain);
-      return { id: role.id, label: named ? named.name : role.shortName, colour: role.colourPaper };
+      return { id: named.id, label: named.name, colour: named.colourPaper };
     });
     drawElementCycle(
       context,
@@ -552,8 +561,8 @@
       ["checks", labels.checks],
       ["checkedBy", labels.checkedBy],
     ].forEach(([key, label]) => {
-      const other = profile.roles.find((role) => role.id === relations[key]);
-      const otherElement = core.elementForRole(data, other.id);
+      const other = profile.currents.find((entry) => entry.id === relations[key]);
+      const otherElement = core.elementForCurrent(data, other.id);
       // A mark beside the name, not a bar down the side of it.
       context.fillStyle = other.colourPaper;
       context.beginPath();
@@ -572,7 +581,7 @@
       y += 16;
       y = drawExportText(
         context,
-        copy[key].replace("{role}", other.name),
+        copy[key].replace("{current}", other.name),
         EXPORT_MARGIN + 44,
         y,
         width - 44,
@@ -598,46 +607,9 @@
     });
   }
 
-  /*
-   * The observations the watch produced, and the question the report closes
-   * on. Both are written copy; neither survived into the old export.
-   */
-  function drawProfileObservationPage(context, data, profile, summary, pageNumber, pageCount) {
-    drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
-    // By id, never by position: inserting a chapter before this one used to
-    // slide the index and print the wrong heading over this page.
-    const closing = data.results.chapters.find((entry) => entry.id === "close");
-    let y = drawExportHeading(context, closing.eyebrow, closing.title, null, "#14181a");
-
-    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
-    y += 20;
-    drawExportLabel(context, data.results.labels.observations, EXPORT_MARGIN, y, "#14181a");
-    y += 64;
-
-    [summary.consistency, summary.adaptation, summary.contribution].forEach((line) => {
-      y = drawExportText(context, line, EXPORT_MARGIN, y, width, {
-        size: 30,
-        colour: "#262b2d",
-        lineHeight: 45,
-      });
-      y += 38;
-    });
-
-    y += 16;
-    drawExportRule(context, y, "#c1caca", 2);
-    y += 68;
-    drawExportLabel(context, data.results.labels.reflection, EXPORT_MARGIN, y, "#14181a");
-    y += 60;
-    drawExportText(context, summary.reflection, EXPORT_MARGIN, y, width, {
-      size: 33,
-      style: "italic",
-      colour: "#262b2d",
-      lineHeight: 48,
-    });
-  }
 
   /* Page 2: how the pattern moved between the three story phases. */
-  function drawProfilePhasePage(context, data, profile, summary, pageNumber, pageCount) {
+  function drawProfilePhasePage(context, data, profile, summary, core, pageNumber, pageCount) {
     drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
     let y = drawExportHeading(
       context,
@@ -651,16 +623,33 @@
     const columnWidth = (width - 80) / 3;
     y += 20;
 
+    /*
+     * The headline of a stretch is the line that sat furthest from the middle
+     * of the scale in it, named at the end it sat on. There is no leading
+     * contribution to print here any more, and a magnitude is the only thing
+     * five separate readings can be ranked by without inventing a total.
+     */
+    const furthest = (phase) =>
+      phase.currents.reduce(
+        (best, entry) =>
+          Number.isFinite(entry.magnitude) &&
+          (!best || Math.abs(entry.magnitude) > Math.abs(best.magnitude))
+            ? entry
+            : best,
+        null,
+      );
+
     [
-      ["Starting", summary.starting, profile.phases[0]],
-      ["Under pressure", summary.pressure, profile.phases[1]],
-      ["After pressure", summary.recovery, profile.phases[2]],
-    ].forEach(([label, lead, phase], index) => {
+      ["Starting", profile.phases[0]],
+      ["Under pressure", profile.phases[1]],
+      ["After pressure", profile.phases[2]],
+    ].forEach(([label, phase], index) => {
       const x = EXPORT_MARGIN + index * (columnWidth + 40);
+      const lead = furthest(phase);
       drawExportLabel(context, label, x, y, "#14181a");
-      drawExportText(context, lead.label, x, y + 74, columnWidth, {
+      drawExportText(context, lead && lead.pole ? lead.pole.name : "—", x, y + 74, columnWidth, {
         size: 40,
-        colour: "#14181a",
+        colour: lead ? lead.colourPaper : "#14181a",
         lineHeight: 50,
         maxLines: 2,
       });
@@ -674,7 +663,29 @@
     });
     y += 250;
     drawExportRule(context, y, "#c1caca", 2);
-    y += 70;
+    y += 40;
+
+    /*
+     * The observations the movement chapter prints on the web, printed here
+     * too. The report and the record have to agree about what the night did.
+     */
+    const labels = data.results.labels;
+    drawExportLabel(context, labels.observations, EXPORT_MARGIN, y, "#14181a");
+    y += 58;
+
+    const returned = core.describeReturn(data, profile);
+    [summary.adaptation, returned ? data.results.returnCopy[returned] : null]
+      .filter(Boolean)
+      .forEach((line) => {
+        y = drawExportText(context, line, EXPORT_MARGIN, y, width, {
+          size: 27,
+          colour: "#262b2d",
+          lineHeight: 40,
+          maxLines: 4,
+        });
+        y += 24;
+      });
+    y += 30;
 
     /*
      * Three rules per contribution, one for each stretch of the watch, each
@@ -698,14 +709,13 @@
     });
     y += 34;
 
-    profile.roles.forEach((role) => {
+    profile.currents.forEach((line) => {
       const readings = profile.phases.map((phase) => ({
         phase,
-        entry: phase.roles.find((candidate) => candidate.id === role.id),
+        entry: phase.currents.find((candidate) => candidate.id === line.id),
       }));
 
-      const named = (profile.currents.find((entry) => entry.domain === role.domain) || role).name;
-      drawExportText(context, named, EXPORT_MARGIN, y + 34, 460, {
+      drawExportText(context, line.name, EXPORT_MARGIN, y + 34, 460, {
         size: 34, family: "sans", weight: 600, colour: "#14181a", lineHeight: 44, maxLines: 1,
       });
 
@@ -742,7 +752,7 @@
 
       // The travel, joined down the rows and drawn first so a mark always
       // sits on top of it.
-      context.strokeStyle = role.colourPaper;
+      context.strokeStyle = line.colourPaper;
       context.lineWidth = 4;
       context.beginPath();
       readings.forEach(({ entry }, index) => {
@@ -760,7 +770,7 @@
         const x = at(entry.normalised);
         const centre = rowCentre(index);
         context.lineWidth = 4;
-        context.strokeStyle = role.colourPaper;
+        context.strokeStyle = line.colourPaper;
         context.fillStyle = "#e6eaeb";
         context.beginPath();
         context.arc(x, centre, 12, 0, Math.PI * 2);
@@ -769,7 +779,7 @@
         // The stretch under pressure is the filled one, so the middle of the
         // night is findable without reading the labels.
         if (index === 1) {
-          context.fillStyle = role.colourPaper;
+          context.fillStyle = line.colourPaper;
           context.beginPath();
           context.arc(x, centre, 6, 0, Math.PI * 2);
           context.fill();
@@ -911,40 +921,10 @@
     }
 
     /*
-     * What this current asks of the other four. The cycle decides the
-     * direction; the pole decides the dialect, so these four lines are written
-     * per pole and belong on the page as much as anything above them.
+     * The four lines about what this current asks of the other four used to
+     * sit here as well as on the relations page, which said the same thing
+     * twice under two headings. They are drawn once, there.
      */
-    const relations = current.relations;
-    if (relations) {
-      drawExportLabel(context, labels.asksOf, EXPORT_MARGIN, y, trace);
-      y += 46;
-      [
-        [labels.supports, "supports"],
-        [labels.supportedBy, "supportedBy"],
-        [labels.checks, "checks"],
-        [labels.checkedBy, "checkedBy"],
-      ].forEach(([label, key]) => {
-        const other = relations[key];
-        drawExportText(
-          context,
-          `${label}${other ? ` · ${other.name}` : ""}`,
-          EXPORT_MARGIN,
-          y,
-          width,
-          { size: 24, family: "sans", weight: 600, colour: other ? other.colourPaper : trace, lineHeight: 32, maxLines: 1 },
-        );
-        y += 38;
-        y = drawExportText(context, current.pole[key], EXPORT_MARGIN, y, width, {
-          size: 27,
-          colour: "#262b2d",
-          lineHeight: 39,
-          maxLines: 3,
-        });
-        y += 26;
-      });
-    }
-
     block(labels.tryThis, current.guidance.reflection, 3);
   }
 
@@ -1039,70 +1019,89 @@
   }
 
   /* Final page: how to read the profile, and where the structure comes from. */
-  function drawProfileGuidancePage(context, data, profile, pageNumber, pageCount) {
+  /*
+   * The closing section and the back matter it carries, on one page.
+   *
+   * They used to be two, and both were mostly white: the observations had been
+   * moved to the movement chapter where the report keeps them, which left a
+   * page holding a single italic question. The web reads them as one section —
+   * the question, then the record — so the export sets them as one page.
+   */
+  function drawProfileHandoverPage(context, data, profile, summary, pageNumber, pageCount) {
     drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
-    let y = drawExportHeading(
-      context,
-      "How to read this profile",
-      "Reading guidance",
-      null,
-      "#14181a",
-    );
+    // By id, never by position: inserting a chapter before this one used to
+    // slide the index and print the wrong heading over this page.
+    const closing = data.results.chapters.find((entry) => entry.id === "close");
+    const record = data.results.record;
+    let y = drawExportHeading(context, closing.eyebrow, closing.title, null, "#14181a");
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
     y += 20;
+    drawExportLabel(context, data.results.labels.reflection, EXPORT_MARGIN, y, "#14181a");
+    y += 60;
+    y = drawExportText(context, summary.reflection, EXPORT_MARGIN, y, width, {
+      size: 33,
+      style: "italic",
+      colour: "#262b2d",
+      lineHeight: 48,
+    });
+    y += 30;
+    y = drawExportText(context, data.results.notATypeStatement, EXPORT_MARGIN, y, width, {
+      size: 29,
+      colour: "#4b5457",
+      lineHeight: 43,
+    });
+
+    y += 44;
+    drawExportRule(context, y, "#c1caca", 2);
+    y += 70;
+    drawExportLabel(context, record.eyebrow, EXPORT_MARGIN, y, "#14181a");
+    y += 66;
+    y = drawExportText(context, record.title, EXPORT_MARGIN, y, width, {
+      size: 46,
+      colour: "#14181a",
+      lineHeight: 58,
+    });
+    y += 40;
+
+    // The same three headed blocks the report's colophon sets, in the same
+    // order, so the download is not a differently worded version of it.
+    [
+      [record.whatHeading, data.assessment.methodNote],
+      [
+        record.notHeading,
+        `${data.instrument.status}. ${data.instrument.statusNote} ${record.limitations}`,
+      ],
+      [record.structureHeading, `${data.instrument.attribution} ${record.mapping}`],
+    ].forEach(([label, copy]) => {
+      drawExportLabel(context, label, EXPORT_MARGIN, y, "#14181a");
+      y += 56;
+      y = drawExportText(context, copy, EXPORT_MARGIN, y, width, {
+        size: 28,
+        colour: "#262b2d",
+        lineHeight: 42,
+      });
+      y += 42;
+    });
+
+    y += 10;
+    drawExportRule(context, y, "#c1caca", 2);
+    y += 52;
     [
       data.results.disclaimer,
-      data.assessment.methodNote,
-      data.results.record.limitations,
-      data.results.record.mapping,
-      data.assessment.phaseNote,
+      data.instrument.permission,
       data.assessment.bandNote,
+      data.assessment.phaseNote,
+      data.results.privacy,
     ].forEach((line) => {
       y = drawExportText(context, line, EXPORT_MARGIN, y, width, {
-        size: 30,
-        colour: "#262b2d",
-        lineHeight: 45,
+        size: 26,
+        colour: "#4b5457",
+        lineHeight: 39,
       });
-      y += 34;
+      y += 22;
     });
-
-    y += 20;
-    drawExportRule(context, y, "#c1caca", 2);
-    y += 76;
-
-    drawExportLabel(context, "Measurement status", EXPORT_MARGIN, y, "#14181a");
-    y += 62;
-    y = drawExportText(
-      context,
-      `${data.instrument.status}. ${data.instrument.statusNote}`,
-      EXPORT_MARGIN,
-      y,
-      width,
-      { size: 29, colour: "#262b2d", lineHeight: 43 },
-    );
-    y += 60;
-
-    drawExportLabel(context, "Attribution", EXPORT_MARGIN, y, "#14181a");
-    y += 62;
-    y = drawExportText(context, data.instrument.attribution, EXPORT_MARGIN, y, width, {
-      size: 27,
-      colour: "#4b5457",
-      lineHeight: 40,
-    });
-    y += 30;
-    y = drawExportText(context, data.instrument.permission, EXPORT_MARGIN, y, width, {
-      size: 27,
-      colour: "#4b5457",
-      lineHeight: 40,
-    });
-    y += 30;
-    y = drawExportText(context, data.assessment.bandNote, EXPORT_MARGIN, y, width, {
-      size: 27,
-      colour: "#4b5457",
-      lineHeight: 40,
-    });
-    y += 30;
+    y += 12;
     drawExportText(context, data.instrument.reference, EXPORT_MARGIN, y, width, {
       size: 25,
       family: "sans",
@@ -1781,8 +1780,8 @@
     const { canvas, context } = exportCanvas();
     const summary = core.summariseProfile(data, profile);
     // Overview, the night, one page per current, calibration, the
-    // relationships, the observations, and the record.
-    const pageCount = profile.currents.length + 6;
+    // relationships, and the handover.
+    const pageCount = profile.currents.length + 5;
     const images = [];
 
     const capture = async (pageNumber, draw) => {
@@ -1799,7 +1798,7 @@
       drawProfileOverviewPage(context, data, profile, summary, dateLabel, pageCount),
     );
     await capture(2, () =>
-      drawProfilePhasePage(context, data, profile, summary, 2, pageCount),
+      drawProfilePhasePage(context, data, profile, summary, core, 2, pageCount),
     );
     for (let index = 0; index < profile.currents.length; index += 1) {
       const pageNumber = index + 3;
@@ -1814,17 +1813,14 @@
         ),
       );
     }
-    await capture(pageCount - 3, () =>
-      drawProfileCalibrationPage(context, data, profile, pageCount - 3, pageCount),
-    );
     await capture(pageCount - 2, () =>
-      drawProfileRelationsPage(context, data, profile, summary, core, pageCount - 2, pageCount),
+      drawProfileCalibrationPage(context, data, profile, pageCount - 2, pageCount),
     );
     await capture(pageCount - 1, () =>
-      drawProfileObservationPage(context, data, profile, summary, pageCount - 1, pageCount),
+      drawProfileRelationsPage(context, data, profile, summary, core, pageCount - 1, pageCount),
     );
     await capture(pageCount, () =>
-      drawProfileGuidancePage(context, data, profile, pageCount, pageCount),
+      drawProfileHandoverPage(context, data, profile, summary, pageCount, pageCount),
     );
 
     if (typeof settings.onAssembling === "function") {

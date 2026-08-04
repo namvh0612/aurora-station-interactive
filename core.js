@@ -589,6 +589,8 @@
    * name is what made an earlier version read as more-is-better.
    */
   const CENTRE = (MIN_RESPONSE + MAX_RESPONSE) / 2;
+  /* Below this a reading is called steady rather than given a number. */
+  const STEADY_CHANGE = 0.25;
   const MAGNITUDE_CLEAR = 0.5;
   const MAGNITUDE_PRONOUNCED = 1;
   /*
@@ -698,15 +700,11 @@
    */
   function linkCurrents(data, currents) {
     currents.forEach((current) => {
-      const role = roleDefinitions(data).find((entry) => entry.domain === current.domain);
-      const relations = role ? relationsFor(data, role.id) : null;
+      const relations = relationsFor(data, current.id);
       if (!relations) {
         return;
       }
-      const at = (roleId) => {
-        const other = data.assessment.roles[roleId];
-        return other ? currents.find((entry) => entry.domain === other.domain) || null : null;
-      };
+      const at = (currentId) => currents.find((entry) => entry.id === currentId) || null;
       current.relations = {
         supports: at(relations.supports),
         supportedBy: at(relations.supportedBy),
@@ -724,7 +722,7 @@
         if (!domain) {
           return null;
         }
-        const definition = roleDefinitions(data).find(
+        const definition = currentDefinitions(data).find(
           (entry) => entry.domain === current.domain,
         );
         const magnitude = magnitudeFor(domain.score);
@@ -735,9 +733,9 @@
           domain: domain.code,
           domainName: domain.name,
           element: current.id,
-          colour: definition ? definition.colour : null,
-          colourNight: definition ? definition.colourNight : null,
-          colourPaper: definition ? definition.colourPaper : null,
+          colour: current.colour,
+          colourNight: current.colourNight,
+          colourPaper: current.colourPaper,
           score: domain.score,
           normalised: domain.normalised,
           band: domain.band,
@@ -860,13 +858,12 @@
       domains.flatMap((domain) => domain.facets.map((facet) => [facet.name, facet.score])),
     );
 
+    /*
+     * No current is singled out. The old profile ranked the five by a
+     * suitability weighting and named a winner, which is the type this design
+     * exists to remove: five separate readings, none of them a lead.
+     */
     const phases = scorePhases(data, safe);
-    const pressurePhase = phases.find((phase) => phase.id === "pressure");
-    const roles = scoreSuitability(
-      data,
-      scoreRoles(data, domainScores, facetScores),
-      pressurePhase ? pressurePhase.roles : [],
-    );
 
     return {
       playerName: safe.participant.name,
@@ -875,52 +872,45 @@
       facets: domains.flatMap((domain) => domain.facets),
       currents: currentsFor(data, domains, safe),
       responseStyle: responseStyleFor(data, safe),
-      roles,
       phases,
       scaleMin: MIN_RESPONSE,
       scaleMax: MAX_RESPONSE,
     };
   }
 
-  /* ---------------------------------------------------------- Aurora Roles */
+  /* ------------------------------------------------------- the five currents */
 
   /*
-   * The five roles are a narrative reading of the same five domains, kept on
-   * the same 1-5 scale. Aegis is the inverse representation of Negative
-   * Emotionality, so a higher Aegis means greater steadiness. Nothing here is
-   * a share of anything: the roles are independent and never total.
+   * Five currents on the same 1-5 scale, each reading its own domain and
+   * nothing else. There is no separate table of names sitting between the
+   * element and the domain any more: that is what allowed one current to be
+   * reported under a name its own line did not carry, and Water to be turned
+   * upside down and called something else on the way past.
    */
-  function roleScoreFor(definition, domainScore) {
-    if (!Number.isFinite(domainScore)) {
-      return null;
-    }
-    /*
-     * Every current reads its domain directly, Water included. Water used to
-     * be reported as 6 - Negative Emotionality under the name Emotional
-     * Stability, which meant the same measurement pointed one way in the
-     * domain chapter and the other way on the instrument, with nothing on the
-     * page connecting them. Both ends of the Water line are named instead.
-     */
-    return domainScore;
-  }
-
-  function roleDefinitions(data) {
-    return data.assessment.roleOrder.map((id) => data.assessment.roles[id]);
+  function currentDefinitions(data) {
+    return data.assessment.spectra.order.map((id) => data.assessment.spectra.currents[id]);
   }
 
   /*
-   * The five contributions read against each other. Two cycles, both carried in
-   * the content file: one where a contribution creates the conditions the next
-   * one needs, and one where a contribution restrains another that has run
-   * long. This is a reading of relationships, not a compatibility score, and
-   * nothing here totals or ranks.
+   * The five currents read against each other. Two cycles, both carried in the
+   * content file: one where a current creates the conditions the next one
+   * needs, and one where a current restrains another that has run long. This
+   * is a reading of relationships, not a compatibility score, and nothing here
+   * totals or ranks.
+   *
+   * The cycle is keyed on the element, and the element names the current it
+   * reads — one hop, not two. It used to route through a role table sitting
+   * between the two, which is what let one current be reported under a
+   * different name from the one its own line carried.
    */
-  function elementForRole(data, roleId) {
-    return Object.values(data.assessment.elements).find((entry) => entry.role === roleId) || null;
+  function elementForCurrent(data, currentId) {
+    return (
+      Object.values(data.assessment.elements).find((entry) => entry.current === currentId) || null
+    );
   }
 
-  function relationsFor(data, roleId) {
-    const element = elementForRole(data, roleId);
+  function relationsFor(data, currentId) {
+    const element = elementForCurrent(data, currentId);
     if (!element) {
       return null;
     }
@@ -931,7 +921,7 @@
       return null;
     }
 
-    const roleOf = (elementId) => data.assessment.elements[elementId].role;
+    const currentOf = (elementId) => data.assessment.elements[elementId].current;
     const feeds = ring[(at + 1) % ring.length];
     const fedBy = ring[(at - 1 + ring.length) % ring.length];
     const checks = cycles.controlling[element.id];
@@ -941,49 +931,41 @@
 
     return {
       element: element.id,
-      supports: roleOf(feeds),
-      supportedBy: roleOf(fedBy),
-      checks: roleOf(checks),
-      checkedBy: roleOf(checkedBy),
+      supports: currentOf(feeds),
+      supportedBy: currentOf(fedBy),
+      checks: currentOf(checks),
+      checkedBy: currentOf(checkedBy),
     };
   }
 
-  function scoreRoles(data, domainScores, facetScores) {
-    return roleDefinitions(data).map((definition) => {
-      const score = roleScoreFor(definition, domainScores[definition.domain]);
+  function scoreCurrents(data, domainScores, facetScores) {
+    return currentDefinitions(data).map((definition) => {
+      const score = domainScores[definition.domain];
+      const reading = Number.isFinite(score) ? score : null;
       return {
         id: definition.id,
         name: definition.name,
-        shortName: definition.shortName,
+        axis: definition.axis,
         // The element is the identity; the two tones are the same hue set for
         // the ground it is drawn on, so a trace stays legible on both.
-        element: definition.element,
+        element: definition.id,
         colour: definition.colour,
         colourNight: definition.colourNight,
         colourPaper: definition.colourPaper,
-        basis: definition.basis,
-        contribution: definition.contribution,
-        reading: definition.reading,
-        inGroup: definition.inGroup,
-        // The report prints these; they must travel with the score.
-        missionFunction: definition.missionFunction,
-        brings: definition.brings,
-        watchFor: definition.watchFor,
-        actionTitle: definition.actionTitle,
-        action: definition.action,
         domain: definition.domain,
-        inverse: definition.inverse,
-        score,
-        normalised: normalise(score),
+        poles: definition.poles,
+        pole: reading === null ? null : poleFor(definition, reading),
+        magnitude: magnitudeFor(reading),
+        score: reading,
+        normalised: normalise(reading),
         facetFloor: facetScores ? facetFloorFor(data, definition, facetScores) : null,
       };
     });
   }
 
   /*
-   * The lowest supporting facet for a role. A role reads on the same scale as
-   * its facets, so an inverse role's supporting facets are inverted too: a
-   * high Anxiety facet is a low Sentinel support.
+   * The lowest supporting facet of a current. A current reads on the same
+   * scale as its three facets, so the floor is simply the weakest of them.
    */
   function facetFloorFor(data, definition, facetScores) {
     const facets = data.assessment.domains[definition.domain].facets;
@@ -993,138 +975,8 @@
     return supporting.length ? Math.min(...supporting) : null;
   }
 
-  /*
-   * How well the reader's own responses support each role. The facet floor is
-   * weighted in so that a strong domain average cannot hide a component the
-   * profile does not actually support.
-   */
-  function scoreSuitability(data, roles, pressureRoles) {
-    const weights = data.assessment.suitability.weights;
-    const pressureById = Object.fromEntries(
-      (pressureRoles || []).map((role) => [role.id, role.score]),
-    );
 
-    return roles.map((role) => {
-      const pressure = pressureById[role.id];
-      const parts = [
-        [weights.overall, role.score],
-        [weights.pressure, pressure],
-        [weights.facetFloor, role.facetFloor],
-      ];
-      const usable = parts.filter(([, value]) => Number.isFinite(value));
-      const totalWeight = usable.reduce((sum, [weight]) => sum + weight, 0);
-      const suitability = totalWeight
-        ? usable.reduce((sum, [weight, value]) => sum + weight * value, 0) / totalWeight
-        : null;
 
-      return {
-        ...role,
-        pressureScore: Number.isFinite(pressure) ? pressure : null,
-        profileSuitability: suitability,
-      };
-    });
-  }
-
-  /*
-   * Recommended Role = profile suitability + team composition + mission
-   * requirement. A solo journey knows only the first, so the other two are
-   * optional inputs and their absence is reported rather than hidden.
-   */
-  function recommendRole(data, roles, options) {
-    const settings = options || {};
-    const team = settings.teamComposition || null;
-    const mission = settings.missionRequirement || null;
-
-    const scored = roles.map((role) => {
-      const teamNeed = Number(team?.[role.id]);
-      const missionNeed = Number(mission?.[role.id]);
-      const parts = [role.profileSuitability];
-      if (Number.isFinite(teamNeed)) {
-        parts.push(teamNeed);
-      }
-      if (Number.isFinite(missionNeed)) {
-        parts.push(missionNeed);
-      }
-      const usable = parts.filter((value) => Number.isFinite(value));
-      return {
-        ...role,
-        teamNeed: Number.isFinite(teamNeed) ? teamNeed : null,
-        missionNeed: Number.isFinite(missionNeed) ? missionNeed : null,
-        recommendationScore: usable.length
-          ? usable.reduce((sum, value) => sum + value, 0) / usable.length
-          : null,
-      };
-    });
-
-    return {
-      roles: scored,
-      inputs: {
-        profileSuitability: true,
-        teamComposition: Boolean(team),
-        missionRequirement: Boolean(mission),
-      },
-      complete: Boolean(team && mission),
-      leading: leadingRoles(data, scored, "recommendationScore"),
-    };
-  }
-
-  /*
-   * Which role or roles led. Two scores within the blend threshold are read as
-   * a blend rather than a winner; a role within the secondary threshold is
-   * offered alongside. No role is ever described as better.
-   */
-  function leadingRoles(data, roles, metric) {
-    const key = metric || "score";
-    const tolerance = data.assessment.suitability.tieTolerance;
-    const secondaryGap = data.assessment.shiftThresholds.secondary;
-    const valueOf = (role) => role[key];
-
-    /*
-     * Ties are never resolved by array order. Equal leading values fall back to
-     * the facet floor, which is the component a role is actually supported by,
-     * and then to the name so the result is stable and explainable.
-     */
-    const ranked = roles
-      .filter((role) => Number.isFinite(valueOf(role)))
-      .slice()
-      .sort((left, right) => {
-        const byMetric = valueOf(right) - valueOf(left);
-        if (Math.abs(byMetric) > 1e-9) {
-          return byMetric;
-        }
-        const byFloor = (right.facetFloor ?? -Infinity) - (left.facetFloor ?? -Infinity);
-        if (Math.abs(byFloor) > 1e-9) {
-          return byFloor;
-        }
-        return left.name.localeCompare(right.name);
-      });
-
-    if (!ranked.length) {
-      return { primary: null, blended: [], secondary: null, isBlend: false, ranked: [], label: "" };
-    }
-
-    // A blend is the top two, never a pile of near-ties: five roles within a
-    // tenth of each other is a flat profile, not a five-way blend.
-    const top = ranked[0];
-    const runnerUp = ranked[1];
-    const isBlend =
-      Boolean(runnerUp) && valueOf(top) - valueOf(runnerUp) <= tolerance;
-    const blended = isBlend ? [top, runnerUp] : [top];
-    const secondary =
-      !isBlend && runnerUp && valueOf(top) - valueOf(runnerUp) <= secondaryGap
-        ? runnerUp
-        : null;
-
-    return {
-      primary: top,
-      blended,
-      secondary,
-      isBlend,
-      ranked,
-      metric: key,
-      label: blended.map((role) => role.shortName || role.name).join(" + "),
-    };
-  }
 
   /* -------------------------------------------------------- context phases */
 
@@ -1164,7 +1016,7 @@
         // Phase results are only definitive once the phase holds three Acts.
         definitive: phase.acts.length >= 3,
         domainScores,
-        roles: scoreRoles(data, domainScores),
+        currents: scoreCurrents(data, domainScores),
       };
     });
   }
@@ -1174,8 +1026,8 @@
   }
 
   /*
-   * A shift is the movement of one role between two phases. Anything below the
-   * ignore threshold is not interpreted at all.
+   * A shift is the movement of one current between two phases. Anything below
+   * the ignore threshold is not interpreted at all.
    */
   function describeShift(data, magnitude) {
     const thresholds = data.assessment.shiftThresholds;
@@ -1186,17 +1038,17 @@
     return size >= thresholds.notable ? "notable" : "subtle";
   }
 
-  function compareRoles(data, fromPhase, toPhase) {
-    const before = Object.fromEntries(fromPhase.roles.map((role) => [role.id, role]));
-    const shifts = toPhase.roles
-      .map((role) => {
-        const previous = before[role.id];
-        if (!Number.isFinite(role.score) || !Number.isFinite(previous?.score)) {
+  function compareCurrents(data, fromPhase, toPhase) {
+    const before = Object.fromEntries(fromPhase.currents.map((entry) => [entry.id, entry]));
+    const shifts = toPhase.currents
+      .map((entry) => {
+        const previous = before[entry.id];
+        if (!Number.isFinite(entry.score) || !Number.isFinite(previous?.score)) {
           return null;
         }
-        const delta = role.score - previous.score;
+        const delta = entry.score - previous.score;
         const size = describeShift(data, delta);
-        return size ? { ...role, delta, size, direction: delta > 0 ? "rose" : "fell" } : null;
+        return size ? { ...entry, delta, size, direction: delta > 0 ? "rose" : "fell" } : null;
       })
       .filter(Boolean)
       .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta));
@@ -1214,10 +1066,10 @@
     }
 
     const distance = (left, right) => {
-      const byId = Object.fromEntries(right.roles.map((role) => [role.id, role.score]));
-      const gaps = left.roles
-        .filter((role) => Number.isFinite(role.score) && Number.isFinite(byId[role.id]))
-        .map((role) => Math.abs(role.score - byId[role.id]));
+      const byId = Object.fromEntries(right.currents.map((entry) => [entry.id, entry.score]));
+      const gaps = left.currents
+        .filter((entry) => Number.isFinite(entry.score) && Number.isFinite(byId[entry.id]))
+        .map((entry) => Math.abs(entry.score - byId[entry.id]));
       return gaps.length ? gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length : null;
     };
 
@@ -1297,32 +1149,19 @@
     return `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
   }
 
-  /*
-   * The closing summary. Every sentence is conditional, describes a pattern
-   * rather than an identity, and never frames a role as a strength or a fault.
-   */
-  function labelOfCurrents(data, lead) {
-    return joinList((lead.blended || [lead.primary]).filter(Boolean).map((role) => nameOfCurrentForRole(data, role.id)));
-  }
 
-  function nameOfCurrentForRole(data, roleId) {
-    const role = data.assessment.roles[roleId];
-    const current = role ? currentForDomain(data, role.domain) : null;
-    return current ? current.name : roleId;
-  }
 
   /*
    * Did this current change which end of its line describes the reader between
    * two stretches? Both readings have to be far enough from the middle to mean
    * anything, or a reading sitting on the centre would "cross" on noise.
    */
-  function crossingFor(data, fromPhase, toPhase, roleId) {
-    const role = data.assessment.roles[roleId];
-    const current = role ? currentForDomain(data, role.domain) : null;
+  function crossingFor(data, fromPhase, toPhase, currentId) {
+    const current = data.assessment.spectra.currents[currentId] || null;
     if (!current) {
       return null;
     }
-    const at = (phase) => phase.roles.find((entry) => entry.id === roleId);
+    const at = (phase) => phase.currents.find((entry) => entry.id === currentId);
     const before = at(fromPhase);
     const after = at(toPhase);
     if (!before || !after) {
@@ -1342,26 +1181,11 @@
       return null;
     }
     const copy = data.results.summaryTemplates;
-    // The overall lead is the role the profile best supports, not simply the
-    // highest raw score.
-    const overall = leadingRoles(data, profile.roles, "profileSuitability");
     const baseline = phaseByld(profile, "baseline");
     const pressure = phaseByld(profile, "pressure");
     const recovery = phaseByld(profile, "recovery");
-    const startingLead = leadingRoles(data, baseline.roles);
-    const pressureLead = leadingRoles(data, pressure.roles);
-    const recoveryLead = leadingRoles(data, recovery.roles);
 
-    const consistency =
-      startingLead.primary?.id === pressureLead.primary?.id
-        ? copy.consistencyAnchored
-            .replace("{overall}", labelOfCurrents(data, overall))
-            .replace("{reading}", overall.primary.reading)
-        : copy.consistencyMoved
-            .replace("{starting}", labelOfCurrents(data, startingLead))
-            .replace("{pressure}", labelOfCurrents(data, pressureLead));
-
-    const pressureComparison = compareRoles(data, baseline, pressure);
+    const pressureComparison = compareCurrents(data, baseline, pressure);
     const returnKind = describeReturn(data, profile);
     const recoveryClause =
       returnKind === "returned"
@@ -1385,6 +1209,12 @@
      * either direction.
      */
     const crossing = largestShift ? crossingFor(data, baseline, pressure, largestShift.id) : null;
+    /*
+     * The pole copy is written as whole sentences, and every template that
+     * quotes one already closes the clause itself. Inserted raw, that printed
+     * "…the choosing is not automatic.. This reads as an adjustment".
+     */
+    const clause = (look) => (look || "").replace(/\.\s*$/, "");
     const adaptation = pressureComparison.stable
       ? copy.adaptationStable
       : crossing
@@ -1392,26 +1222,16 @@
             .replace("{current}", crossing.current.name)
             .replace("{from}", crossing.from.name)
             .replace("{to}", crossing.to.name)
-            .replace("{reading}", crossing.to.look)
+            .replace("{reading}", clause(crossing.to.look))
             .replace("{recoveryClause}", recoveryClause)
         : (largestShift.direction === "rose" ? copy.adaptationShift : copy.adaptationRecede)
-            .replace("{pressure}", nameOfCurrentForRole(data, largestShift.id))
-            .replace("{reading}", largestShift.reading)
+            .replace("{pressure}", largestShift.name)
+            .replace("{reading}", clause(largestShift.pole ? largestShift.pole.look : ""))
             .replace("{recoveryClause}", recoveryClause);
 
-    const contribution = copy.contribution.replace(
-      "{contribution}",
-      joinList(overall.blended.map((role) => role.inGroup)),
-    );
-
     return {
-      overall,
-      starting: startingLead,
-      pressure: pressureLead,
-      recovery: recoveryLead,
-      consistency,
       adaptation,
-      contribution,
+      recovery: returnKind,
       reflection: data.results.reflectionPrompt,
     };
   }
@@ -1436,7 +1256,8 @@
     canGoBack,
     clearJourney,
     CENTRE,
-    compareRoles,
+    STEADY_CHANGE,
+    compareCurrents,
     contextPhaseFor,
     currentForDomain,
     currentsFor,
@@ -1460,7 +1281,6 @@
     goBack,
     isComplete,
     itemIdForNumber,
-    leadingRoles,
     loadPreferences,
     loadState,
     narrativeForRaw,
@@ -1469,18 +1289,15 @@
     pendingQuestion,
     phaseDefinitions,
     previousResponse,
-    recommendRole,
     recordResponse,
     responseLabels,
-    roleDefinitions,
-    roleScoreFor,
-    scoreSuitability,
+    currentDefinitions,
     sanitisePreferences,
     sanitiseState,
     savePreferences,
     saveState,
     scoreProfile,
-    elementForRole,
+    elementForCurrent,
     relationsFor,
     setPlayerName,
     splitParagraphs,

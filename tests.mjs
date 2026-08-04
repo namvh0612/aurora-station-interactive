@@ -215,7 +215,7 @@ check("the experience does not name the instrument, and the credit survives", ()
   const shown = [
     data.instrument.status,
     data.instrument.statusNote,
-    data.assessment.roleNote,
+    data.assessment.spectra.note,
     data.assessment.phaseNote,
     data.assessment.bandNote,
     data.results.disclaimer,
@@ -393,39 +393,6 @@ check("no response is imputed and invalid values are rejected", () => {
 
 /* ---------------------------------------------------------- Aurora Roles */
 
-check("the five roles map onto the five domains as specified", () => {
-  assert.deepEqual(data.assessment.roleOrder, [
-    "pathfinder",
-    "catalyst",
-    "steward",
-    "architect",
-    "sentinel",
-  ]);
-  assert.deepEqual(data.assessment.roleMapping, {
-    "The Pathfinder": "Open-Mindedness",
-    "The Catalyst": "Extraversion",
-    "The Steward": "Agreeableness",
-    "The Architect": "Conscientiousness",
-    "The Sentinel": "Negative Emotionality",
-  });
-
-  const expected = {
-    pathfinder: { domain: "openMindedness", basis: "Open-Mindedness" },
-    catalyst: { domain: "extraversion", basis: "Extraversion" },
-    steward: { domain: "agreeableness", basis: "Agreeableness" },
-    architect: { domain: "conscientiousness", basis: "Conscientiousness" },
-    sentinel: { domain: "negativeEmotionality", basis: "Negative Emotionality" },
-  };
-  Object.entries(expected).forEach(([id, definition]) => {
-    const role = data.assessment.roles[id];
-    assert.equal(role.domain, definition.domain, `${id} domain`);
-    assert.equal(role.basis, definition.basis, `${id} basis`);
-    assert.ok(role.contribution, `${id} contribution`);
-    assert.match(role.colour, /^#[0-9a-f]{6}$/i, `${id} colour`);
-  });
-  // Roles are contributions, not types.
-  assert.match(data.assessment.roleNote, /not fixed personality types/i);
-});
 
 check("every current reads its own domain directly, Water included", () => {
   /*
@@ -455,181 +422,57 @@ check("every current reads its own domain directly, Water included", () => {
   const water = profile.currents.find((current) => current.id === "water");
   assert.equal(water.score, 5);
   assert.equal(water.pole.name, water.poles.high.name, "high Water is not the far pole");
-  assert.equal(core.roleScoreFor({}, 2), 2);
-  // The flag that used to carry the inversion is gone from the data entirely.
-  Object.values(data.assessment.roles).forEach((role) => {
-    assert.equal("inverse" in role, false, `${role.id} still carries an inverse flag`);
+
+  /*
+   * The table that carried the inversion is gone outright, along with the
+   * weighting that picked a winner out of the five. Nothing sits between the
+   * element and the domain any more, so nothing can rename a reading on its
+   * way to the page.
+   */
+  assert.equal(data.assessment.roles, undefined, "the role table is still in the data");
+  assert.equal(data.assessment.suitability, undefined, "the suitability weighting survives");
+  ["roleScoreFor", "scoreSuitability", "leadingRoles", "recommendRole"].forEach((name) => {
+    assert.equal(typeof core[name], "undefined", `core still exports ${name}`);
+  });
+  const retiredKey = ["r", "o", "l", "e", "s"].join("");
+  assert.equal(retiredKey in profile, false, "the profile still carries a role list");
+  profile.phases.forEach((phase) => {
+    assert.ok(Array.isArray(phase.currents), `${phase.id} has no currents`);
+    assert.equal(retiredKey in phase, false, `${phase.id} still carries a role list`);
   });
 });
 
-check("the facet floor is the lowest supporting facet", () => {
-  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
-  const facets = Object.fromEntries(
-    profile.facets.map((facet) => [facet.name, facet.score]),
-  );
-
-  profile.roles.forEach((role) => {
-    const names = data.assessment.domains[role.domain].facets;
-    const supporting = names.map((name) => facets[name]);
-    assert.equal(role.facetFloor, Math.min(...supporting), `${role.shortName} floor`);
-    // The floor can never exceed the role's own score.
-    assert.ok(role.facetFloor <= role.score + 1e-9, `${role.shortName} floor above score`);
-  });
-
-  const sentinel = profile.roles.find((role) => role.id === "sentinel");
-  const neFacets = data.assessment.domains.negativeEmotionality.facets.map(
-    (name) => facets[name],
-  );
-  assert.equal(sentinel.facetFloor, Math.min(...neFacets));
-});
-
-check("profile suitability weights overall, pressure and the facet floor", () => {
-  const weights = data.assessment.suitability.weights;
-  assert.deepEqual(weights, { overall: 0.6, pressure: 0.25, facetFloor: 0.15 });
-  assert.match(
-    data.assessment.suitability.formula,
-    /0\.60 \* overallRoleScore \+ 0\.25 \* pressureRoleScore \+ 0\.15 \* facetFloor/,
-  );
-
-  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
-  profile.roles.forEach((role) => {
-    const expected =
-      weights.overall * role.score +
-      weights.pressure * role.pressureScore +
-      weights.facetFloor * role.facetFloor;
-    assert.ok(
-      Math.abs(role.profileSuitability - expected) < 1e-9,
-      `${role.shortName} ${role.profileSuitability} vs ${expected}`,
-    );
-    assert.ok(role.profileSuitability >= 1 && role.profileSuitability <= 5);
+check("no surface still reaches for a list of roles", () => {
+  /*
+   * Blunt on purpose. The two checks that resolve content paths and summary
+   * keys cannot see a read off an object the renderer built itself, and that
+   * is exactly how `stateAt.roles` survived the conversion inside the movement
+   * instrument — the array was renamed at the point it was built and one of
+   * the four reads was left behind, which silently blanked the chart.
+   *
+   * Nothing in this design has roles, so the word appearing as a property or a
+   * binding is the defect itself, whatever the surrounding code looks like.
+   * The ARIA attribute is the one legitimate use and is written as a string.
+   */
+  const retired = new RegExp(`[.\\w]${["r", "o", "l", "e", "s"].join("")}\\b`);
+  [
+    ["core.js", coreSource],
+    ["results.js", resultsSource],
+    ["pdf-export.js", pdfSource],
+    ["app.js", appSource],
+  ].forEach(([file, source]) => {
+    const stripped = source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/[^\n]*/g, " ");
+    assert.doesNotMatch(stripped, retired, `${file} still names a list of roles`);
   });
 });
 
-check("a low facet floor pulls suitability below the domain average", () => {
-  // One facet of Conscientiousness answered low, the rest high.
-  const state = answerAll((index, item) => {
-    if (item.domain !== "conscientiousness") {
-      return 3;
-    }
-    const low = item.facet === "Organization";
-    return low ? (item.reverse ? 5 : 1) : item.reverse ? 1 : 5;
-  });
-  const profile = core.scoreProfile(data, state);
-  const architect = profile.roles.find((role) => role.id === "architect");
-  assert.ok(architect.facetFloor < architect.score, "floor should be the weak facet");
-  assert.ok(
-    architect.profileSuitability < architect.score,
-    "an unsupported component must reduce suitability",
-  );
-});
 
-check("the recommendation combines suitability, team and mission", () => {
-  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
-  const solo = core.recommendRole(data, profile.roles);
-  assert.deepEqual(solo.inputs, {
-    profileSuitability: true,
-    teamComposition: false,
-    missionRequirement: false,
-  });
-  assert.equal(solo.complete, false, "a solo journey cannot know team or mission");
-  assert.ok(solo.leading.primary);
 
-  // Team and mission demand can move the recommendation off the best fit.
-  const demand = Object.fromEntries(
-    data.assessment.roleOrder.map((id) => [id, id === "pathfinder" ? 5 : 1]),
-  );
-  const group = core.recommendRole(data, profile.roles, {
-    teamComposition: demand,
-    missionRequirement: demand,
-  });
-  assert.equal(group.complete, true);
-  assert.equal(group.leading.primary.id, "pathfinder");
-  assert.match(
-    data.assessment.suitability.recommendedFormula,
-    /Profile Suitability \+ Team Composition \+ Mission Requirement/,
-  );
-});
 
-check("ties are never broken by array order", () => {
-  const tied = data.assessment.roleOrder.map((id, index) => ({
-    id,
-    name: data.assessment.roles[id].name,
-    shortName: data.assessment.roles[id].shortName,
-    profileSuitability: 4,
-    facetFloor: index === 3 ? 5 : 2,
-  }));
 
-  const lead = core.leadingRoles(data, tied, "profileSuitability");
-  // Architect sits fourth in the array but has the only supported floor.
-  assert.equal(lead.ranked[0].id, "architect");
 
-  // Reversing the input must not change the outcome.
-  const reversed = core.leadingRoles(data, tied.slice().reverse(), "profileSuitability");
-  assert.equal(reversed.ranked[0].id, "architect");
-  assert.deepEqual(
-    lead.ranked.map((role) => role.id),
-    reversed.ranked.map((role) => role.id),
-  );
-});
 
-check("role scores stay on the 1-5 scale and never total", () => {
-  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
-  assert.equal(profile.roles.length, 5);
-  profile.roles.forEach((role) => {
-    assert.ok(role.score >= 1 && role.score <= 5, `${role.name} ${role.score}`);
-    assert.equal(role.normalised, (role.score - 1) / 4, `${role.name} normalised`);
-  });
-  ["total", "sum", "percentage", "share"].forEach((key) => {
-    assert.equal(key in profile.roles[0], false, `role.${key}`);
-  });
-});
 
-check("a tie inside the configured tolerance produces a blend of two", () => {
-  const tolerance = data.assessment.suitability.tieTolerance;
-  assert.equal(tolerance, 0.15);
-  const roles = [
-    { id: "a", name: "The Steward", shortName: "Steward", score: 4.1 },
-    { id: "b", name: "The Architect", shortName: "Architect", score: 4.0 },
-    { id: "c", name: "The Sentinel", shortName: "Sentinel", score: 3.2 },
-    { id: "d", name: "The Catalyst", shortName: "Catalyst", score: 2.0 },
-    { id: "e", name: "The Pathfinder", shortName: "Pathfinder", score: 1.5 },
-  ];
-  const blend = core.leadingRoles(data, roles);
-  assert.equal(blend.isBlend, true);
-  assert.equal(blend.label, "Steward + Architect");
-  assert.equal(blend.blended.length, 2);
-
-  // A flat profile is a flat profile, not a five-way blend.
-  const flat = core.leadingRoles(
-    data,
-    roles.map((role) => ({ ...role, score: 3 })),
-  );
-  assert.equal(flat.blended.length, 2);
-
-  // Just outside the tolerance is a single role.
-  const single = core.leadingRoles(
-    data,
-    roles.map((role, index) => ({ ...role, score: index === 0 ? 4.2 : role.score })),
-  );
-  assert.equal(single.isBlend, false);
-});
-
-check("a secondary role is offered only within 0.30", () => {
-  const base = [
-    { id: "a", name: "The Steward", shortName: "Steward", score: 4.5 },
-    { id: "b", name: "The Architect", shortName: "Architect", score: 4.2 },
-    { id: "c", name: "The Sentinel", shortName: "Sentinel", score: 2.0 },
-  ];
-  const close = core.leadingRoles(data, base);
-  assert.equal(close.isBlend, false);
-  assert.equal(close.secondary.shortName, "Architect");
-
-  const far = core.leadingRoles(data, [
-    { id: "a", name: "The Steward", shortName: "Steward", score: 4.5 },
-    { id: "b", name: "The Architect", shortName: "Architect", score: 4.0 },
-  ]);
-  assert.equal(far.secondary, null);
-});
 
 /* -------------------------------------------------------- context phases */
 
@@ -678,11 +521,11 @@ check("phase scores are calculated separately from the full profile", () => {
         : 3,
     ),
   );
-  const architect = (phase) =>
-    phase.roles.find((role) => role.id === "architect").score;
-  assert.equal(architect(profile.phases[0]), 3, "baseline untouched");
-  assert.equal(architect(profile.phases[1]), 5, "pressure raised");
-  assert.equal(architect(profile.phases[2]), 3, "recovery untouched");
+  const metal = (phase) =>
+    phase.currents.find((role) => role.id === "metal").score;
+  assert.equal(metal(profile.phases[0]), 3, "baseline untouched");
+  assert.equal(metal(profile.phases[1]), 5, "pressure raised");
+  assert.equal(metal(profile.phases[2]), 3, "recovery untouched");
   profile.phases.forEach((phase) => assert.equal(phase.definitive, true));
 });
 
@@ -706,7 +549,7 @@ check("shifts use the 0.25 and 0.50 thresholds", () => {
 
 check("a stable pattern reports no shifts at all", () => {
   const profile = core.scoreProfile(data, answerAll(() => 3));
-  const comparison = core.compareRoles(data, profile.phases[0], profile.phases[1]);
+  const comparison = core.compareCurrents(data, profile.phases[0], profile.phases[1]);
   assert.equal(comparison.stable, true);
   assert.deepEqual(comparison.shifts, []);
 });
@@ -728,15 +571,17 @@ check("the summary describes patterns, never a type or a verdict", () => {
 
   profiles.forEach((profile) => {
     const summary = core.summariseProfile(data, profile);
-    assert.ok(summary.overall.primary, "no leading role");
-    ["consistency", "adaptation", "contribution"].forEach((key) => {
-      const words = summary[key].trim().split(/\s+/).length;
-      assert.ok(words >= 50 && words <= 90, `${key} is ${words} words`);
-      assert.doesNotMatch(summary[key], /\byour type\b/i);
-      assert.doesNotMatch(summary[key], /\bstrength|weakness\b/i);
-      assert.doesNotMatch(summary[key], /\bsuccessful|unsuccessful\b/i);
-      assert.doesNotMatch(summary[key], /\bshould\b/i);
-    });
+    /*
+     * The summary no longer nominates a leading current. It describes what the
+     * night did to the five, and nothing about it ranks them.
+     */
+    assert.equal("overall" in summary, false, "the summary still names a lead");
+    const words = summary.adaptation.trim().split(/\s+/).length;
+    assert.ok(words >= 40 && words <= 110, `adaptation is ${words} words`);
+    assert.doesNotMatch(summary.adaptation, /\byour type\b/i);
+    assert.doesNotMatch(summary.adaptation, /\bstrength|weakness\b/i);
+    assert.doesNotMatch(summary.adaptation, /\bsuccessful|unsuccessful\b/i);
+    assert.doesNotMatch(summary.adaptation, /\bshould\b/i);
     assert.ok(summary.reflection.endsWith("?"), "reflection is a question");
   });
 });
@@ -747,7 +592,7 @@ check("the pressure observation names which way the contribution moved", () => {
    * mover was always described as having "became more visible" — including
    * when it had fallen. Across three thousand simulated watches, half of them
    * had a fall at the top of that list, so half of all reports asserted the
-   * opposite of the reader's own responses. `compareRoles` had been computing
+   * opposite of the reader's own responses. `compareCurrents` had been computing
    * the direction all along and the summary never read it.
    */
   const swing = (early, late) =>
@@ -765,7 +610,7 @@ check("the pressure observation names which way the contribution moved", () => {
   const rose = core.scoreProfile(data, swing(4, 5));
   const reading = (profile) => {
     const phase = (id) => profile.phases.find((entry) => entry.id === id);
-    const steward = (id) => phase(id).roles.find((role) => role.id === "steward").score;
+    const steward = (id) => phase(id).currents.find((role) => role.id === "earth").score;
     return steward("pressure") - steward("baseline");
   };
 
@@ -1222,31 +1067,6 @@ check("the crew on the page matches the crew in the station", () => {
   });
 });
 
-check("a role is labelled with the element its relations actually use", () => {
-  /*
-   * Two independent sources. `role.element` is the printed label ("Wood"), and
-   * the Sheng/Ke walk finds the element by searching for the one whose `role`
-   * points back. Nothing keys either off the other, so they can drift and the
-   * report would draw one element while naming another.
-   */
-  Object.values(data.assessment.roles).forEach((role) => {
-    const byCycle = Object.values(data.assessment.elements).find((e) => e.role === role.id);
-    assert.ok(byCycle, `${role.id} is not claimed by any element`);
-    assert.equal(
-      byCycle.name,
-      role.element,
-      `${role.id} is labelled ${role.element} but its relations use ${byCycle.name}`,
-    );
-
-    const relations = core.relationsFor(data, role.id);
-    assert.ok(relations, `${role.id} has no relations`);
-    [relations.supports, relations.supportedBy, relations.checks, relations.checkedBy]
-      .forEach((other) => {
-        assert.ok(other, `${role.id} has a relation that resolves to nothing`);
-        assert.notEqual(other, role.id, `${role.id} feeds or checks itself`);
-      });
-  });
-});
 
 check("a finished journey ends with the completion panel", () => {
   const nodes = core.buildNodes(data, answerFirst(60));
@@ -1264,7 +1084,9 @@ check("the story PDF carries exactly the on-screen branches", () => {
   const fromNodes = core
     .buildNodes(data, state)
     .filter((node) => node.type === "selected")
-    .map((node) => node.text.replace(/[\u2010-\u2014]/g, "-"));
+    // The export has no dash glyph and sets one as a spaced hyphen, taking any
+    // spacing the dash already had with it.
+    .map((node) => node.text.replace(/[ \t]*[\u2010-\u2014][ \t]*/g, " - "));
   const fromBlocks = pdf
     .buildStoryBlocks(data, state, core)
     .filter((block) => block.type === "chosen")
@@ -1458,6 +1280,75 @@ const stylesSource = read("./styles.css");
 const pdfSource = read("./pdf-export.js");
 const audioSource = read("./audio.js");
 const readme = read("./README.md");
+
+/*
+ * Every content path the three surfaces read has to exist in the content file.
+ *
+ * This is here because removing the role tables broke four separate reads that
+ * the whole suite passed straight over: the story tinted an item by
+ * `assessment.roleOrder`, the report's instrument read `state.roles`, and the
+ * export printed `summary.consistency` and `summary.contribution`. None of
+ * them are covered by a behavioural check, because nothing here renders a
+ * page — so the paths are resolved statically instead.
+ *
+ * Resolution stops as soon as a segment lands on something that is not a plain
+ * object, which is what makes `chapters.find(...)` and `currents[id]` read as
+ * paths rather than as missing keys.
+ */
+check("no surface reads a content path the data does not have", () => {
+  const plain = (value) =>
+    value !== null && typeof value === "object" && !Array.isArray(value);
+
+  // Comments describe what the code used to do, and are not reads.
+  const stripped = (source) =>
+    source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/[^\n]*/g, " ");
+
+  let resolved = 0;
+  [
+    ["app.js", appSource],
+    ["results.js", resultsSource],
+    ["pdf-export.js", pdfSource],
+  ].forEach(([file, source]) => {
+    [...stripped(source).matchAll(/\bdata((?:\.[A-Za-z_$][\w$]*)+)/g)].forEach((match) => {
+      const path = match[1].slice(1).split(".");
+      let node = data;
+      path.forEach((key, index) => {
+        if (!plain(node)) {
+          return;
+        }
+        assert.ok(
+          Object.prototype.hasOwnProperty.call(node, key),
+          `${file} reads data.${path.slice(0, index + 1).join(".")}, which the content file does not have`,
+        );
+        node = node[key];
+        resolved += 1;
+      });
+    });
+  });
+  assert.ok(resolved > 120, `only ${resolved} content reads were checked`);
+});
+
+/*
+ * The same problem one level up: the report and the export are both handed the
+ * object `summariseProfile` returns, and both used to read keys off it that
+ * the roles removal had deleted.
+ */
+check("both surfaces read only the summary keys core actually returns", () => {
+  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
+  const summary = core.summariseProfile(data, profile);
+  const keys = new Set(Object.keys(summary));
+  assert.ok(keys.size >= 3, "the summary is empty");
+
+  [
+    ["results.js", resultsSource],
+    ["pdf-export.js", pdfSource],
+  ].forEach(([file, source]) => {
+    const stripped = source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/[^\n]*/g, " ");
+    [...stripped.matchAll(/\bsummary\.([A-Za-z_$][\w$]*)/g)].forEach((match) => {
+      assert.ok(keys.has(match[1]), `${file} reads summary.${match[1]}, which core does not return`);
+    });
+  });
+});
 
 check("both pages load the modules they need and nothing else", () => {
   [
@@ -1681,22 +1572,6 @@ check("the debrief is read one chapter at a time, and loses nothing", () => {
   assert.doesNotMatch(resultsSource, /setInterval/);
 });
 
-check("a role carries its written copy, not only its score", () => {
-  const profile = core.scoreProfile(data, answerAll(() => 4));
-  profile.roles.forEach((role) => {
-    ["missionFunction", "brings", "watchFor", "actionTitle", "action", "reading", "basis"].forEach(
-      (key) => {
-        assert.equal(typeof role[key], "string", `${role.id} ${key}`);
-        assert.ok(role[key].length > 0, `${role.id} ${key} is empty`);
-      },
-    );
-  });
-  // The report prints "{actionTitle} — {action}"; neither half may be missing.
-  assert.doesNotMatch(
-    profile.roles.map((role) => `${role.actionTitle} — ${role.action}`).join(" "),
-    /undefined/,
-  );
-});
 
 check("the export prints the report, not a summary of it", () => {
   /*
@@ -1719,10 +1594,9 @@ check("the export prints the report, not a summary of it", () => {
     assert.match(pdfSource, new RegExp(key), `export is missing ${key}`),
   );
 
-  // Overview, the night, five currents, calibration, relations, observations,
-  // the record.
-  assert.match(pdfSource, /profile\.currents\.length \+ 6/);
-  ["drawProfileCurrentPage", "drawProfileCalibrationPage", "drawProfileObservationPage"].forEach(
+  // Overview, the night, five currents, calibration, relations, the handover.
+  assert.match(pdfSource, /profile\.currents\.length \+ 5/);
+  ["drawProfileCurrentPage", "drawProfileCalibrationPage", "drawProfileHandoverPage"].forEach(
     (name) => assert.match(pdfSource, new RegExp(name), name),
   );
   // The retired contribution page is gone rather than merely unreferenced.
@@ -1792,26 +1666,24 @@ check("the reading centres on a wide page instead of hugging one edge", () => {
 });
 
 check("the five currents carry the five elements", () => {
+  /*
+   * An element names the current it reads, and nothing sits between them. The
+   * colours moved onto the current for the same reason: a second table holding
+   * half the identity is what let a reading be renamed on its way to the page.
+   */
   const elements = data.assessment.elements;
-  const expected = {
-    wood: "pathfinder",
-    fire: "catalyst",
-    earth: "steward",
-    metal: "architect",
-    water: "sentinel",
-  };
-  assert.deepEqual(Object.keys(elements).sort(), Object.keys(expected).sort());
-  Object.entries(expected).forEach(([elementId, roleId]) => {
-    assert.equal(elements[elementId].role, roleId, elementId);
-    assert.ok(elements[elementId].keywords, `${elementId} keywords`);
-    assert.ok(elements[elementId].shadow, `${elementId} shadow`);
-    assert.ok(data.assessment.roles[roleId].element, `${roleId} element`);
+  const currents = data.assessment.spectra.currents;
+  assert.deepEqual(Object.keys(elements).sort(), Object.keys(currents).sort());
+  Object.entries(elements).forEach(([elementId, element]) => {
+    assert.equal(element.current, elementId, elementId);
+    assert.ok(element.keywords, `${elementId} keywords`);
+    assert.ok(element.shadow, `${elementId} shadow`);
+    assert.ok(currents[elementId], `${elementId} has no current`);
   });
-  // Every role carries the deck value plus a tone for each ground.
-  core.DOMAIN_ORDER.forEach(() => {});
-  Object.values(data.assessment.roles).forEach((role) => {
+  // Every current carries the deck value plus a tone for each ground.
+  Object.values(currents).forEach((current) => {
     ["colour", "colourNight", "colourPaper"].forEach((key) => {
-      assert.match(role[key], /^#[0-9a-f]{6}$/, `${role.id} ${key}`);
+      assert.match(current[key], /^#[0-9a-f]{6}$/, `${current.id} ${key}`);
     });
   });
 });
@@ -1833,7 +1705,7 @@ check("a trace is legible on the ground it is drawn on", () => {
 
   const night = "#05080b";
   const paper = "#e6eaeb";
-  Object.values(data.assessment.roles).forEach((role) => {
+  Object.values(data.assessment.spectra.currents).forEach((role) => {
     assert.ok(
       ratio(role.colourNight, night) >= 3,
       `${role.id} night ${ratio(role.colourNight, night).toFixed(2)}:1`,
@@ -1844,7 +1716,7 @@ check("a trace is legible on the ground it is drawn on", () => {
     );
   });
   // The five stay distinguishable from one another on each ground.
-  const hues = Object.values(data.assessment.roles).map((role) => role.colour);
+  const hues = Object.values(data.assessment.spectra.currents).map((role) => role.colour);
   assert.equal(new Set(hues).size, 5);
 });
 
@@ -1866,13 +1738,13 @@ check("the relationships read outward from the leading contribution", () => {
   });
 
   // The deck's two worked examples, in Aurora's own names.
-  assert.equal(core.relationsFor(data, "architect").checks, "pathfinder");
-  assert.equal(core.relationsFor(data, "sentinel").checks, "catalyst");
+  assert.equal(core.relationsFor(data, "metal").checks, "wood");
+  assert.equal(core.relationsFor(data, "water").checks, "fire");
 
-  data.assessment.roleOrder.forEach((id) => {
+  data.assessment.spectra.order.forEach((id) => {
     const relations = core.relationsFor(data, id);
     ["supports", "supportedBy", "checks", "checkedBy"].forEach((key) => {
-      assert.ok(data.assessment.roles[relations[key]], `${id} ${key}`);
+      assert.ok(data.assessment.spectra.currents[relations[key]], `${id} ${key}`);
       assert.notEqual(relations[key], id, `${id} ${key} points at itself`);
     });
     // What you feed and what feeds you are never the same contribution.
@@ -1884,7 +1756,7 @@ check("the relationships read outward from the leading contribution", () => {
 check("the relationships chapter suggests, and never rates", () => {
   const copy = data.results.relationsCopy;
   ["supports", "supportedBy", "checks", "checkedBy"].forEach((key) => {
-    assert.ok(copy[key].includes("{role}"), `${key} template`);
+    assert.ok(copy[key].includes("{current}"), `${key} template`);
   });
   // No pair score, no cohesion figure, no compatibility rating.
   [resultsSource, pdfSource].forEach((source) => {
@@ -2115,7 +1987,8 @@ check("every export page gets its own number, and the last one is the count", ()
    * one lower than the file actually had.
    */
   const currents = 5;
-  const total = currents + 6;
+  // Read from the export rather than restated, so the two cannot drift apart.
+  const total = currents + Number(pdfSource.match(/profile\.currents\.length \+ (\d+)/)[1]);
   const slot = (expression) =>
     Function("pageCount", "index", `"use strict"; return ${expression};`);
 
@@ -2335,18 +2208,21 @@ check("the aurora ends as light does, not at a box edge", () => {
 
 check("the report carries every required piece of the record", () => {
   const labels = data.results.labels;
-  ["missionFunction", "brings", "watchFor", "action", "why", "basis", "advantage", "overextension", "reflection"].forEach(
+  ["look", "divides", "misread", "firmness", "tryThis", "advantage", "overextension", "reflection"].forEach(
     (key) => assert.ok(labels[key], `label ${key}`),
   );
   assert.match(data.results.notATypeStatement, /not a fixed personality type/i);
   assert.ok(data.results.disclaimer);
 
-  // Role copy for all five contributions.
-  data.assessment.roleOrder.forEach((id) => {
-    const role = data.assessment.roles[id];
-    ["missionFunction", "brings", "watchFor", "actionTitle", "action"].forEach((key) =>
-      assert.ok(role[key], `${id} ${key}`),
-    );
+  // Writing for both ends of all five currents.
+  data.assessment.spectra.order.forEach((id) => {
+    const current = data.assessment.spectra.currents[id];
+    assert.ok(current.axis, `${id} axis`);
+    ["low", "high"].forEach((end) => {
+      ["name", "look", "misread"].forEach((key) =>
+        assert.ok(current.poles[end][key], `${id}.${end} ${key}`),
+      );
+    });
   });
 
   // Advantage, overextension and reflection for every band of every current.
@@ -2381,8 +2257,8 @@ check("the movement instrument keeps fixed axes and a fixed scale", () => {
     radar.states.map((state) => state.phase),
     ["baseline", "pressure", "recovery"],
   );
-  assert.equal(data.assessment.suitability.stableChange, 0.25);
-  assert.match(resultsSource, /const order = data\.assessment\.roleOrder/);
+  assert.equal(core.STEADY_CHANGE, 0.25);
+  assert.match(resultsSource, /const order = data\.assessment\.spectra\.order/);
   assert.doesNotMatch(resultsSource, /order\.sort\(|\.sort\(\)/);
   assert.doesNotMatch(resultsSource, /rotate/);
   assert.match(resultsSource, /\[2, 3, 4, 5\]\.forEach/);
@@ -2395,7 +2271,7 @@ check("the movement instrument keeps fixed axes and a fixed scale", () => {
 });
 
 check("the report copy stays neutral and non-diagnostic", () => {
-  const copy = JSON.stringify(data.results) + JSON.stringify(data.assessment.roles);
+  const copy = JSON.stringify(data.results) + JSON.stringify(data.assessment.spectra);
   [
     /\bbest role\b/i,
     /\bwinner\b/i,

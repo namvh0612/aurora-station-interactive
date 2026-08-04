@@ -380,144 +380,39 @@ window.AURORA_STATION_DATA = {
       "pressure",
       "recovery"
     ],
-    "roles": {
-      "pathfinder": {
-        "id": "pathfinder",
-        "name": "The Pathfinder",
-        "shortName": "Pathfinder",
-        "domain": "openMindedness",
-        "basis": "Open-Mindedness",
-        "element": "Wood",
-        "colour": "#3dcd58",
-        "colourNight": "#3dcd58",
-        "colourPaper": "#237a35",
-        "contribution": "Explores possibilities and reframes uncertainty.",
-        "reading": "keeping more than one explanation alive and looking for the route that has not been tried",
-        "inGroup": "finds the option a group has not yet considered",
-        "missionFunction": "Keep unexplored routes visible before the watch closes on one explanation.",
-        "brings": "Alternative readings of the same evidence, and the patience to hold them open while the data is still thin.",
-        "watchFor": "Exploration can outlast its usefulness. A watch that keeps reopening the question never reaches the point of acting on it.",
-        "actionTitle": "OPEN ONE MORE ROUTE",
-        "action": "Name one plausible explanation the room has not yet said aloud, then set the evidence that would close it."
-      },
-      "catalyst": {
-        "id": "catalyst",
-        "name": "The Catalyst",
-        "shortName": "Catalyst",
-        "domain": "extraversion",
-        "basis": "Extraversion",
-        "element": "Fire",
-        "colour": "#b10043",
-        "colourNight": "#e0175c",
-        "colourPaper": "#b10043",
-        "contribution": "Creates momentum and mobilises others.",
-        "reading": "putting energy into the room and making your engagement visible to the people in it",
-        "inGroup": "raises the level of a room when the work needs momentum",
-        "missionFunction": "Turn a stalled room into a moving one and keep the work visible between people.",
-        "brings": "Momentum, and the willingness to be the first voice when the silence has stopped being useful.",
-        "watchFor": "Momentum can occupy the space other people needed in order to think. The room can end up moving at your pace rather than the problem's.",
-        "actionTitle": "MAKE ROOM AFTER MOVING",
-        "action": "Once the direction is set, leave a deliberate pause in which someone else can change it."
-      },
-      "steward": {
-        "id": "steward",
-        "name": "The Steward",
-        "shortName": "Steward",
-        "domain": "agreeableness",
-        "basis": "Agreeableness",
-        "element": "Earth",
-        "colour": "#e47f00",
-        "colourNight": "#e47f00",
-        "colourPaper": "#a35a00",
-        "contribution": "Maintains trust, cooperation and human connection.",
-        "reading": "keeping people in contact with one another and protecting the working relationship",
-        "inGroup": "holds a group together when the work starts to pull people apart",
-        "missionFunction": "Keep the people in contact with each other while the work pulls them apart.",
-        "brings": "Attention to what a decision costs the person carrying it, and the conditions cooperation actually needs.",
-        "watchFor": "Protecting the relationship can delay a necessary disagreement. Some decisions cost trust in the short term and are still correct.",
-        "actionTitle": "NAME THE HUMAN COST",
-        "action": "Say plainly who carries the weight of the current plan, then ask whether they can."
-      },
-      "architect": {
-        "id": "architect",
-        "name": "The Architect",
-        "shortName": "Architect",
-        "domain": "conscientiousness",
-        "basis": "Conscientiousness",
-        "element": "Metal",
-        "colour": "#9fa0a4",
-        "colourNight": "#9fa0a4",
-        "colourPaper": "#5c6166",
-        "contribution": "Creates structure and dependable execution.",
-        "reading": "holding sequence and finishing what the situation started",
-        "inGroup": "turns an intention into something that actually gets carried through",
-        "missionFunction": "Turn intent into a sequence that survives being handed to someone else.",
-        "brings": "Order, follow-through, and a record that means the next watch does not begin from nothing.",
-        "watchFor": "Structure can outlive the situation it was built for. A sequence held past its usefulness becomes the thing being defended.",
-        "actionTitle": "SET THE STOPPING RULE",
-        "action": "Define the condition that would tell you the current sequence is no longer the right one."
-      },
-      "sentinel": {
-        "id": "sentinel",
-        "name": "The Sentinel",
-        "shortName": "Sentinel",
-        "domain": "negativeEmotionality",
-        "basis": "Negative Emotionality",
-        "element": "Water",
-        "colour": "#42b4e6",
-        "colourNight": "#42b4e6",
-        "colourPaper": "#10688f",
-        "contribution": "Maintains calm, awareness and resilience under pressure.",
-        "reading": "staying level while the situation moves and keeping your own state out of the problem",
-        "inGroup": "gives others something steady to work against when conditions are not steady",
-        "missionFunction": "Hold a steady reading while the conditions around it stop being steady.",
-        "brings": "Calm that other people can work against, and attention that stays on the instrument rather than the alarm.",
-        "watchFor": "Steadiness can read as distance. A room under strain sometimes needs the pressure acknowledged before it is absorbed.",
-        "actionTitle": "SAY WHAT IS UNRESOLVED",
-        "action": "Name the one risk still open and the evidence that would show it is controlled."
-      }
-    },
-    "roleOrder": [
-      "pathfinder",
-      "catalyst",
-      "steward",
-      "architect",
-      "sentinel"
-    ],
-    "roleNote": "Aurora Roles are mission contributions derived from your own responses. They are not fixed personality types. All five sit on the same one-to-five scale, they do not total anything, and no role is better than another.",
     "elements": {
       "wood": {
         "id": "wood",
         "name": "Wood",
-        "role": "pathfinder",
+        "current": "wood",
         "keywords": "Initiating, creative, unconventional, visionary",
         "shadow": "Many ideas, and no one left to finalise them"
       },
       "fire": {
         "id": "fire",
         "name": "Fire",
-        "role": "catalyst",
+        "current": "fire",
         "keywords": "Spreading, driving, energetic, active",
         "shadow": "Impulsive and loud, and short of depth"
       },
       "earth": {
         "id": "earth",
         "name": "Earth",
-        "role": "steward",
+        "current": "earth",
         "keywords": "Bonding, mediating, nurturing, steadying",
         "shadow": "Avoids conflict, and is reluctant on the hard calls"
       },
       "metal": {
         "id": "metal",
         "name": "Metal",
-        "role": "architect",
+        "current": "metal",
         "keywords": "Disciplined, exacting, completing, quality-led",
         "shadow": "Rigid and perfectionist, and slow to adapt"
       },
       "water": {
         "id": "water",
         "name": "Water",
-        "role": "sentinel",
+        "current": "water",
         "keywords": "Calm, analytical, deep, adaptable",
         "shadow": "Passive and detached, and prone to over-analysis"
       }
@@ -537,14 +432,7 @@ window.AURORA_STATION_DATA = {
         "fire": "metal",
         "metal": "wood"
       },
-      "note": "The five elements are used here for the shape of a relationship between contributions, and for nothing else. No part of your reading is derived from a date of birth."
-    },
-    "roleMapping": {
-      "The Pathfinder": "Open-Mindedness",
-      "The Catalyst": "Extraversion",
-      "The Steward": "Agreeableness",
-      "The Architect": "Conscientiousness",
-      "The Sentinel": "Negative Emotionality"
+      "note": "The five elements are used here for the shape of a relationship between the currents, and for nothing else. No part of your reading is derived from a date of birth."
     },
     "shiftThresholds": {
       "ignore": 0.25,
@@ -552,19 +440,6 @@ window.AURORA_STATION_DATA = {
       "notable": 0.5,
       "blend": 0.15,
       "secondary": 0.3
-    },
-    "suitability": {
-      "formula": "0.60 * overallRoleScore + 0.25 * pressureRoleScore + 0.15 * facetFloor",
-      "weights": {
-        "overall": 0.6,
-        "pressure": 0.25,
-        "facetFloor": 0.15
-      },
-      "facetFloorNote": "The lowest supporting facet score for that role, so a strong average cannot hide an unsupported component.",
-      "recommendedFormula": "Profile Suitability + Team Composition + Mission Requirement",
-      "recommendedNote": "Profile suitability describes the fit your own responses support. A recommended role also depends on what the team already has and what the mission needs, neither of which a solo journey can know.",
-      "tieTolerance": 0.15,
-      "stableChange": 0.25
     },
     "instruments": {
       "extraversion": {
@@ -589,6 +464,7 @@ window.AURORA_STATION_DATA = {
       }
     },
     "spectra": {
+      "order": ["wood", "fire", "earth", "metal", "water"],
       "note": "Each current is one line with a name at both ends. A reading is a position on that line. Neither end is a shortage of the other, and distance from the middle is how pronounced a tendency is, never how good it is.",
       "magnitudes": {
         "faint": "faint",
@@ -603,6 +479,9 @@ window.AURORA_STATION_DATA = {
       "currents": {
         "wood": {
           "id": "wood",
+          "colour": "#3dcd58",
+          "colourNight": "#3dcd58",
+          "colourPaper": "#237a35",
           "name": "Wood",
           "domain": "openMindedness",
           "axis": "how you meet the unfamiliar",
@@ -646,6 +525,9 @@ window.AURORA_STATION_DATA = {
         },
         "fire": {
           "id": "fire",
+          "colour": "#b10043",
+          "colourNight": "#e0175c",
+          "colourPaper": "#b10043",
           "name": "Fire",
           "domain": "extraversion",
           "axis": "how you occupy a room",
@@ -689,6 +571,9 @@ window.AURORA_STATION_DATA = {
         },
         "earth": {
           "id": "earth",
+          "colour": "#e47f00",
+          "colourNight": "#e47f00",
+          "colourPaper": "#a35a00",
           "name": "Earth",
           "domain": "agreeableness",
           "axis": "how you hold ground with people",
@@ -732,6 +617,9 @@ window.AURORA_STATION_DATA = {
         },
         "metal": {
           "id": "metal",
+          "colour": "#9fa0a4",
+          "colourNight": "#9fa0a4",
+          "colourPaper": "#5c6166",
           "name": "Metal",
           "domain": "conscientiousness",
           "axis": "how you commit",
@@ -775,6 +663,9 @@ window.AURORA_STATION_DATA = {
         },
         "water": {
           "id": "water",
+          "colour": "#42b4e6",
+          "colourNight": "#42b4e6",
+          "colourPaper": "#10688f",
           "name": "Water",
           "domain": "negativeEmotionality",
           "axis": "how feeling moves",
@@ -2324,14 +2215,8 @@ window.AURORA_STATION_DATA = {
       "mapping": "Wood, Fire, Earth, Metal and Water correspond to Open-Mindedness, Extraversion, Agreeableness, Conscientiousness and Negative Emotionality. Negative Emotionality is read as itself throughout: on the Water line, more feeling in motion sits toward The Open Sea.",
       "limitations": "This record must not be used as the sole or determining basis for recruitment or selection, promotion, pay or performance decisions, disciplinary decisions, clinical or psychological assessment, educational admission, or any other high-stakes judgement about a person."
     },
-    "notATypeStatement": "Your Aurora Role is the contribution your profile is best placed to make. It is not a fixed personality type, and it is not a limit on what you are able to do.",
+    "notATypeStatement": "Five lines, each read separately, each with a named end in both directions. Where you sat tonight is a reading of one watch, not a fixed personality type, and where you sat is not a limit on what you are able to do.",
     "labels": {
-      "missionFunction": "Mission function",
-      "brings": "What you bring",
-      "watchFor": "Watch for",
-      "action": "Mission action",
-      "why": "Why this role",
-      "basis": "Behavioural current",
       "advantage": "Potential advantage",
       "overextension": "Possible overextension",
       "reflection": "Reflection",
@@ -2342,7 +2227,6 @@ window.AURORA_STATION_DATA = {
       "divides": "Where the current divides",
       "misread": "How this is often misread",
       "firmness": "How firm this reading is",
-      "asksOf": "What this asks of your other currents",
       "tryThis": "One thing to try",
       "fromCentre": "from centre",
       "supports": "Feeds",
@@ -2350,13 +2234,18 @@ window.AURORA_STATION_DATA = {
       "checks": "Checks",
       "checkedBy": "Checked by"
     },
-    "shiftIntro": "The same five contributions, read separately across three stretches of the watch. The instrument holds one scale throughout; only the distance along each axis changes.",
-    "shiftStableCopy": "Little moved. Across the three stretches no contribution shifted far enough to read as a change, which suggests your approach was not especially sensitive to how difficult the night became.",
+    "shiftIntro": "The same five lines, read separately across three stretches of the watch. The instrument holds one scale throughout; only the distance along each axis changes.",
+    "shiftStableCopy": "Little moved. Across the three stretches no current shifted far enough to read as a change, which suggests your approach was not especially sensitive to how difficult the night became.",
+    "returnCopy": {
+      "returned": "By the closing Acts the pattern had come back towards the one you began with.",
+      "retained": "By the closing Acts the pattern still sat nearer the pressure reading than the one you began with.",
+      "new": "By the closing Acts the pattern had settled somewhere that matches neither the opening nor the worst of it."
+    },
     "detailIntro": "Each current read in full: what it was doing, what it is likely to give you, what it can cost, and one question worth sitting with.",
-    "relationsIntro": "Contributions do not sit apart from one another. Read from the one your record supports most clearly, this is which contribution yours tends to feed, which one tends to feed yours, and which one holds it in check when it runs long. None of it is a compatibility rating, and none of it says who to work with.",
+    "relationsIntro": "The five currents do not sit apart from one another. Read from the line your record marks most clearly, this is which current yours tends to feed, which one tends to feed yours, and which one holds it in check when it runs long. None of it is a compatibility rating, and none of it says who to work with.",
     "relationsNote": "These relationships come from the five elements: an old way of describing how forces feed and restrain one another, used here only for the shape of the relationship. Everything about you in this report comes from your own sixty responses.",
     "relationsLabels": {
-      "supports": "Your contribution tends to feed",
+      "supports": "Your current tends to feed",
       "supportedBy": "Tends to be fed by",
       "checks": "You tend to hold in check",
       "checkedBy": "Tends to hold you in check",
@@ -2367,13 +2256,13 @@ window.AURORA_STATION_DATA = {
       "yours": "Yours"
     },
     "relationsCopy": {
-      "supports": "When your contribution is working, it tends to create the conditions {role} needs. Offering it deliberately is usually more useful than waiting to be asked.",
-      "supportedBy": "{role} tends to create the conditions yours needs. When your own reading feels thin, this is the contribution worth having near you.",
-      "checks": "Your contribution tends to restrain {role} when that one runs long. Used well this is a useful brake; used constantly it becomes friction.",
-      "checkedBy": "{role} tends to restrain yours when yours runs long. That is a check rather than an obstacle, and it is easier to accept before it is needed than during."
+      "supports": "When your current is running well, it tends to create the conditions {current} needs. Offering it deliberately is usually more useful than waiting to be asked.",
+      "supportedBy": "{current} tends to create the conditions yours needs. When your own reading feels thin, this is the line worth having near you.",
+      "checks": "Your current tends to restrain {current} when that one runs long. Used well this is a useful brake; used constantly it becomes friction.",
+      "checkedBy": "{current} tends to restrain yours when yours runs long. That is a check rather than an obstacle, and it is easier to accept before it is needed than during."
     },
     "radar": {
-      "heading": "Contribution across the watch",
+      "heading": "The five currents across the watch",
       "states": [
         {
           "id": "baseline",
@@ -2391,15 +2280,9 @@ window.AURORA_STATION_DATA = {
           "phase": "recovery"
         }
       ],
-      "tableCaption": "Contribution readings and change from the previous stretch",
+      "tableCaption": "Current readings and change from the previous stretch",
       "stableLabel": "steady",
-      "columns": {
-        "role": "Contribution",
-        "score": "Reading",
-        "change": "Change",
-        "previous": "Previous"
-      },
-      "note": "This records how the contributions available to you moved with the situation. It does not record a personality becoming a different one."
+      "note": "This records how each of the five lines moved with the situation. It does not record a personality becoming a different one."
     },
     "pager": {
       "previous": "Previous",
@@ -2415,16 +2298,13 @@ window.AURORA_STATION_DATA = {
     "restartConfirm": "Begin a new watch?\n\nThis clears the watchkeeper name, every recorded observation, the story and this report. Your sound setting is kept.",
     "privacy": "Your name and your responses stay in this browser. Aurora Station has no backend and sends nothing anywhere.",
     "summaryTemplates": {
-      "consistencyAnchored": "Across the watch your pattern stayed anchored in {overall}: {reading}. It was the tendency most available to you at the start and it did not give that position up, even as the conditions around it changed. That kind of consistency is not the same as rigidity. It suggests a way of working you return to by default, and which the rest of your responses arranged themselves around.",
-      "consistencyMoved": "Across the watch the most available tendency changed hands. You opened anchored in {starting}, and by the hardest hours {pressure} had moved ahead of it. That does not mean one replaced the other. It suggests that what you reach for first is sensitive to what the situation is asking, and that more than one way of working was genuinely available to you.",
       "adaptationShift": "Reading the routine stretch against the worst of the night, {pressure} became more visible in your responses: {reading}. This reads as an adjustment rather than a personality change—the kind of shift that shows what you lean on when the ordinary approach stops being enough. {recoveryClause}",
       "adaptationRecede": "Reading the routine stretch against the worst of the night, {pressure} receded furthest from your responses: {reading}. This reads as an adjustment rather than a personality change—the kind of shift that shows what gives way first when the ordinary approach stops being enough. {recoveryClause}",
-      "adaptationCrossed": "Between the routine stretch and the worst of the night, your {current} changed ends. It read as {from} while the watch was ordinary and as {to} once it was not: {reading} This is an adjustment rather than a personality change — it is the clearest kind, because it is not a matter of degree but of which end of the line was describing you. {recoveryClause}",
+      "adaptationCrossed": "Between the routine stretch and the worst of the night, your {current} changed ends. It read as {from} while the watch was ordinary and as {to} once it was not: {reading}. This is an adjustment rather than a personality change — it is the clearest kind, because it is not a matter of degree but of which end of the line was describing you. {recoveryClause}",
       "adaptationStable": "Pressure did not move you far. Through the worst of the night your responses stayed close to the pattern you began with, and they stayed close to it again once the situation became bounded. That steadiness is a finding in itself: it suggests your approach is not especially reactive to how difficult conditions become, for better and for worse.",
       "recoveryReturned": "Once the pressure eased, the pattern came back towards where it started.",
       "recoveryRetained": "Once the pressure eased, the adjustment mostly stayed.",
-      "recoveryNew": "Once the pressure eased, the pattern settled somewhere new.",
-      "contribution": "In a group, a pattern like this tends to {contribution}. That is a contribution rather than a role you must occupy: it describes what other people are likely to be able to rely on from you, and it says nothing about what you are unable to do. The tendencies that sat lower here are not deficits, and they can be deliberately reached for when a situation calls for them."
+      "recoveryNew": "Once the pressure eased, the pattern settled somewhere new."
     },
     "reflectionPrompt": "When the next situation stops behaving predictably, which of these do you want to reach for first, and which one would you rather not lose while you do?"
   },

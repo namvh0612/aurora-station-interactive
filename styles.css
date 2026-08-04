@@ -1479,55 +1479,14 @@ body.report .art-grain {
   padding-top: 2.5rem;
 }
 
-/* ---- the contribution ---- */
+/* ---- the standing note ---- */
 
-.role-lede {
-  display: grid;
-  gap: 2rem 4rem;
-  align-items: start;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-}
-
-.role-name {
-  font-size: var(--step-display);
-  letter-spacing: -0.03em;
-}
-
-.role-basis {
-  margin-top: 1rem;
-}
-
-.role-statement {
+.record-statement {
   max-width: var(--measure);
   margin-top: 2rem;
   padding-left: 1.25rem;
   border-left: 2px solid var(--ink);
   font-style: italic;
-}
-
-.role-why {
-  max-width: var(--measure);
-  margin-top: 2rem;
-  color: var(--ink-dim);
-}
-
-.role-lines {
-  display: grid;
-  gap: 0;
-  margin-top: 3rem;
-  border-top: var(--rule) solid var(--paper-line);
-}
-
-.role-line {
-  display: grid;
-  gap: 0.5rem 3rem;
-  padding: 1.5rem 0;
-  border-bottom: var(--rule) solid var(--paper-line);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
-}
-
-.role-line p:last-child {
-  max-width: var(--measure-wide);
 }
 
 /* ---- instruments ---- */
@@ -2037,7 +1996,6 @@ body.report .action-quiet {
 /* ------------------------------------------------------------ responsive */
 
 @media (max-width: 60rem) {
-  .role-lede,
   .instrument-plot,
   .spectrum,
   .current-head {
@@ -2049,7 +2007,6 @@ body.report .action-quiet {
     text-align: left;
   }
 
-  .role-line,
   .facet-row {
     grid-template-columns: minmax(0, 1fr);
   }

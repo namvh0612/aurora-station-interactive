@@ -102,9 +102,8 @@
 
   /* ------------------------------------------------------------- spectra */
 
-  function currentForRoleId(id) {
-    const role = data.assessment.roles[id];
-    return role ? profile.currents.find((entry) => entry.domain === role.domain) : null;
+  function currentById(id) {
+    return profile.currents.find((entry) => entry.id === id) || null;
   }
 
   /*
@@ -158,7 +157,7 @@
       board.appendChild(row);
     });
     body.appendChild(board);
-    body.appendChild(el("p", "role-statement", COPY.notATypeStatement));
+    body.appendChild(el("p", "record-statement", COPY.notATypeStatement));
     return node;
   }
 
@@ -195,12 +194,15 @@
   function buildInstrument() {
     const ns = "http://www.w3.org/2000/svg";
     const copy = COPY.radar;
-    const order = data.assessment.roleOrder;
-    const steady = data.assessment.suitability.stableChange;
+    const order = data.assessment.spectra.order;
+    const steady = core.STEADY_CHANGE;
 
     const states = copy.states.map((entry) => {
       const phase = profile.phases.find((candidate) => candidate.id === entry.phase);
-      return { ...entry, roles: order.map((id) => phase.roles.find((role) => role.id === id)) };
+      return {
+        ...entry,
+        currents: order.map((id) => phase.currents.find((entry) => entry.id === id)),
+      };
     });
 
     const wrap = el("div", "instrument");
@@ -255,7 +257,7 @@
       const dot = document.createElementNS(ns, "circle");
       dot.setAttribute("r", "5.5");
       dot.setAttribute("class", "plot-node");
-      dot.setAttribute("fill", data.assessment.roles[id].colourPaper);
+      dot.setAttribute("fill", data.assessment.spectra.currents[id].colourPaper);
       plot.appendChild(dot);
       return { id, index, node: dot };
     });
@@ -270,7 +272,7 @@
         "text-anchor",
         Math.abs(anchor.x - PLOT_CENTRE) < 12 ? "middle" : anchor.x > PLOT_CENTRE ? "start" : "end",
       );
-      label.textContent = (currentForRoleId(id) || { name: "" }).name.toUpperCase();
+      label.textContent = data.assessment.spectra.currents[id].name.toUpperCase();
       plot.appendChild(label);
     });
 
@@ -278,7 +280,7 @@
     const list = el("ul", "reading-list");
     const rows = {};
     order.forEach((id) => {
-      const role = data.assessment.roles[id];
+      const line = data.assessment.spectra.currents[id];
       const item = el("li");
       const row = el("button", "reading");
       row.type = "button";
@@ -287,8 +289,8 @@
 
       const swatch = el("span", "reading-swatch");
       swatch.setAttribute("aria-hidden", "true");
-      swatch.style.setProperty("--trace", role.colourPaper);
-      const name = el("span", "reading-name", (currentForRoleId(id) || { name: role.shortName }).name);
+      swatch.style.setProperty("--trace", line.colourPaper);
+      const name = el("span", "reading-name", line.name);
       const value = el("span", "reading-value", "—");
       const change = el("span", "reading-change", "");
       const tip = el("span", "reading-tip");
@@ -303,7 +305,7 @@
 
     let active = 0;
     let frame = 0;
-    let current = states[0].roles.map((role) => role.normalised);
+    let plotted = states[0].currents.map((entry) => entry.normalised);
 
     const describe = (delta) => {
       if (delta === null) {
@@ -331,17 +333,17 @@
     const travel = (target) => {
       window.cancelAnimationFrame(frame);
       if (stillMotion()) {
-        current = target.slice();
-        paint(current);
+        plotted = target.slice();
+        paint(plotted);
         return;
       }
-      const from = current.slice();
+      const from = plotted.slice();
       const began = performance.now();
       const step = (now) => {
         const progress = Math.min(1, (now - began) / PLOT_TRAVEL);
         const eased = 1 - Math.pow(1 - progress, 3);
-        current = from.map((value, index) => value + (target[index] - value) * eased);
-        paint(current);
+        plotted = from.map((value, index) => value + (target[index] - value) * eased);
+        paint(plotted);
         if (progress < 1) {
           frame = window.requestAnimationFrame(step);
         }
@@ -364,35 +366,37 @@
       ghost.setAttribute(
         "points",
         earlier
-          ? plotPoints(earlier.roles.map((role) => role.normalised))
-          : plotPoints(stateAt.roles.map(() => 0)),
+          ? plotPoints(earlier.currents.map((entry) => entry.normalised))
+          : plotPoints(stateAt.currents.map(() => 0)),
       );
       ghost.style.opacity = earlier ? "1" : "0";
 
-      stateAt.roles.forEach((role, index) => {
-        const before = earlier ? earlier.roles[index].score : null;
-        const delta = before === null ? null : role.score - before;
+      stateAt.currents.forEach((entry, index) => {
+        const before = earlier ? earlier.currents[index].score : null;
+        const delta = before === null ? null : entry.score - before;
         const change = describe(delta);
-        const row = rows[role.id];
-        row.value.textContent = outOf(role.score);
+        const row = rows[entry.id];
+        row.value.textContent = outOf(entry.score);
         row.change.textContent = change.text;
         row.change.dataset.steady = String(change.steady);
-        const named = (currentForRoleId(role.id) || role).name;
+        const named = entry.name;
         row.tip.textContent = earlier
-          ? `${named}: ${reading(role.score)} of ${core.MAX_RESPONSE}, ${change.spoken} from ${earlier.label} (${reading(before)}).`
-          : `${named}: ${reading(role.score)} of ${core.MAX_RESPONSE} at ${stateAt.label}.`;
+          ? `${named}: ${reading(entry.score)} of ${core.MAX_RESPONSE}, ${change.spoken} from ${earlier.label} (${reading(before)}).`
+          : `${named}: ${reading(entry.score)} of ${core.MAX_RESPONSE} at ${stateAt.label}.`;
       });
 
       plot.setAttribute(
         "aria-label",
-        `${copy.heading}. ${stateAt.label}. Each contribution reads from one to five. ${stateAt.roles
-          .map((role) => `${(currentForRoleId(role.id) || role).name} ${reading(role.score)}`)
+        `${copy.heading}. ${stateAt.label}. Each current reads from one to five. ${stateAt.currents
+          .map((entry) => `${entry.name} ${reading(entry.score)}`)
           .join(". ")}.`,
       );
 
-      travel(stateAt.roles.map((role) => role.normalised));
+      travel(stateAt.currents.map((entry) => entry.normalised));
       if (settings.announce) {
-        say(`${stateAt.label}. ${stateAt.roles.map((role) => `${(currentForRoleId(role.id) || role).name} ${reading(role.score)}`).join(", ")}.`);
+        say(
+          `${stateAt.label}. ${stateAt.currents.map((entry) => `${entry.name} ${reading(entry.score)}`).join(", ")}.`,
+        );
       }
     };
 
@@ -420,7 +424,7 @@
     plotWrap.append(plot, list);
     wrap.append(switcher, plotWrap, el("p", "mark mark-sentence", copy.note));
 
-    paint(current);
+    paint(plotted);
     show(0);
     return wrap;
   }
@@ -434,8 +438,8 @@
     const baseline = profile.phases[0];
     const pressure = profile.phases[1];
     const recovery = profile.phases[2];
-    const intoPressure = core.compareRoles(data, baseline, pressure);
-    const outOfPressure = core.compareRoles(data, pressure, recovery);
+    const intoPressure = core.compareCurrents(data, baseline, pressure);
+    const outOfPressure = core.compareCurrents(data, pressure, recovery);
 
     const notes = el("div", "chapter-body");
     notes.appendChild(el("p", "mark", LABELS.observations));
@@ -447,14 +451,8 @@
       observations.push(summary.adaptation);
     }
     const returned = core.describeReturn(data, profile);
-    if (returned) {
-      observations.push(
-        returned === "returned"
-          ? "By the closing Acts the pattern had come back towards the one you began with."
-          : returned === "retained"
-            ? "By the closing Acts the pattern still sat nearer the pressure reading than the one you began with."
-            : "By the closing Acts the pattern had settled somewhere that matches neither the opening nor the worst of it.",
-      );
+    if (returned && COPY.returnCopy[returned]) {
+      observations.push(COPY.returnCopy[returned]);
     }
     observations.forEach((copy) => {
       notes.appendChild(el("p", "chapter-intro", copy));
@@ -521,28 +519,11 @@
         say(LABELS.firmness, current.firmness.copy);
       }
 
-      const asks = el("div", "guidance-block");
-      asks.appendChild(el("p", "mark", LABELS.asksOf));
-      const relations = core.relationsFor(data, roleIdForCurrent(current));
-      const lines = el("div", "role-lines");
-      [
-        ["supports", LABELS.supports],
-        ["supportedBy", LABELS.supportedBy],
-        ["checks", LABELS.checks],
-        ["checkedBy", LABELS.checkedBy],
-      ].forEach(([key, label]) => {
-        const other = currentForRoleId(relations[key]);
-        const row = el("div", "role-line");
-        row.style.setProperty("--trace", other ? other.colourPaper : current.colourPaper);
-        row.append(
-          el("p", "mark", `${label} · ${other ? other.name : ""}`),
-          el("p", "", current.pole[key]),
-        );
-        lines.appendChild(row);
-      });
-      asks.appendChild(lines);
-      page.appendChild(asks);
-
+      /*
+       * What this current asks of the other four belongs to Section IV, which
+       * reads the whole cycle at once. Printing it here as well said the same
+       * thing twice, once without the other side of the relationship.
+       */
       say(LABELS.tryThis, current.guidance.reflection);
       body.appendChild(page);
     });
@@ -551,13 +532,6 @@
   }
 
   /* ------------------------------------------------- IV: what holds what */
-
-  function roleIdForCurrent(current) {
-    const role = Object.values(data.assessment.roles).find(
-      (entry) => entry.domain === current.domain,
-    );
-    return role ? role.id : null;
-  }
 
   /*
    * The cycle read inward. Each current feeds one of your own and holds
@@ -573,20 +547,20 @@
       (best, entry) => (Math.abs(entry.magnitude) > Math.abs(best.magnitude) ? entry : best),
       profile.currents[0],
     );
-    const leadRole = roleIdForCurrent(lead);
+    const leadId = lead.id;
 
     const figure = el("div", "relations-figure");
     if (art) {
       const nodes = data.assessment.cycles.generating.map((elementId) => {
         const element = data.assessment.elements[elementId];
-        const entry = currentForRoleId(element.role);
+        const entry = currentById(element.current);
         return {
-          id: element.role,
+          id: element.current,
           label: entry ? entry.name : element.name,
           colour: entry ? entry.colourPaper : null,
         };
       });
-      figure.appendChild(art.elementCycle(nodes, leadRole, core.relationsFor(data, leadRole)));
+      figure.appendChild(art.elementCycle(nodes, leadId, core.relationsFor(data, leadId)));
     }
     const key = el("p", "mark relations-key");
     key.append(
@@ -598,9 +572,9 @@
 
     const grid = el("div", "relations-grid");
     profile.currents.forEach((current) => {
-      const relations = core.relationsFor(data, roleIdForCurrent(current));
-      const feeds = currentForRoleId(relations.supports);
-      const checks = currentForRoleId(relations.checks);
+      const relations = current.relations || {};
+      const feeds = relations.supports;
+      const checks = relations.checks;
       const block = el("article", "relations-block");
       block.style.setProperty("--trace", current.colourPaper);
       block.append(
@@ -684,11 +658,7 @@
   function buildCloseChapter() {
     const { node, body } = section("close");
 
-    [summary.consistency, summary.contribution].forEach((copy) => {
-      body.appendChild(el("p", "chapter-intro", copy));
-    });
-
-    const reflection = el("div", "role-statement");
+    const reflection = el("div", "record-statement");
     reflection.append(el("p", "mark", LABELS.reflection), el("p", "", summary.reflection));
     body.appendChild(reflection);
 
