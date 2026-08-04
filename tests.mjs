@@ -1594,11 +1594,15 @@ check("the export prints the report, not a summary of it", () => {
     assert.match(pdfSource, new RegExp(key), `export is missing ${key}`),
   );
 
-  // Overview, the night, five currents, calibration, relations, the handover.
-  assert.match(pdfSource, /profile\.currents\.length \+ 5/);
-  ["drawProfileCurrentPage", "drawProfileCalibrationPage", "drawProfileHandoverPage"].forEach(
-    (name) => assert.match(pdfSource, new RegExp(name), name),
-  );
+  // Overview, the night, five currents, calibration, relations, what those
+  // relationships cost in excess, the handover.
+  assert.match(pdfSource, /profile\.currents\.length \+ 6/);
+  [
+    "drawProfileCurrentPage",
+    "drawProfileCalibrationPage",
+    "drawProfileExcessPage",
+    "drawProfileHandoverPage",
+  ].forEach((name) => assert.match(pdfSource, new RegExp(name), name));
   // The retired contribution page is gone rather than merely unreferenced.
   assert.doesNotMatch(pdfSource, /drawProfileRolePage/);
   // Both ends of every line are drawn, so the export cannot imply a maximum.
@@ -2233,6 +2237,114 @@ check("no chapter or page singles out one of the five", () => {
     assert.equal(entry.moved, false, `${entry.id} moved on a flat record`);
     assert.ok(entry.copy);
   });
+});
+
+check("a relationship is written in both directions, working and overrun", () => {
+  /*
+   * The cycle only ever described the working direction, which reads as though
+   * more feeding were always better and more checking always safer. In the
+   * five elements they have the same shape and opposite failures: what you
+   * feed without limit drains you, and what you restrain without limit stops
+   * working at all. Both are written, for every current.
+   */
+  data.assessment.spectra.order.forEach((id) => {
+    const element = Object.values(data.assessment.elements).find((entry) => entry.current === id);
+    assert.ok(element, `${id} has no element`);
+    ["feeding", "fed", "checking", "checked"].forEach((key) => {
+      assert.ok(element.excess[key], `${id} excess ${key}`);
+      assert.ok(element.excess[key].length > 80, `${id} excess ${key} is a stub`);
+    });
+    // The two directions of one relationship, not the same sentence twice.
+    assert.notEqual(element.excess.feeding, element.excess.fed, id);
+    assert.notEqual(element.excess.checking, element.excess.checked, id);
+  });
+  [resultsSource, pdfSource].forEach((source) => {
+    assert.match(source, /excess\.feeding/);
+    assert.match(source, /excess\.checked/);
+  });
+  assert.ok(data.results.relationsExcess.intro.length > 120);
+
+  /*
+   * The figure answers the question it is next to. Pointing at a current picks
+   * out the two edges it is on, and the nodes are reachable by keyboard —
+   * a figure a keyboard cannot enter is a figure half the readers do not have.
+   */
+  assert.match(artworkSource, /data-current/);
+  assert.match(artworkSource, /"data-from": from\.id/);
+  assert.match(artworkSource, /tabindex: "0"/);
+  assert.match(resultsSource, /pointerenter/);
+  assert.match(resultsSource, /addEventListener\("focus"/);
+  assert.match(stylesSource, /data-focus/);
+  assert.ok(data.results.relationsHint, "nothing tells the reader the figure is live");
+});
+
+check("an action and a watch-for belong to an end, not to a band", () => {
+  /*
+   * The band version described The Blade and The Ore with the same sentence,
+   * because a band is a third of the scale and an end is a place on it. Every
+   * one of the fifteen blocks carries its own.
+   */
+  const seen = { action: new Set(), watchFor: new Set(), gloss: new Set() };
+  data.assessment.spectra.order.forEach((id) => {
+    const poles = data.assessment.spectra.currents[id].poles;
+    ["low", "middle", "high"].forEach((end) => {
+      ["action", "watchFor", "gloss"].forEach((key) => {
+        const value = poles[end][key];
+        assert.ok(value, `${id}.${end} ${key}`);
+        assert.equal(seen[key].has(value), false, `${id}.${end} ${key} is reused`);
+        seen[key].add(value);
+      });
+      // A gloss is a phrase that fits beside a name, not a paragraph.
+      assert.ok(poles[end].gloss.length < 60, `${id}.${end} gloss is too long to sit inline`);
+    });
+  });
+  assert.equal(seen.action.size, 15);
+  assert.equal(seen.watchFor.size, 15);
+  [resultsSource, pdfSource].forEach((source) => {
+    assert.match(source, /current\.pole\.watchFor/);
+    assert.match(source, /current\.pole\.action/);
+    assert.doesNotMatch(
+      source,
+      /guidance\.overextension/,
+      "a band still supplies the watch-for",
+    );
+  });
+});
+
+check("calibration shows the shape it is describing", () => {
+  /*
+   * Balance, ends and middle are three summaries of one thing: the sixty
+   * answers counted onto the five points they were given on. A flat spread, a
+   * lean and a pile in the middle can produce the same three sentences, so the
+   * shape is drawn as well as described — on both surfaces.
+   */
+  const style = core.responseStyleFor(data, answerAll((index) => (index % 5) + 1));
+  assert.equal(style.distribution.length, 5);
+  assert.deepEqual(
+    style.distribution.map((entry) => entry.value),
+    [1, 2, 3, 4, 5],
+  );
+  assert.equal(
+    style.distribution.reduce((total, entry) => total + entry.count, 0),
+    core.ITEM_COUNT,
+    "the columns do not account for every answer",
+  );
+  assert.equal(style.answered, core.ITEM_COUNT);
+
+  // Answering 5 to everything puts every answer in one column and none in the
+  // other four, which is the case a summary sentence hides best.
+  const flat = core.responseStyleFor(data, answerAll(() => 5));
+  assert.deepEqual(
+    flat.distribution.map((entry) => entry.count),
+    [0, 0, 0, 0, core.ITEM_COUNT],
+  );
+
+  [resultsSource, pdfSource].forEach((source) =>
+    assert.match(source, /style\.distribution/, "a surface describes without drawing"),
+  );
+  assert.ok(data.results.calibration.chartNote);
+  // Counted, never scored: the columns are answers given, not a total.
+  assert.doesNotMatch(JSON.stringify(data.results.calibration), /score|total/i);
 });
 
 check("a facet is a line with a name at each end, not a score", () => {

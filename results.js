@@ -649,9 +649,15 @@
       const divides = el("div", "guidance-block");
       divides.appendChild(el("p", "mark", LABELS.divides));
       const facets = el("div", "facet-set");
+      /*
+       * The facet's own name is gone. "Anxiety", "Depression" and "Emotional
+       * Volatility" were the labels a clinical inventory gives its subscales,
+       * and both ends of each line are now named in the reader's own terms —
+       * Risk-Tolerant to Risk-Sensitive says what the line measures without
+       * telling the reader which end is the disorder.
+       */
       current.facets.forEach((facet) => {
         const row = el("div", "facet-row");
-        row.appendChild(el("p", "reading-name", facet.name));
         const track = el("div", "spectrum-track facet-track");
         const mark = el("span", "spectrum-mark");
         mark.style.setProperty("--at", `${(facet.normalised * 100).toFixed(1)}%`);
@@ -670,7 +676,13 @@
 
       say(LABELS.misread, current.pole.misread);
       say(LABELS.advantage, current.guidance.advantage);
-      say(LABELS.overextension, current.guidance.overextension);
+      /*
+       * The watch-for is written for the end this reading was taken at, not
+       * for the third of the scale it falls in. The band version described
+       * The Blade and The Ore with the same sentence, which is the flattening
+       * that naming both ends was supposed to remove.
+       */
+      say(LABELS.overextension, current.pole.watchFor);
       if (current.firmness) {
         say(LABELS.firmness, current.firmness.copy);
       }
@@ -680,6 +692,8 @@
        * reads the whole cycle at once. Printing it here as well said the same
        * thing twice, once without the other side of the relationship.
        */
+      // The action, likewise written for the end rather than for the band.
+      say(LABELS.action, current.pole.action);
       say(LABELS.tryThis, current.guidance.reflection);
       pages.push({ current, page });
     });
@@ -695,6 +709,48 @@
    * another in check, which is what makes five readings a system rather than
    * five separate bars. It suggests, and never rates.
    */
+  /*
+   * Pointing at a current picks out the two edges it is on: the one it feeds
+   * along and the one it restrains along. Everything else stays drawn — the
+   * whole cycle is the subject, and this only says which part of it you are
+   * asking about.
+   *
+   * Keyboard and pointer both, because the nodes are the only way into this
+   * and a figure a keyboard cannot enter is a figure half the readers do not
+   * have. Focus is what the CSS keys on, so the two paths cannot drift.
+   */
+  function wireCycleFocus(figure, blocks) {
+    const svg = figure.querySelector("svg");
+    if (!svg) {
+      return;
+    }
+    const nodes = [...svg.querySelectorAll("[data-current]")];
+    const set = (id) => {
+      svg.dataset.focus = id || "";
+      blocks.forEach((block, key) => {
+        block.dataset.focus = String(Boolean(id) && key === id);
+      });
+    };
+
+    nodes.forEach((node) => {
+      const id = node.dataset.current;
+      node.addEventListener("pointerenter", () => set(id));
+      node.addEventListener("focus", () => set(id));
+      node.addEventListener("blur", () => set(null));
+      /*
+       * Scroll the block into view on activation rather than on hover: a
+       * figure that moves the page as the pointer crosses it is unusable.
+       */
+      node.addEventListener("click", () => {
+        const block = blocks.get(id);
+        if (block) {
+          block.scrollIntoView({ block: "center", behavior: stillMotion() ? "auto" : "smooth" });
+        }
+      });
+    });
+    svg.addEventListener("pointerleave", () => set(null));
+  }
+
   function buildRelationsChapter() {
     const { node, body } = section("relations");
     const labels = COPY.relationsLabels;
@@ -728,15 +784,24 @@
       el("span", "", labels.cycleGenerating),
       el("span", "", labels.cycleControlling),
     );
-    figure.append(key, el("p", "mark mark-sentence", COPY.relationsNote));
+    figure.append(
+      key,
+      el("p", "mark mark-sentence relations-hint", COPY.relationsHint),
+      el("p", "mark mark-sentence", COPY.relationsNote),
+    );
     body.appendChild(figure);
 
+    const excess = COPY.relationsExcess;
     const grid = el("div", "relations-grid");
+    const blocks = new Map();
+
     profile.currents.forEach((current) => {
       const relations = current.relations || {};
       const feeds = relations.supports;
       const checks = relations.checks;
+      const element = core.elementForCurrent(data, current.id);
       const block = el("article", "relations-block");
+      block.id = `relations-${current.id}`;
       block.style.setProperty("--trace", current.colourPaper);
       block.append(
         el("h3", "current-title", current.name.toUpperCase()),
@@ -747,9 +812,38 @@
         el("p", "", current.pole.supports),
         el("p", "", current.pole.checks),
       );
+
+      /*
+       * And what happens when either relationship runs long. The report only
+       * ever described the working direction, which reads as though more
+       * feeding were always better and more checking always safer. In the
+       * cycle these have the same shape and opposite failures: what you feed
+       * without limit drains you, and what you restrain without limit stops
+       * working at all.
+       */
+      if (element && element.excess) {
+        const runs = el("div", "relations-excess");
+        [
+          [excess.feeding, element.excess.feeding],
+          [excess.fed, element.excess.fed],
+          [excess.checking, element.excess.checking],
+          [excess.checked, element.excess.checked],
+        ].forEach(([label, copy]) => {
+          const line = el("div", "relations-excess-line");
+          line.append(el("p", "mark", label), el("p", "", copy));
+          runs.appendChild(line);
+        });
+        block.appendChild(runs);
+      }
+
+      blocks.set(current.id, block);
       grid.appendChild(block);
     });
     body.appendChild(grid);
+
+    if (art) {
+      wireCycleFocus(figure, blocks);
+    }
 
     return node;
   }
@@ -771,6 +865,29 @@
     if (style) {
       const scale = el("div", "guidance-block");
       scale.appendChild(el("p", "mark", copy.scaleHeading));
+
+      /*
+       * The sixty answers counted onto the five points they were given on.
+       * Every figure below this is a summary of this one shape, and a flat
+       * spread, a lean and a pile in the middle are three different ways of
+       * answering that the same three sentences describe identically.
+       */
+      const chart = el("div", "response-chart");
+      const labels = core.responseLabels(data);
+      const tallest = Math.max(...style.distribution.map((entry) => entry.count), 1);
+      style.distribution.forEach((entry) => {
+        const column = el("div", "response-column");
+        column.style.setProperty("--fill", `${((entry.count / tallest) * 100).toFixed(1)}%`);
+        column.append(
+          el("p", "response-count", String(entry.count)),
+          el("span", "response-bar"),
+          el("p", "response-point", String(entry.value)),
+          el("p", "response-label", labels[entry.value - 1] || ""),
+        );
+        chart.appendChild(column);
+      });
+      scale.append(chart, el("p", "mark mark-sentence", copy.chartNote));
+
       const table = el("div", "calibration-table");
       [
         [copy.labels.balance, style.balance.value.toFixed(2), style.balance.copy],
@@ -798,6 +915,13 @@
       body.appendChild(scale);
     }
 
+    /*
+     * The third column used to hold the pole name, which is blank for any
+     * reading in the middle — on a record where several sit there the table
+     * was a column of dashes. It carries what the firmness actually means for
+     * that line instead, which is the thing this section exists to say and is
+     * never empty.
+     */
     const firm = el("div", "guidance-block");
     firm.appendChild(el("p", "mark", copy.firmnessHeading));
     const index = el("div", "calibration-table");
@@ -807,7 +931,7 @@
       row.append(
         el("p", "reading-name", current.name),
         el("p", "facet-value", current.firmness ? current.firmness.id : "—"),
-        el("p", "", poleNameFor(current) || "—"),
+        el("p", "", current.firmness ? current.firmness.copy : ""),
       );
       index.appendChild(row);
     });
@@ -822,8 +946,18 @@
   function buildCloseChapter() {
     const { node, body } = section("close");
 
-    const reflection = el("div", "record-statement");
-    reflection.append(el("p", "mark", LABELS.reflection), el("p", "", summary.reflection));
+    /*
+     * The question first, at the weight a closing question deserves, then the
+     * standing note under it. The section ran reflection, four buttons and
+     * then eight paragraphs of back matter in one undifferentiated column, so
+     * the last thing the reader was asked sat in the same type as the licence.
+     */
+    const reflection = el("div", "handover");
+    reflection.append(
+      el("p", "mark", LABELS.reflection),
+      el("p", "handover-question", summary.reflection),
+      el("p", "record-statement", COPY.notATypeStatement),
+    );
     body.appendChild(reflection);
 
     const actions = el("div", "close-actions");

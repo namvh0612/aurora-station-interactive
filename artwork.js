@@ -444,6 +444,12 @@
      * ink. Drawing the head as a sibling path lets it take the line's own
      * class, and keeps it the same size whatever the stroke width.
      */
+    /*
+     * Both ends are recorded on the path, so the stylesheet can pick out the
+     * edges a focused node is on without this module knowing which one that
+     * is. The figure stays a drawing; which part of it is being asked about is
+     * a presentation question.
+     */
     function connect(from, to, className) {
       const dx = to.x - from.x;
       const dy = to.y - from.y;
@@ -453,9 +459,14 @@
       const gap = 18;
       const start = { x: from.x + unit.x * gap, y: from.y + unit.y * gap };
       const end = { x: to.x - unit.x * gap, y: to.y - unit.y * gap };
+      const ends = { "data-from": from.id, "data-to": to.id };
 
       figure.appendChild(
-        shape("path", { d: path([[start.x, start.y], [end.x, end.y]], false), class: className }),
+        shape("path", {
+          d: path([[start.x, start.y], [end.x, end.y]], false),
+          class: className,
+          ...ends,
+        }),
       );
 
       const head = 9;
@@ -470,6 +481,7 @@
             true,
           ),
           class: `${className} art-cycle-head`,
+          ...ends,
         }),
       );
     }
@@ -486,7 +498,29 @@
 
     placed.forEach((node) => {
       const weight = Math.max(0, Math.min(1, Number(node.weight) || 0));
-      figure.appendChild(
+      /*
+       * Each node is its own focusable group with a generous invisible target
+       * over it, so pointing at a current does not require hitting a circle
+       * eight pixels across and a keyboard can reach every one of the five.
+       */
+      const group = shape("g", {
+        class: "art-cycle-mark",
+        "data-current": node.id,
+        tabindex: "0",
+        role: "button",
+      });
+      const title = shape("title", {});
+      title.textContent = node.label;
+      group.appendChild(title);
+      group.appendChild(
+        shape("circle", {
+          cx: node.x.toFixed(1),
+          cy: node.y.toFixed(1),
+          r: 22,
+          class: "art-cycle-target",
+        }),
+      );
+      group.appendChild(
         shape("circle", {
           cx: node.x.toFixed(1),
           cy: node.y.toFixed(1),
@@ -500,6 +534,7 @@
           "stroke-width": node.filled ? 2.5 : 1.5,
         }),
       );
+      figure.appendChild(group);
 
       /*
        * Labels are pushed outward along the line from the centre through the

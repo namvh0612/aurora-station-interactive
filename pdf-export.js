@@ -601,6 +601,68 @@
     });
   }
 
+  /*
+   * What each relationship costs when it runs long — the half of the cycle the
+   * report never gave. Its own page, because twenty blocks of writing do not
+   * fit under the five they belong to.
+   */
+  function drawProfileExcessPage(context, data, profile, core, pageNumber, pageCount) {
+    const excess = data.results.relationsExcess;
+    drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
+    let y = drawExportHeading(
+      context,
+      excess.heading,
+      "Too much of a good relationship",
+      excess.intro,
+      "#14181a",
+    );
+
+    const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
+    const columnWidth = (width - 60) / 2;
+
+    profile.currents.forEach((current) => {
+      const element = core.elementForCurrent(data, current.id);
+      if (!element || !element.excess) {
+        return;
+      }
+      context.fillStyle = current.colourPaper;
+      context.beginPath();
+      context.arc(EXPORT_MARGIN + 10, y - 6, 10, 0, Math.PI * 2);
+      context.fill();
+      drawExportText(context, current.name.toUpperCase(), EXPORT_MARGIN + 44, y + 6, 620, {
+        size: 32,
+        family: "sans",
+        weight: 600,
+        colour: current.colourPaper,
+        lineHeight: 42,
+        maxLines: 1,
+      });
+      y += 56;
+
+      // Two columns of two, so a current's four failure modes read as one
+      // block rather than as a list four pages long.
+      let deepest = y;
+      [
+        [excess.feeding, element.excess.feeding],
+        [excess.fed, element.excess.fed],
+        [excess.checking, element.excess.checking],
+        [excess.checked, element.excess.checked],
+      ].forEach(([label, copy], index) => {
+        const x = EXPORT_MARGIN + (index % 2) * (columnWidth + 60);
+        const top = y + Math.floor(index / 2) * 190;
+        drawExportLabel(context, label, x, top, "#5c6568");
+        const bottom = drawExportText(context, copy, x, top + 44, columnWidth, {
+          size: 25,
+          colour: "#262b2d",
+          lineHeight: 37,
+          maxLines: 4,
+        });
+        deepest = Math.max(deepest, bottom);
+      });
+      y = deepest + 46;
+    });
+  }
+
 
   /* Page 2: how the pattern moved between the three story phases. */
   function drawProfilePhasePage(context, data, profile, summary, core, pageNumber, pageCount) {
@@ -954,7 +1016,9 @@
 
     block(labels.misread, current.pole.misread);
     block(labels.advantage, current.guidance.advantage);
-    block(labels.overextension, current.guidance.overextension);
+    // Written for the end this reading was taken at, not for the third of the
+    // scale it falls in — the report prints the same sentences.
+    block(labels.overextension, current.pole.watchFor);
 
     drawExportRule(context, y, "#c1caca", 2);
     y += 56;
@@ -963,27 +1027,28 @@
     /*
      * Each facet drawn as its own line with a name at each end, as the report
      * draws them. Printed as "4.8 / 5" over a filled bar, three of them stood
-     * under a bipolar reading claiming it had a maximum.
+     * under a bipolar reading claiming it had a maximum — and the subscale
+     * name above them ("Anxiety", "Depression") told the reader which end was
+     * the disorder, which the two names do not.
      */
     current.facets.forEach((facet) => {
-      drawExportText(context, facet.name, EXPORT_MARGIN, y + 26, 620, {
-        size: 30,
-        weight: 600,
-        colour: "#14181a",
-        lineHeight: 40,
-        maxLines: 1,
-      });
       drawSpectrum(
         context,
-        EXPORT_MARGIN + 660,
+        EXPORT_MARGIN,
         y,
-        width - 660,
-        { score: facet.score, poles: { low: { name: facet.poles ? facet.poles.low : "" }, high: { name: facet.poles ? facet.poles.high : "" } } },
+        width,
+        {
+          score: facet.score,
+          poles: {
+            low: { name: facet.poles ? facet.poles.low : "" },
+            high: { name: facet.poles ? facet.poles.high : "" },
+          },
+        },
         trace,
         { min: profile.scaleMin, max: profile.scaleMax },
         { centreBand: core.situationalReach(data) },
       );
-      y += 130;
+      y += 120;
     });
     y += 16;
     y = drawExportText(context, current.divergence.copy, EXPORT_MARGIN, y, width, {
@@ -1003,6 +1068,7 @@
      * sit here as well as on the relations page, which said the same thing
      * twice under two headings. They are drawn once, there.
      */
+    block(labels.action, current.pole.action, 4);
     block(labels.tryThis, current.guidance.reflection, 3);
   }
 
@@ -1021,6 +1087,53 @@
 
     const style = profile.responseStyle;
     if (style) {
+      /*
+       * The sixty answers counted onto the five points of the scale, as the
+       * report draws them. Everything under this is a reading of this one
+       * shape, and a flat spread, a lean and a pile in the middle read
+       * identically in prose.
+       */
+      const labels = core.responseLabels(data);
+      const tallest = Math.max(...style.distribution.map((entry) => entry.count), 1);
+      const chartWidth = width;
+      const columnWidth = chartWidth / style.distribution.length;
+      const floor = y + 260;
+      style.distribution.forEach((entry, index) => {
+        const x = EXPORT_MARGIN + index * columnWidth;
+        const height = (entry.count / tallest) * 200;
+        context.fillStyle = "#c1caca";
+        context.fillRect(x + 40, floor - height, columnWidth - 80, height);
+        drawExportText(context, String(entry.count), x + columnWidth / 2, floor - height - 22, columnWidth, {
+          size: 26,
+          family: "sans",
+          weight: 600,
+          colour: "#14181a",
+          align: "center",
+          lineHeight: 34,
+        });
+        drawExportText(context, labels[entry.value - 1] || "", x + columnWidth / 2, floor + 46, columnWidth - 20, {
+          size: 22,
+          family: "sans",
+          colour: "#5c6568",
+          align: "center",
+          lineHeight: 30,
+          maxLines: 2,
+        });
+      });
+      context.strokeStyle = "#c1caca";
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(EXPORT_MARGIN, floor);
+      context.lineTo(EXPORT_PAGE_WIDTH - EXPORT_MARGIN, floor);
+      context.stroke();
+      y = floor + 130;
+      y = drawExportText(context, copy.chartNote, EXPORT_MARGIN, y, width, {
+        size: 26,
+        colour: "#5c6568",
+        lineHeight: 38,
+      });
+      y += 50;
+
       [
         [copy.labels.balance, style.balance.value.toFixed(2), style.balance.copy],
         [copy.labels.ends, `${Math.round(style.ends.share * 100)}%`, style.ends.copy],
@@ -1858,8 +1971,8 @@
     const { canvas, context } = exportCanvas();
     const summary = core.summariseProfile(data, profile);
     // Overview, the night, one page per current, calibration, the
-    // relationships, and the handover.
-    const pageCount = profile.currents.length + 5;
+    // relationships, what they cost in excess, and the handover.
+    const pageCount = profile.currents.length + 6;
     const images = [];
 
     const capture = async (pageNumber, draw) => {
@@ -1892,11 +2005,14 @@
         ),
       );
     }
+    await capture(pageCount - 3, () =>
+      drawProfileCalibrationPage(context, data, profile, core, pageCount - 3, pageCount),
+    );
     await capture(pageCount - 2, () =>
-      drawProfileCalibrationPage(context, data, profile, core, pageCount - 2, pageCount),
+      drawProfileRelationsPage(context, data, profile, summary, core, pageCount - 2, pageCount),
     );
     await capture(pageCount - 1, () =>
-      drawProfileRelationsPage(context, data, profile, summary, core, pageCount - 1, pageCount),
+      drawProfileExcessPage(context, data, profile, core, pageCount - 1, pageCount),
     );
     await capture(pageCount, () =>
       drawProfileHandoverPage(context, data, profile, summary, pageCount, pageCount),

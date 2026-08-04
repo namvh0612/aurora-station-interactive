@@ -873,7 +873,22 @@
     const facetNames = Object.keys(byFacet);
     const held = facetNames.filter((name) => spread(byFacet[name]) < FACET_AGREEMENT_LIMIT).length;
 
+    /*
+     * The sixty raw answers counted onto the five points of the scale. Every
+     * other reading in this section is a summary of this one, and the shape it
+     * summarises is worth showing: a flat spread, a lean and a pile in the
+     * middle are three different ways of answering that the same three
+     * sentences would otherwise describe.
+     */
+    const distribution = [];
+    for (let value = MIN_RESPONSE; value <= MAX_RESPONSE; value += 1) {
+      const count = raw.filter((entry) => entry === value).length;
+      distribution.push({ value, count, share: count / raw.length });
+    }
+
     return {
+      distribution,
+      answered: raw.length,
       balance: { value: average, lean, id: balanceId, copy: copy.balance[balanceId] },
       ends: { share: endShare, id: endsId, copy: copy.ends[endsId] },
       middle: {
@@ -1291,43 +1306,87 @@
       const under = at(pressure);
       const after = at(recovery);
       const definition = data.assessment.spectra.currents[current.id];
+      /*
+       * The banded block, not the nearer end. A stretch that read as
+       * situational is described by the middle of the line, so a reading that
+       * moved from 3.1 to 3.4 is not reported as travelling between two poles
+       * it never reached.
+       */
+      const block = (score) => bandedPoleFor(data, definition, score);
+      const fill = (template, values) =>
+        Object.keys(values).reduce(
+          (text, key) => text.split(`{${key}}`).join(values[key]),
+          template,
+        );
+
       const delta = under.score - from.score;
       const back = after.score - under.score;
-      const moved = Math.abs(delta) >= floor;
-
-      if (!moved) {
-        const drifted = Math.abs(after.score - from.score) >= floor;
-        return {
-          id: current.id,
-          name: current.name,
-          colourPaper: current.colourPaper,
-          moved: false,
-          copy: drifted
-            ? copy.heldMoved.replace(
-                "{recovery}",
-                after.score > from.score ? copy.above : copy.below,
-              )
-            : copy.held,
-        };
-      }
-
-      const crossing = crossingFor(data, baseline, pressure, current.id);
-      const clause =
-        Math.abs(back) < floor
-          ? copy.stayed
-          : Math.abs(after.score - from.score) < floor
-            ? copy.returned
-            : copy.settled;
-      const template = crossing ? copy.crossed : delta > 0 ? copy.rose : copy.fell;
-      return {
+      const shared = {
         id: current.id,
         name: current.name,
         colourPaper: current.colourPaper,
+      };
+
+      if (Math.abs(delta) < floor) {
+        const drifted = Math.abs(after.score - from.score) >= floor;
+        return {
+          ...shared,
+          moved: false,
+          copy: fill(drifted ? copy.heldMoved : copy.held, {
+            from: block(from.score).name,
+            fromGloss: block(from.score).gloss,
+            direction: after.score > from.score ? copy.above : copy.below,
+          }),
+        };
+      }
+
+      /*
+       * Where it ended is named rather than gestured at, and named by block
+       * rather than by distance. "Settled somewhere else again" was true of
+       * every reading that neither returned nor stayed, which makes it a
+       * category rather than a finding.
+       */
+      const landed =
+        block(after.score) === block(under.score)
+          ? copy.stayed
+          : block(after.score) === block(from.score)
+            ? copy.returned
+            : copy.settled;
+
+      /*
+       * A line can move a long way without changing which end describes it.
+       * Reported with the same template as a crossing it printed "started at
+       * The Lantern and moved to The Lantern", so the three cases are told
+       * apart: a crossing, more of the same end, or a step back toward the
+       * middle without leaving it.
+       */
+      const same = block(from.score) === block(under.score);
+      const deeper = Math.abs(under.score - CENTRE) > Math.abs(from.score - CENTRE);
+      // The middle is not an end, so it cannot be gone further into or eased
+      // back from — a move inside the band is a move inside the band.
+      const inMiddle = block(from.score) === definition.poles.middle;
+      const template = !same
+        ? copy.crossed
+        : inMiddle
+          ? copy.middleMoved
+          : deeper
+            ? copy.deepened
+            : copy.eased;
+      return {
+        ...shared,
         moved: true,
-        copy: template
-          .replace("{from}", crossing ? crossing.from.name : poleFor(definition, from.score).name)
-          .replace("{to}", poleFor(definition, under.score).name)
-          .replace("{recoveryClause}", clause),
+        copy: fill(template, {
+          from: block(from.score).name,
+          fromGloss: block(from.score).gloss,
+          to: block(under.score).name,
+          toGloss: block(under.score).gloss,
+          after: block(after.score).name,
+          afterGloss: block(after.score).gloss,
+          recoveryClause: fill(landed, {
+            after: block(after.score).name,
+            afterGloss: block(after.score).gloss,
+          }),
+        }),
       };
     });
   }

@@ -1370,11 +1370,6 @@ body.report .art-grain {
   stroke-width: 1;
 }
 
-/* The relationships the reader is part of are the ones drawn in ink. */
-.art-cycle-live {
-  stroke: var(--ink-dim);
-}
-
 /*
  * The head carries its line's own class, so it takes the same colour without
  * depending on a shared marker that could only ever be one colour.
@@ -1385,10 +1380,6 @@ body.report .art-grain {
   stroke-dasharray: none;
 }
 
-.art-cycle-head.art-cycle-live {
-  fill: var(--ink-dim);
-}
-
 .art-cycle-label {
   fill: var(--ink-dim);
   font-family: var(--type-operational);
@@ -1396,8 +1387,58 @@ body.report .art-grain {
   letter-spacing: 0.04em;
 }
 
-.art-cycle-label-lead {
-  fill: var(--ink);
+/*
+ * Pointing at a current picks out the two edges it is on. Nothing is hidden —
+ * the whole cycle stays drawn, and the two lines under the pointer come up in
+ * ink so the question "what does this one feed, and what does it hold" has a
+ * visible answer. Both ends of every path are recorded on the path itself, so
+ * this is one attribute selector rather than a second drawing pass.
+ */
+.art-cycle-mark {
+  cursor: pointer;
+}
+
+.art-cycle-target {
+  fill: transparent;
+  stroke: none;
+}
+
+.art-cycle-mark:focus-visible .art-cycle-target {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.art-cycle svg,
+svg.art-cycle {
+  --lit: var(--ink-dim);
+}
+
+svg.art-cycle[data-focus] path[data-from],
+svg.art-cycle[data-focus] path[data-to] {
+  transition: stroke 160ms ease, fill 160ms ease;
+}
+
+svg.art-cycle[data-focus="wood"] path[data-from="wood"],
+svg.art-cycle[data-focus="fire"] path[data-from="fire"],
+svg.art-cycle[data-focus="earth"] path[data-from="earth"],
+svg.art-cycle[data-focus="metal"] path[data-from="metal"],
+svg.art-cycle[data-focus="water"] path[data-from="water"] {
+  stroke: var(--lit);
+}
+
+svg.art-cycle[data-focus="wood"] .art-cycle-head[data-from="wood"],
+svg.art-cycle[data-focus="fire"] .art-cycle-head[data-from="fire"],
+svg.art-cycle[data-focus="earth"] .art-cycle-head[data-from="earth"],
+svg.art-cycle[data-focus="metal"] .art-cycle-head[data-from="metal"],
+svg.art-cycle[data-focus="water"] .art-cycle-head[data-from="water"] {
+  fill: var(--lit);
+}
+
+/* Reduced motion asks for no transition, not for no highlight. */
+@media (prefers-reduced-motion: reduce) {
+  svg.art-cycle path {
+    transition: none;
+  }
 }
 
 /* The key, so solid and broken are named where they are seen. */
@@ -1835,6 +1876,55 @@ body.report .art-grain {
   content: "";
 }
 
+/*
+ * The sixty answers counted onto the five points of the scale. Drawn as five
+ * columns rather than described in three sentences, because a flat spread, a
+ * lean and a pile in the middle read identically in prose and not at all
+ * alike here.
+ */
+.response-chart {
+  display: grid;
+  gap: 0 1rem;
+  align-items: end;
+  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.response-column {
+  display: grid;
+  gap: 0.4rem;
+  align-content: end;
+  text-align: center;
+}
+
+.response-bar {
+  display: block;
+  height: 5rem;
+  background: linear-gradient(to top, var(--trace, var(--ink)) var(--fill, 0%), transparent var(--fill, 0%));
+  border-bottom: var(--rule) solid var(--paper-line);
+}
+
+.response-count,
+.response-point {
+  font-family: var(--type-operational);
+  font-size: var(--step-mark);
+  font-variant-numeric: tabular-nums;
+}
+
+.response-count {
+  color: var(--ink);
+}
+
+.response-point {
+  color: var(--ink-faint);
+}
+
+.response-label {
+  font-size: var(--step-note);
+  color: var(--ink-dim);
+  hyphens: auto;
+}
+
 .calibration-row {
   display: grid;
   gap: 0.5rem 3rem;
@@ -1874,6 +1964,37 @@ body.report .art-grain {
 .relations-block {
   padding: 2rem 0;
   border-top: var(--rule) solid var(--paper-line);
+}
+
+/* Pointing at a node in the figure marks its block, so the figure and the
+ * writing are visibly the same subject. */
+.relations-block[data-focus="true"] {
+  border-top-color: var(--trace, var(--ink));
+  box-shadow: inset 3px 0 0 -1px var(--trace, var(--ink));
+  padding-left: 1rem;
+}
+
+.relations-hint {
+  color: var(--ink-faint);
+}
+
+/*
+ * Both relationships have a failure mode and the report only ever described
+ * the working one, which reads as though more feeding were always better.
+ */
+.relations-excess {
+  display: grid;
+  gap: 0.75rem 3rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: var(--rule) solid var(--paper-line);
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+}
+
+.relations-excess-line p:last-child {
+  margin-top: 0.3rem;
+  font-size: var(--step-note);
+  color: var(--ink-dim);
 }
 
 /*
@@ -1989,15 +2110,9 @@ body.report .art-grain {
  */
 .facet-row {
   display: grid;
-  gap: 0.25rem 2.5rem;
+  gap: 0.25rem;
   padding: 1.1rem 0;
   border-bottom: var(--rule) solid var(--paper-line);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr);
-  align-items: center;
-}
-
-.facet-row .reading-name {
-  grid-row: span 2;
 }
 
 .facet-track {
@@ -2077,12 +2192,46 @@ body.report .action-quiet {
   color: var(--ink-dim);
 }
 
+/* The closing question, at the weight a closing question deserves. */
+.handover {
+  max-width: var(--measure-wide);
+  padding-bottom: 2.5rem;
+}
+
+.handover-question {
+  max-width: var(--measure);
+  margin-top: 0.75rem;
+  font-size: var(--step-lead);
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.handover .record-statement {
+  margin-top: 2rem;
+  font-size: var(--step-note);
+}
+
+/*
+ * The back matter, set in two columns so eight short paragraphs read as a
+ * colophon rather than as eight more things the report wanted to tell you.
+ */
 .colophon {
-  display: grid;
-  gap: 0.85rem;
+  columns: 2 var(--measure);
+  column-gap: 3rem;
   max-width: var(--measure-wide);
   padding-top: 2.5rem;
   border-top: var(--rule) solid var(--paper-line);
+}
+
+.colophon > * {
+  margin-bottom: 0.85rem;
+  break-inside: avoid;
+}
+
+.colophon .guidance-block {
+  display: block;
+  padding: 0;
+  border: 0;
 }
 
 .colophon p,
