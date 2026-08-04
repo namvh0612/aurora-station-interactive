@@ -2479,6 +2479,38 @@ check("the facet reading and the facet drawing agree", () => {
   });
 });
 
+check("the export advances by what it drew, not by a guess", () => {
+  /*
+   * `drawSpectrum` returns the y it finished at. Called for its side effect
+   * and followed by a fixed step, it printed "Practical · Proven" on top of
+   * the next element's name the moment the two-word tags made each block
+   * taller than the step allowed. Every call takes the return value.
+   */
+  const calls = [...pdfSource.matchAll(/^(\s*)(y = )?drawSpectrum\(/gm)];
+  assert.ok(calls.length >= 3, "the export draws no spectra");
+  calls.forEach((call, index) => {
+    assert.ok(call[2], `drawSpectrum call ${index + 1} discards where it finished`);
+  });
+  assert.match(pdfSource, /return names \+ \d+;/, "drawSpectrum reports no height");
+
+  /*
+   * And the rail in Section III names the element only. It carried the pole
+   * name under it as well, which put a second set of five names in the one
+   * place whose whole job is to be scannable.
+   */
+  assert.doesNotMatch(resultsSource, /current-tab-pole/);
+  assert.doesNotMatch(resultsSource, /current-step-pole/);
+  assert.doesNotMatch(stylesSource, /current-tab-pole|current-step-pole/);
+
+  /*
+   * Activating a node in the cycle shows its edges and does not move the page.
+   * On a phone the tap that asked the question was the tap that scrolled the
+   * answer off screen, and hover is wired only where hover exists.
+   */
+  assert.doesNotMatch(resultsSource, /block\.scrollIntoView/);
+  assert.match(resultsSource, /\(hover: hover\)/);
+});
+
 check("calibration shows the shape it is describing", () => {
   /*
    * Balance, ends and middle are three summaries of one thing: the sixty

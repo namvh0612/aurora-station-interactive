@@ -458,7 +458,13 @@
         width,
         { size: 27, family: "sans", weight: 600, colour: "#4b5457", lineHeight: 36, maxLines: 1 },
       );
-      drawSpectrum(
+      /*
+       * Advanced by where the drawing actually finished rather than by a fixed
+       * step. The two-word tags under the pole names made each block taller
+       * than the step allowed, so "Practical · Proven" was set directly on top
+       * of the next element's name.
+       */
+      y = drawSpectrum(
         context,
         EXPORT_MARGIN,
         y + 148,
@@ -468,7 +474,7 @@
         { min: profile.scaleMin, max: profile.scaleMax },
         { centreBand: core.situationalReach(data) },
       );
-      y += 268;
+      y += 56;
     });
 
     y += 24;
@@ -1044,7 +1050,8 @@
      * the disorder, which the two names do not.
      */
     current.facets.forEach((facet) => {
-      drawSpectrum(
+      // Advanced by where it finished, so a facet cannot sit on the next one.
+      y = drawSpectrum(
         context,
         EXPORT_MARGIN,
         y,
@@ -1060,7 +1067,7 @@
         { min: profile.scaleMin, max: profile.scaleMax },
         { centreBand: core.situationalReach(data) },
       );
-      y += 120;
+      y += 16;
     });
     y += 16;
     y = drawExportText(context, current.divergence.copy, EXPORT_MARGIN, y, width, {

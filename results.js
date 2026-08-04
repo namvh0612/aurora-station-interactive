@@ -560,11 +560,13 @@
       tab.setAttribute("role", "tab");
       tab.setAttribute("aria-controls", page.id);
       tab.style.setProperty("--trace", current.colourPaper);
-      tab.append(
-        el("span", "current-tab-name", current.name.toUpperCase()),
-        // Blank inside the middle band, for the same reason the readout is.
-        el("span", "current-tab-pole", poleNameFor(current)),
-      );
+      /*
+       * The element only. The rail carried the pole name under it as well, so
+       * a reader scanning for "Metal" was reading "The Blade" — a second set
+       * of five names in the one place whose whole job is to be scannable.
+       * Which end each line was read at is the page's business, not the rail's.
+       */
+      tab.append(el("span", "current-tab-name", current.name.toUpperCase()));
       page.setAttribute("role", "tabpanel");
       page.setAttribute("aria-labelledby", tab.id);
       page.tabIndex = -1;
@@ -623,10 +625,9 @@
         button.type = "button";
         button.style.setProperty("--trace", other.colourPaper);
         const label = side === "previous" ? `${arrow} ${other.name}` : `${other.name} ${arrow}`;
-        button.append(
-          el("span", "current-step-name", label),
-          el("span", "current-step-pole", poleNameFor(other)),
-        );
+        // The element, as on the rail. Where that line was read is its own
+        // page's business.
+        button.append(el("span", "current-step-name", label));
         button.addEventListener("click", () => show(target, { reveal: true }));
         foot.appendChild(button);
       });
@@ -787,23 +788,38 @@
       });
     };
 
+    /*
+     * Hover is wired only where hover exists. A tap fires pointerenter, then
+     * click, then pointerleave as the finger lifts — so on a phone the same
+     * gesture would have set the highlight and cleared it again.
+     */
+    const hovers = window.matchMedia("(hover: hover)").matches;
+
     nodes.forEach((node) => {
       const id = node.dataset.current;
-      node.addEventListener("pointerenter", () => set(id));
+      if (hovers) {
+        node.addEventListener("pointerenter", () => set(id));
+      }
       node.addEventListener("focus", () => set(id));
       node.addEventListener("blur", () => set(null));
       /*
-       * Scroll the block into view on activation rather than on hover: a
-       * figure that moves the page as the pointer crosses it is unusable.
+       * Activating a node shows its two edges and nothing else. It used to
+       * scroll the matching block into view as well, which moved the page out
+       * from under a reader who had only wanted to see what Earth feeds — and
+       * on a phone the tap that asked the question was the tap that took the
+       * answer off screen.
        */
-      node.addEventListener("click", () => {
-        const block = blocks.get(id);
-        if (block) {
-          block.scrollIntoView({ block: "center", behavior: stillMotion() ? "auto" : "smooth" });
-        }
+      node.addEventListener("click", (event) => {
+        event.stopPropagation();
+        set(id);
       });
     });
-    svg.addEventListener("pointerleave", () => set(null));
+    if (hovers) {
+      svg.addEventListener("pointerleave", () => set(null));
+    }
+    // Anywhere else in the figure puts it back, which is the only way off a
+    // highlight on a device with no pointer to move away.
+    svg.addEventListener("click", () => set(null));
   }
 
   function buildRelationsChapter() {
@@ -932,19 +948,25 @@
        * spread, a lean and a pile in the middle are three different ways of
        * answering that the same three sentences describe identically.
        */
+      /*
+       * Laid out as three rows of five rather than five stacked columns. Each
+       * column sized itself, so a two-line label under one of them pushed its
+       * neighbours' baselines out of line and the row of scale points came out
+       * at three different heights.
+       */
       const chart = el("div", "response-chart");
       const labels = core.responseLabels(data);
       const tallest = Math.max(...style.distribution.map((entry) => entry.count), 1);
       style.distribution.forEach((entry) => {
         const column = el("div", "response-column");
         column.style.setProperty("--fill", `${((entry.count / tallest) * 100).toFixed(1)}%`);
-        column.append(
-          el("p", "response-count", String(entry.count)),
-          el("span", "response-bar"),
-          el("p", "response-point", String(entry.value)),
-          el("p", "response-label", labels[entry.value - 1] || ""),
-        );
+        column.append(el("p", "response-count", String(entry.count)), el("span", "response-bar"));
         chart.appendChild(column);
+      });
+      style.distribution.forEach((entry) => {
+        chart.appendChild(
+          el("p", "response-label", `${entry.value} · ${labels[entry.value - 1] || ""}`),
+        );
       });
       scale.append(chart, el("p", "mark mark-sentence", copy.chartNote));
 

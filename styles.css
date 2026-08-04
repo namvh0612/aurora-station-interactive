@@ -1920,18 +1920,25 @@ svg.art-cycle[data-focus="water"] .art-cycle-head[data-from="water"] {
  * lean and a pile in the middle read identically in prose and not at all
  * alike here.
  */
+/*
+ * Two rows of five, not five columns side by side. Sized column by column, a
+ * two-line label under one of them pushed its neighbours' baselines out of
+ * line — so the bars sit in one row of fixed height and the labels in another,
+ * and every bar bottom and every label top is shared across the five.
+ */
 .response-chart {
   display: grid;
-  gap: 0 1rem;
-  align-items: end;
+  gap: 0.6rem 1rem;
   margin-bottom: 1.5rem;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: 7rem auto;
 }
 
 .response-column {
-  display: grid;
-  gap: 0.4rem;
-  align-content: end;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.35rem;
   text-align: center;
 }
 
@@ -1942,25 +1949,21 @@ svg.art-cycle[data-focus="water"] .art-cycle-head[data-from="water"] {
   border-bottom: var(--rule) solid var(--paper-line);
 }
 
-.response-count,
-.response-point {
+.response-count {
   font-family: var(--type-operational);
   font-size: var(--step-mark);
   font-variant-numeric: tabular-nums;
-}
-
-.response-count {
   color: var(--ink);
 }
 
-.response-point {
-  color: var(--ink-faint);
-}
-
+/* The scale point and its wording as one string, so there is one thing to
+ * align rather than two that can drift apart. */
 .response-label {
+  align-self: start;
   font-size: var(--step-note);
   color: var(--ink-dim);
-  hyphens: auto;
+  text-align: center;
+  text-wrap: balance;
 }
 
 .calibration-row {
@@ -2095,18 +2098,9 @@ svg.art-cycle[data-focus="water"] .art-cycle-head[data-from="water"] {
   letter-spacing: 0.1em;
 }
 
-.current-tab-pole {
-  font-size: var(--step-note);
-  color: var(--ink-faint);
-}
-
 .current-tab[aria-selected="true"] {
   border-bottom-color: var(--trace, var(--ink));
   color: var(--trace, var(--ink));
-}
-
-.current-tab[aria-selected="true"] .current-tab-pole {
-  color: var(--ink-dim);
 }
 
 .current-tab:focus-visible {
@@ -2153,11 +2147,6 @@ svg.art-cycle[data-focus="water"] .art-cycle-head[data-from="water"] {
   font-size: var(--step-mark);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.current-step-pole {
-  font-size: var(--step-note);
-  color: var(--ink-dim);
 }
 
 .current-step-link:focus-visible {
