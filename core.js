@@ -618,8 +618,79 @@
     );
   }
 
+  /*
+   * Which end of a line a reading is nearer. Answers for every score, so a
+   * reading of exactly 3.00 gets an answer too — which is why nothing that
+   * writes to the page uses this on its own.
+   */
   function poleFor(current, score) {
     return score < CENTRE ? current.poles.low : current.poles.high;
+  }
+
+  /*
+   * The block a reading is actually described by. Inside the situational band
+   * that is the middle of the line, not the nearer end: at 3.02 the reader is
+   * a hair above the centre of a five-point scale, and printing the far pole's
+   * writing there describes someone the responses did not describe.
+   *
+   * The band is the one the content file defines, so the shaded middle of the
+   * drawn line, the decision to name an end, and the writing that gets printed
+   * are all the same width by construction.
+   */
+  function bandedPoleFor(data, current, score) {
+    if (!Number.isFinite(score)) {
+      return null;
+    }
+    return bandForScore(data, score).id === "situational"
+      ? current.poles.middle || poleFor(current, score)
+      : poleFor(current, score);
+  }
+
+  /* Half the width of the situational band, in scale points. */
+  function situationalReach(data) {
+    const bands = data.assessment.interpretationBands;
+    const situational = bands.find((band) => band.id === "situational");
+    return situational ? Number((situational.max - CENTRE).toFixed(2)) : MAGNITUDE_CLEAR;
+  }
+
+  /*
+   * How a current arrived at the middle, which is the difference between a
+   * range held all night and a range pressure produced. Read from the routine
+   * stretch against the worst of it: moving inward is readiness, moving
+   * outward is pressure picking a side.
+   */
+  function middleMovementFor(data, profile, currentId) {
+    const current = data.assessment.spectra.currents[currentId];
+    const baseline = phaseByld(profile, "baseline");
+    const pressure = phaseByld(profile, "pressure");
+    const middle = current && current.poles.middle;
+    if (!middle || !baseline || !pressure) {
+      return null;
+    }
+    const at = (phase) => phase.currents.find((entry) => entry.id === currentId);
+    const from = at(baseline);
+    const to = at(pressure);
+    if (!from || !to || !Number.isFinite(from.score) || !Number.isFinite(to.score)) {
+      return null;
+    }
+    const wasMiddle = bandForScore(data, from.score).id === "situational";
+    const isMiddle = bandForScore(data, to.score).id === "situational";
+    if (wasMiddle && isMiddle) {
+      return { kind: "held", copy: middle.held };
+    }
+    if (isMiddle) {
+      return {
+        kind: "arrivedFrom",
+        copy: middle.arrivedFrom.replace("{from}", poleFor(current, from.score).name),
+      };
+    }
+    if (wasMiddle) {
+      return {
+        kind: "leftFor",
+        copy: middle.leftFor.replace("{to}", poleFor(current, to.score).name),
+      };
+    }
+    return { kind: "held", copy: middle.held };
   }
 
   function magnitudeFor(score) {
@@ -740,13 +811,23 @@
           normalised: domain.normalised,
           band: domain.band,
           poles: current.poles,
-          pole: poleFor(current, domain.score),
+          pole: bandedPoleFor(data, current, domain.score),
+          nearer: poleFor(current, domain.score),
+          situational: domain.band === "situational",
           magnitude,
           magnitudeLabel: magnitudeLabelFor(data, magnitude),
           firmness: firmnessFor(data, state, domain.code),
           divergence: divergenceFor(data, domain),
           guidance: data.assessment.domains[domain.code].guidance[domain.band],
-          facets: domain.facets,
+          /*
+           * A facet is a line too, with a name at each end. Carrying only a
+           * number left three of them on every page reading as a score out of
+           * five, which is the one thing a bipolar reading is not.
+           */
+          facets: domain.facets.map((facet) => ({
+            ...facet,
+            poles: current.facets[facet.name] || null,
+          })),
         };
       })
       .filter(Boolean);
@@ -942,6 +1023,7 @@
     return currentDefinitions(data).map((definition) => {
       const score = domainScores[definition.domain];
       const reading = Number.isFinite(score) ? score : null;
+      const banded = reading === null ? null : bandedPoleFor(data, definition, reading);
       return {
         id: definition.id,
         name: definition.name,
@@ -954,7 +1036,15 @@
         colourPaper: definition.colourPaper,
         domain: definition.domain,
         poles: definition.poles,
-        pole: reading === null ? null : poleFor(definition, reading),
+        /*
+         * `pole` is the block the page prints — the middle one inside the
+         * situational band. `nearer` is which end it leans toward, which the
+         * relation lines still need because a relationship is directional even
+         * when the reading is not pronounced.
+         */
+        pole: banded,
+        nearer: reading === null ? null : poleFor(definition, reading),
+        situational: banded !== null && banded === definition.poles.middle,
         magnitude: magnitudeFor(reading),
         score: reading,
         normalised: normalise(reading),
@@ -1176,6 +1266,72 @@
     return { current, from: poleFor(current, before.score), to: poleFor(current, after.score) };
   }
 
+  /*
+   * One line per current across the three stretches, including the ones that
+   * did not move.
+   *
+   * The movement chapter reported only the reading that travelled furthest,
+   * which left four of the five unaccounted for on a page whose whole subject
+   * is what the night did to them. A line that held is a finding as much as a
+   * line that swung, and it is only readable as one if it is said.
+   */
+  function movementPerCurrent(data, profile) {
+    const copy = data.results.movementCopy;
+    const baseline = phaseByld(profile, "baseline");
+    const pressure = phaseByld(profile, "pressure");
+    const recovery = phaseByld(profile, "recovery");
+    if (!baseline || !pressure || !recovery) {
+      return [];
+    }
+    const floor = data.assessment.shiftThresholds.ignore;
+
+    return profile.currents.map((current) => {
+      const at = (phase) => phase.currents.find((entry) => entry.id === current.id);
+      const from = at(baseline);
+      const under = at(pressure);
+      const after = at(recovery);
+      const definition = data.assessment.spectra.currents[current.id];
+      const delta = under.score - from.score;
+      const back = after.score - under.score;
+      const moved = Math.abs(delta) >= floor;
+
+      if (!moved) {
+        const drifted = Math.abs(after.score - from.score) >= floor;
+        return {
+          id: current.id,
+          name: current.name,
+          colourPaper: current.colourPaper,
+          moved: false,
+          copy: drifted
+            ? copy.heldMoved.replace(
+                "{recovery}",
+                after.score > from.score ? copy.above : copy.below,
+              )
+            : copy.held,
+        };
+      }
+
+      const crossing = crossingFor(data, baseline, pressure, current.id);
+      const clause =
+        Math.abs(back) < floor
+          ? copy.stayed
+          : Math.abs(after.score - from.score) < floor
+            ? copy.returned
+            : copy.settled;
+      const template = crossing ? copy.crossed : delta > 0 ? copy.rose : copy.fell;
+      return {
+        id: current.id,
+        name: current.name,
+        colourPaper: current.colourPaper,
+        moved: true,
+        copy: template
+          .replace("{from}", crossing ? crossing.from.name : poleFor(definition, from.score).name)
+          .replace("{to}", poleFor(definition, under.score).name)
+          .replace("{recoveryClause}", clause),
+      };
+    });
+  }
+
   function summariseProfile(data, profile) {
     if (!profile) {
       return null;
@@ -1267,6 +1423,10 @@
     magnitudeFor,
     magnitudeLabelFor,
     poleFor,
+    bandedPoleFor,
+    situationalReach,
+    middleMovementFor,
+    movementPerCurrent,
     responseStyleFor,
     spectraDefinitions,
     currentItem,

@@ -2137,21 +2137,131 @@ check("no end is named for a reading that sits in the middle", () => {
    * centre". That names a side the responses did not take. Both surfaces name
    * an end only once the reading has cleared the band the line shades.
    */
-  const middle = new RegExp(
-    `magnitude\\)? *>=? *(core\\.)?MAGNITUDE_CLEAR|>= *core\\.MAGNITUDE_CLEAR`,
-  );
-  assert.match(resultsSource, middle, "the report names a pole unconditionally");
-  assert.match(pdfSource, /distance >= clear/, "the export names a pole unconditionally");
+  const named = /current\.situational \|\| !current\.pole \? "" : current\.pole\.name/;
+  assert.match(resultsSource, named, "the report names a pole unconditionally");
+  assert.match(pdfSource, named, "the export names a pole unconditionally");
 
-  // The shaded band is that same distance, so the drawing and the wording
-  // cannot disagree about where the middle ends.
-  assert.match(resultsSource, /core\.MAGNITUDE_CLEAR \/ span/);
-  assert.match(pdfSource, /centreBand: core\.MAGNITUDE_CLEAR/);
+  // The shaded band is that same distance, so the drawing, the naming and the
+  // writing cannot disagree about where the middle ends.
+  assert.match(resultsSource, /core\.situationalReach\(data\) \/ span/);
+  assert.match(pdfSource, /centreBand: core\.situationalReach\(data\)/);
   assert.match(pdfSource, /settings\.centreBand \/ span/);
+  assert.equal(core.situationalReach(data), 0.49);
 
   // And the readout is written once per surface rather than per page.
   assert.equal((pdfSource.match(/function spectrumReadout/g) || []).length, 1);
   assert.equal((resultsSource.match(/function spectrumReadout/g) || []).length, 1);
+
+  /*
+   * The block a page prints follows the same band. A reading of 3.02 is a hair
+   * above the centre of a five-point scale; printing the far pole's writing
+   * there describes someone the responses did not describe.
+   */
+  const wood = core.spectraDefinitions(data).wood;
+  assert.equal(core.bandedPoleFor(data, wood, 3.02).id, wood.poles.middle.id);
+  assert.equal(core.bandedPoleFor(data, wood, 2.98).id, wood.poles.middle.id);
+  assert.equal(core.bandedPoleFor(data, wood, 4.2).id, wood.poles.high.id);
+  assert.equal(core.bandedPoleFor(data, wood, 1.8).id, wood.poles.low.id);
+  /*
+   * All three blocks of a line carry the same keys. The middle was added with
+   * `look` and `misread` and without the four relation lines, so the relations
+   * chapter printed a heading and nothing under it for any current that read
+   * as situational — a blank block rather than a visible failure.
+   */
+  const shared = ["name", "look", "misread", "supports", "supportedBy", "checks", "checkedBy"];
+  data.assessment.spectra.order.forEach((id) => {
+    const poles = data.assessment.spectra.currents[id].poles;
+    ["low", "middle", "high"].forEach((end) => {
+      shared.forEach((key) => assert.ok(poles[end][key], `${id}.${end} ${key}`));
+    });
+    ["held", "arrivedFrom", "leftFor"].forEach((key) =>
+      assert.ok(poles.middle[key], `${id}.middle ${key}`),
+    );
+    assert.match(poles.middle.arrivedFrom, /\{from\}/);
+    assert.match(poles.middle.leftFor, /\{to\}/);
+    // Three ends, three different readings of the same line.
+    assert.equal(new Set(["low", "middle", "high"].map((end) => poles[end].look)).size, 3);
+  });
+});
+
+check("no chapter or page singles out one of the five", () => {
+  /*
+   * Three places kept picking the reading furthest from the middle and making
+   * it the subject: the cycle figure filled that node and dimmed the edges
+   * that did not touch it, the export's relations page set itself from that
+   * element's colour and printed its keywords under "Yours", and the export's
+   * phase page headlined each stretch with a single pole name. Each is a
+   * leading type by another name, in a report whose argument is that there is
+   * not one.
+   */
+  [resultsSource, pdfSource, artworkSource].forEach((source) => {
+    assert.doesNotMatch(source, /leadId/, "a figure still takes a lead");
+    assert.doesNotMatch(source, /\bconst (lead|primary) =/, "a page still picks one current");
+  });
+  // The figure takes nodes and nothing else, and each node carries its own
+  // reading rather than being told whether it is the chosen one.
+  assert.match(artworkSource, /function elementCycle\(nodes\)/);
+  assert.match(pdfSource, /function drawElementCycle\(context, centreX, centreY, radius, nodes\)/);
+  [resultsSource, pdfSource].forEach((source) => {
+    assert.match(source, /filled: distance >= reach/);
+  });
+
+  /*
+   * And the movement chapter accounts for all five, not only the one that
+   * travelled furthest. A line that held is a finding as much as one that
+   * swung, and it is only readable as one if it is said.
+   */
+  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
+  const movement = core.movementPerCurrent(data, profile);
+  assert.equal(movement.length, 5, "the movement chapter drops a current");
+  assert.deepEqual(
+    movement.map((entry) => entry.id),
+    data.assessment.spectra.order,
+  );
+  movement.forEach((entry) => {
+    assert.ok(entry.copy, `${entry.id} has no movement line`);
+    assert.doesNotMatch(entry.copy, /\{[a-z]/i, `${entry.id} left a placeholder unfilled`);
+  });
+  [resultsSource, pdfSource].forEach((source) =>
+    assert.match(source, /core\.movementPerCurrent\(data, profile\)/),
+  );
+
+  // A reading that never moved still gets a line of its own.
+  const still = core.movementPerCurrent(data, core.scoreProfile(data, answerAll(() => 3)));
+  assert.equal(still.length, 5);
+  still.forEach((entry) => {
+    assert.equal(entry.moved, false, `${entry.id} moved on a flat record`);
+    assert.ok(entry.copy);
+  });
+});
+
+check("a facet is a line with a name at each end, not a score", () => {
+  /*
+   * Three facets printed as "4.8 / 5" over a filled bar sat under a bipolar
+   * reading claiming the scale had a top. Each is named at both ends instead.
+   */
+  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
+  const seen = new Set();
+  profile.currents.forEach((current) => {
+    assert.equal(current.facets.length, 3, `${current.id} facet count`);
+    current.facets.forEach((facet) => {
+      assert.ok(facet.poles, `${facet.name} has no ends`);
+      assert.ok(facet.poles.low, `${facet.name} low`);
+      assert.ok(facet.poles.high, `${facet.name} high`);
+      assert.notEqual(facet.poles.low, facet.poles.high, `${facet.name} ends match`);
+      [facet.poles.low, facet.poles.high].forEach((name) => {
+        assert.equal(seen.has(name), false, `${name} is used for two facet ends`);
+        seen.add(name);
+      });
+    });
+  });
+  assert.equal(seen.size, 30, "fifteen facets need thirty names");
+
+  // Neither surface still prints a facet out of five.
+  [resultsSource, pdfSource].forEach((source) => {
+    assert.doesNotMatch(source, /facet\.score\.toFixed\(1\)/, "a facet is scored out of five");
+    assert.doesNotMatch(source, /outOf\(facet\.score\)/, "a facet is scored out of five");
+  });
 });
 
 check("the record says how the scale itself was used", () => {
@@ -2365,16 +2475,17 @@ check("progress reads as an observation sequence, not a percentage", () => {
   assert.match(stylesSource, /\.sequence-tick/);
 });
 
-check("a facet reads out of five, and a current reads as a position", () => {
+check("nothing on a current's page is reported out of five", () => {
   /*
-   * A facet is a quantity and is still shown out of five. A current is not:
-   * it is a line with a name at each end, so it is reported as a pole and a
-   * distance from the middle. Printing it out of five would put a maximum on
-   * a spectrum and quietly restore more-is-better.
+   * A current is a line with a name at each end, so it is reported as a pole
+   * and a distance from the middle. So are its three facets: they used to be
+   * the exception, printed out of five over a filled bar, which put a maximum
+   * back on the page directly under a reading that says there is not one.
+   *
+   * The movement instrument still reads one to five, and says so. That is a
+   * chart of three readings of the same night on one fixed scale, which is a
+   * different claim from a facet having a top.
    */
-  assert.match(resultsSource, /\$\{reading\(value\)\} \/ \$\{core\.MAX_RESPONSE\}/);
-  assert.match(pdfSource, /facet\.score\.toFixed\(1\)\} \/ \$\{profile\.scaleMax\}/);
-
   [resultsSource, pdfSource].forEach((source) => {
     assert.doesNotMatch(source, /current\.score\.toFixed\(1\)\} \/ /, "a current is scored out of five");
     assert.doesNotMatch(source, /role\.score\.toFixed\(1\)\} \/ /, "a current is scored out of five");

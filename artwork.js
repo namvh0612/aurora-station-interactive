@@ -405,7 +405,18 @@
    * `nodes` is [{ id, label, colour }] in cycle order; `links` names the four
    * roles the reader relates to.
    */
-  function elementCycle(nodes, leadId, links) {
+  /*
+   * The cycle, with all five present and none of them the subject.
+   *
+   * It used to pick the reading furthest from the middle, draw that node
+   * filled and larger, brighten the four edges touching it and dim the rest —
+   * which said "you are Earth" in a report whose whole argument is that there
+   * is no such reading. Every node is drawn instead at the weight its own
+   * distance from the middle earns: a pronounced line is filled and a little
+   * larger, a situational one is an outline. Nothing is dimmed, because every
+   * edge is as true as every other.
+   */
+  function elementCycle(nodes) {
     const size = 300;
     // The box is wider than the ring so the outer labels have their own room
     // instead of being pulled back across the lines they sit beside.
@@ -424,10 +435,6 @@
         y: centre + Math.sin(angle) * radius,
       };
     });
-
-    const related = links
-      ? [links.supports, links.supportedBy, links.checks, links.checkedBy]
-      : [];
 
     /*
      * Each line draws its own head rather than sharing a marker. A marker's
@@ -469,32 +476,28 @@
 
     // The feeding cycle, each step drawn in the direction it feeds.
     placed.forEach((node, index) => {
-      const target = placed[(index + 1) % placed.length];
-      const live = node.id === leadId || target.id === leadId;
-      connect(node, target, live ? "art-cycle-ring art-cycle-live" : "art-cycle-ring");
+      connect(node, placed[(index + 1) % placed.length], "art-cycle-ring");
     });
 
     // The checking cycle: each node reaches across to the one it restrains.
     placed.forEach((node, index) => {
-      const target = placed[(index + 2) % placed.length];
-      const live = node.id === leadId || target.id === leadId;
-      connect(node, target, live ? "art-cycle-check art-cycle-live" : "art-cycle-check");
+      connect(node, placed[(index + 2) % placed.length], "art-cycle-check");
     });
 
     placed.forEach((node) => {
-      const lead = node.id === leadId;
-      const touches = related.includes(node.id);
+      const weight = Math.max(0, Math.min(1, Number(node.weight) || 0));
       figure.appendChild(
         shape("circle", {
           cx: node.x.toFixed(1),
           cy: node.y.toFixed(1),
-          r: lead ? 13 : 8,
-          class: lead ? "art-cycle-node art-cycle-node-lead" : "art-cycle-node",
-          // Filled is the reader's own; the rest are outlines, so the fill
-          // means something instead of being true for every node.
-          fill: lead ? node.colour : "var(--paper)",
+          r: (8 + weight * 5).toFixed(1),
+          class: "art-cycle-node",
+          // Filled means the reading cleared the middle band. Five outlines
+          // and one fill used to mean "this one is you"; now the fill means
+          // "this line took a side", which can be true of all five or none.
+          fill: node.filled ? node.colour : "var(--paper)",
           stroke: node.colour,
-          "stroke-width": touches ? 2.5 : 1.5,
+          "stroke-width": node.filled ? 2.5 : 1.5,
         }),
       );
 
@@ -511,10 +514,10 @@
       const text = shape("text", {
         x: x.toFixed(1),
         y: (y + (Math.sin(node.angle) > 0.3 ? 12 : 4)).toFixed(1),
-        class: lead ? "art-cycle-label art-cycle-label-lead" : "art-cycle-label",
+        class: "art-cycle-label",
         "text-anchor": anchor,
       });
-      text.textContent = lead ? `${node.label} ·` : node.label;
+      text.textContent = node.label;
       figure.appendChild(text);
     });
 

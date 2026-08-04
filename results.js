@@ -106,10 +106,15 @@
     return profile.currents.find((entry) => entry.id === id) || null;
   }
 
-  /* The share of the line a reading has to leave before it describes an end. */
+  /*
+   * The share of the line a reading has to leave before it describes an end.
+   * Read from the situational band the content file defines, so the shaded
+   * middle of the drawing is the same width as the rule that decides whether
+   * an end gets named and which block of writing gets printed.
+   */
   function centreBand() {
     const span = profile.scaleMax - profile.scaleMin;
-    return (core.MAGNITUDE_CLEAR / span) * 100;
+    return (core.situationalReach(data) / span) * 100;
   }
 
   /*
@@ -132,9 +137,7 @@
    * did not take.
    */
   function poleNameFor(current) {
-    return Math.abs(current.magnitude) >= core.MAGNITUDE_CLEAR && current.pole
-      ? current.pole.name
-      : "";
+    return current.situational || !current.pole ? "" : current.pole.name;
   }
 
   function spectrumReadout(current) {
@@ -499,6 +502,27 @@
     });
     body.appendChild(notes);
 
+    /*
+     * Then all five, named, including the ones that held. The chapter used to
+     * report only the reading that travelled furthest, which left four of the
+     * five unaccounted for on the page about what the night did to them — and
+     * a line that did not move is a finding as much as one that swung.
+     */
+    const movement = el("div", "guidance-block");
+    movement.appendChild(el("p", "mark", COPY.movementHeading));
+    const list = el("div", "movement-list");
+    core.movementPerCurrent(data, profile).forEach((entry) => {
+      const row = el("p", "movement-row");
+      row.style.setProperty("--trace", entry.colourPaper);
+      row.append(
+        el("span", "movement-name", entry.name),
+        el("span", "", ` ${entry.copy}`),
+      );
+      list.appendChild(row);
+    });
+    movement.appendChild(list);
+    body.appendChild(movement);
+
     return node;
   }
 
@@ -602,22 +626,43 @@
       say(LABELS.look, current.pole.look);
 
       /*
+       * How this current came to be read the way it is. Only written for a
+       * reading in the middle, where the finding is the range itself and
+       * whether pressure produced it is the whole of what there is to say.
+       */
+      const movement = current.situational
+        ? core.middleMovementFor(data, profile, current.id)
+        : null;
+      if (movement) {
+        say(LABELS.underPressure, movement.copy);
+      }
+
+      /*
        * The facet lines are where a mid reading earns its keep: a domain built
        * from three readings that disagree is a different person from one built
        * from three that agree, and the average alone cannot tell them apart.
+       *
+       * Each is drawn the way the current above it is — a name at each end and
+       * a mark between them. Printed as "4.8 / 5" they read as three scores
+       * with a maximum, which is the one thing a bipolar reading is not.
        */
       const divides = el("div", "guidance-block");
       divides.appendChild(el("p", "mark", LABELS.divides));
       const facets = el("div", "facet-set");
       current.facets.forEach((facet) => {
         const row = el("div", "facet-row");
-        const bar = el("span", "facet-bar");
-        bar.style.setProperty("--at", `${(facet.normalised * 100).toFixed(1)}%`);
-        row.append(
-          el("p", "reading-name", facet.name),
-          el("p", "facet-value", outOf(facet.score)),
-          bar,
+        row.appendChild(el("p", "reading-name", facet.name));
+        const track = el("div", "spectrum-track facet-track");
+        const mark = el("span", "spectrum-mark");
+        mark.style.setProperty("--at", `${(facet.normalised * 100).toFixed(1)}%`);
+        track.append(el("span", "spectrum-centre"), mark);
+        const ends = el("div", "spectrum-ends facet-ends");
+        ends.append(
+          el("p", "spectrum-pole", facet.poles ? facet.poles.low : ""),
+          el("p", "spectrum-firmness", ""),
+          el("p", "spectrum-pole spectrum-pole-high", facet.poles ? facet.poles.high : ""),
         );
+        row.append(track, ends);
         facets.appendChild(row);
       });
       divides.append(facets, el("p", "", current.divergence.copy));
@@ -655,24 +700,28 @@
     const labels = COPY.relationsLabels;
     body.appendChild(el("p", "chapter-intro", COPY.relationsIntro));
 
-    const lead = profile.currents.reduce(
-      (best, entry) => (Math.abs(entry.magnitude) > Math.abs(best.magnitude) ? entry : best),
-      profile.currents[0],
-    );
-    const leadId = lead.id;
-
+    /*
+     * No current is the subject of this chapter. The figure used to fill the
+     * one furthest from the middle and read the cycle outward from it, which
+     * announced a leading element in a report that has none; every node now
+     * carries its own reading and the cycle is drawn whole.
+     */
+    const reach = core.situationalReach(data);
     const figure = el("div", "relations-figure");
     if (art) {
       const nodes = data.assessment.cycles.generating.map((elementId) => {
         const element = data.assessment.elements[elementId];
         const entry = currentById(element.current);
+        const distance = entry ? Math.abs(entry.magnitude) : 0;
         return {
           id: element.current,
           label: entry ? entry.name : element.name,
           colour: entry ? entry.colourPaper : null,
+          weight: distance / (profile.scaleMax - core.CENTRE),
+          filled: distance >= reach,
         };
       });
-      figure.appendChild(art.elementCycle(nodes, leadId, core.relationsFor(data, leadId)));
+      figure.appendChild(art.elementCycle(nodes));
     }
     const key = el("p", "mark relations-key");
     key.append(

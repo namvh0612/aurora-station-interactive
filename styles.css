@@ -1844,6 +1844,29 @@ body.report .art-grain {
   align-items: baseline;
 }
 
+/* All five lines, named and ruled apart, including the ones that held. */
+.movement-list {
+  display: grid;
+  gap: 0;
+}
+
+.movement-row {
+  padding: 0.7rem 0;
+  border-bottom: var(--rule) solid var(--paper-line);
+}
+
+.movement-row:last-child {
+  border-bottom: 0;
+}
+
+.movement-name {
+  font-family: var(--type-operational);
+  font-size: var(--step-mark);
+  letter-spacing: 0.08em;
+  color: var(--trace, var(--ink));
+  text-transform: uppercase;
+}
+
 .relations-grid {
   margin-top: 3rem;
 }
@@ -1958,13 +1981,31 @@ body.report .art-grain {
   text-align: right;
 }
 
+/*
+ * A facet is a line, drawn the way the current above it is: the facet's name
+ * on the left, then a rule with a shaded middle and a mark, then a name at
+ * each end. Set as a name, a number and a filled bar it read as a score with
+ * a maximum, and three of those under a bipolar reading contradicted it.
+ */
 .facet-row {
   display: grid;
-  gap: 0.5rem 3rem;
-  padding: 1.25rem 0;
+  gap: 0.25rem 2.5rem;
+  padding: 1.1rem 0;
   border-bottom: var(--rule) solid var(--paper-line);
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 2fr);
-  align-items: baseline;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr);
+  align-items: center;
+}
+
+.facet-row .reading-name {
+  grid-row: span 2;
+}
+
+.facet-track {
+  height: 0.75rem;
+}
+
+.facet-ends {
+  margin-top: 0.15rem;
 }
 
 .facet-value {

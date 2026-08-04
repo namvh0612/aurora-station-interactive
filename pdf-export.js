@@ -307,10 +307,13 @@
    * feeding cycle around the outside, checking reaches across the middle, the
    * reader's own contribution filled and the four it touches picked out.
    */
-  function drawElementCycle(context, centreX, centreY, radius, nodes, leadId, relations) {
-    const related = relations
-      ? [relations.supports, relations.supportedBy, relations.checks, relations.checkedBy]
-      : [];
+  /*
+   * The cycle with all five present and none of them the subject, as the
+   * report draws it. Each node is sized by its own distance from the middle
+   * and filled once that distance clears the band; every edge is drawn at the
+   * same weight, because every edge is as true as every other.
+   */
+  function drawElementCycle(context, centreX, centreY, radius, nodes) {
     const placed = nodes.map((node, index) => {
       const angle = (Math.PI * 2 * index) / nodes.length - Math.PI / 2;
       return {
@@ -321,7 +324,7 @@
       };
     });
 
-    function arrow(from, to, live, dashed) {
+    function arrow(from, to, dashed) {
       const dx = to.x - from.x;
       const dy = to.y - from.y;
       const length = Math.hypot(dx, dy) || 1;
@@ -331,7 +334,7 @@
       const end = { x: to.x - unit.x * gap, y: to.y - unit.y * gap };
 
       context.save();
-      context.strokeStyle = live ? "#4b5457" : "#c1caca";
+      context.strokeStyle = "#c1caca";
       context.lineWidth = dashed ? 2 : 3;
       context.setLineDash(dashed ? [8, 12] : []);
       context.beginPath();
@@ -343,7 +346,7 @@
       // The head, so the direction is drawn rather than implied.
       const head = 14;
       const left = { x: -unit.y, y: unit.x };
-      context.fillStyle = live ? "#4b5457" : "#c1caca";
+      context.fillStyle = "#c1caca";
       context.beginPath();
       context.moveTo(end.x, end.y);
       context.lineTo(end.x - unit.x * head + left.x * head * 0.5, end.y - unit.y * head + left.y * head * 0.5);
@@ -354,21 +357,21 @@
 
     placed.forEach((node, index) => {
       const target = placed[(index + 1) % placed.length];
-      arrow(node, target, node.id === leadId || target.id === leadId, false);
+      arrow(node, target, false);
     });
     placed.forEach((node, index) => {
       const target = placed[(index + 2) % placed.length];
-      arrow(node, target, node.id === leadId || target.id === leadId, true);
+      arrow(node, target, true);
     });
 
     placed.forEach((node) => {
-      const lead = node.id === leadId;
+      const weight = Math.max(0, Math.min(1, Number(node.weight) || 0));
       context.beginPath();
-      context.arc(node.x, node.y, lead ? 26 : 17, 0, Math.PI * 2);
-      context.fillStyle = lead ? node.colour : "#e6eaeb";
+      context.arc(node.x, node.y, 17 + weight * 10, 0, Math.PI * 2);
+      context.fillStyle = node.filled ? node.colour : "#e6eaeb";
       context.fill();
       context.strokeStyle = node.colour;
-      context.lineWidth = related.includes(node.id) ? 5 : 3;
+      context.lineWidth = node.filled ? 5 : 3;
       context.stroke();
 
       const out = 58;
@@ -382,8 +385,8 @@
         {
           size: 26,
           family: "sans",
-          weight: lead ? 600 : 400,
-          colour: lead ? "#14181a" : "#4b5457",
+          weight: node.filled ? 600 : 400,
+          colour: "#4b5457",
           align: Math.abs(horizontal) < 0.35 ? "center" : horizontal > 0 ? "left" : "right",
           lineHeight: 34,
         },
@@ -449,7 +452,7 @@
       });
       drawExportText(
         context,
-        spectrumReadout(current, data.results.labels, core.MAGNITUDE_CLEAR).toUpperCase(),
+        spectrumReadout(current, data.results.labels).toUpperCase(),
         EXPORT_MARGIN,
         y + 100,
         width,
@@ -463,7 +466,7 @@
         current,
         current.colourPaper,
         { min: profile.scaleMin, max: profile.scaleMax },
-        { centreBand: core.MAGNITUDE_CLEAR },
+        { centreBand: core.situationalReach(data) },
       );
       y += 268;
     });
@@ -487,130 +490,110 @@
   }
 
   /*
-   * The contribution read against the other four: which one it tends to feed,
-   * which tends to feed it, and which holds it in check. A reading of
-   * relationships between contributions, never a rating of people.
+   * The cycle, read for all five.
+   *
+   * This page used to pick the reading furthest from the middle, print its
+   * element's keywords under the heading "Yours", fill its node in the figure
+   * and set the whole page from its colour — a leading element in a report
+   * that has none, and the last place one survived. Every current now gets its
+   * own block: what it feeds and what it holds in check, in its own writing.
    */
   function drawProfileRelationsPage(context, data, profile, summary, core, pageNumber, pageCount) {
-    const primary = profile.currents.reduce(
-      (best, entry) => (Math.abs(entry.magnitude) > Math.abs(best.magnitude) ? entry : best),
-      profile.currents[0],
-    );
-    const relations = core.relationsFor(data, primary.id);
-    const element = core.elementForCurrent(data, primary.id);
-    const copy = data.results.relationsCopy;
     const labels = data.results.relationsLabels;
     const chapter = data.results.chapters.find((entry) => entry.id === "relations");
 
-    drawExportPageBase(context, pageNumber, profile.playerName, primary.colourPaper, pageCount);
+    drawExportPageBase(context, pageNumber, profile.playerName, "#14181a", pageCount);
     let y = drawExportHeading(
       context,
       chapter.eyebrow,
       chapter.title,
       data.results.relationsIntro,
-      primary.colourPaper,
+      "#14181a",
     );
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
-    const columnWidth = width * 0.52;
+    const reach = core.situationalReach(data);
 
-    y += 10;
-    drawExportLabel(context, `${labels.yours} · ${primary.name}`, EXPORT_MARGIN, y, "#14181a");
-    let column = y + 52;
-    column = drawExportText(
-      context,
-      `${labels.keywords} · ${element.keywords}`,
-      EXPORT_MARGIN,
-      column,
-      columnWidth,
-      { size: 27, family: "sans", colour: "#4b5457", lineHeight: 38 },
-    );
-    column += 16;
-    // The shadow line the report shows under the current name, which the export
-    // used to drop.
-    column = drawExportText(
-      context,
-      `${labels.shadow}: ${element.shadow}`,
-      EXPORT_MARGIN,
-      column,
-      columnWidth,
-      { size: 27, colour: "#4b5457", lineHeight: 40 },
-    );
-
-    // The same figure the report draws, beside the reading rather than absent.
+    // The same figure the report draws, with every node at the weight its own
+    // distance from the middle earns and none of them the subject.
     const cycleNodes = data.assessment.cycles.generating.map((elementId) => {
       const named = profile.currents.find(
         (entry) => entry.id === data.assessment.elements[elementId].current,
       );
-      return { id: named.id, label: named.name, colour: named.colourPaper };
+      const distance = Math.abs(named.magnitude);
+      return {
+        id: named.id,
+        label: named.name,
+        colour: named.colourPaper,
+        weight: distance / (profile.scaleMax - (profile.scaleMin + profile.scaleMax) / 2),
+        filled: distance >= reach,
+      };
     });
-    drawElementCycle(
-      context,
-      EXPORT_PAGE_WIDTH - EXPORT_MARGIN - 430,
-      y + 400,
-      270,
-      cycleNodes,
-      primary.id,
-      relations,
-    );
+    /*
+     * The ring is centred on its own y, not offset from it — placed at `y + 30`
+     * the top node sat 240 points above the heading rule and landed on the
+     * intro paragraph.
+     */
+    y += 320;
+    drawElementCycle(context, EXPORT_PAGE_WIDTH / 2, y, 270, cycleNodes);
     drawExportText(
       context,
       `${labels.cycleGenerating} — ${labels.cycleControlling} - - -`,
-      EXPORT_PAGE_WIDTH - EXPORT_MARGIN - 430,
-      y + 790,
+      EXPORT_PAGE_WIDTH / 2 - 430,
+      y + 400,
       860,
       { size: 24, family: "sans", colour: "#5c6568", align: "center", lineHeight: 32 },
     );
 
-    y = Math.max(column, y + 830) + 40;
+    y += 460;
     drawExportRule(context, y, "#c1caca", 2);
-    y += 66;
+    y += 56;
 
-    [
-      ["supports", labels.supports],
-      ["supportedBy", labels.supportedBy],
-      ["checks", labels.checks],
-      ["checkedBy", labels.checkedBy],
-    ].forEach(([key, label]) => {
-      const other = profile.currents.find((entry) => entry.id === relations[key]);
-      const otherElement = core.elementForCurrent(data, other.id);
+    profile.currents.forEach((current) => {
+      const relations = current.relations || {};
+      const feeds = relations.supports;
+      const checks = relations.checks;
       // A mark beside the name, not a bar down the side of it.
-      context.fillStyle = other.colourPaper;
+      context.fillStyle = current.colourPaper;
       context.beginPath();
-      context.arc(EXPORT_MARGIN + 10, y - 8, 10, 0, Math.PI * 2);
+      context.arc(EXPORT_MARGIN + 10, y - 6, 10, 0, Math.PI * 2);
       context.fill();
 
-      drawExportLabel(context, label, EXPORT_MARGIN + 44, y, other.colourPaper);
-      y += 50;
-      const otherCurrent = profile.currents.find((entry) => entry.domain === other.domain);
-      y = drawExportText(context, otherCurrent ? otherCurrent.name : other.name, EXPORT_MARGIN + 44, y, width - 44, {
-        size: 44,
-        colour: "#14181a",
-        lineHeight: 54,
-        maxLines: 1,
-      });
-      y += 16;
-      y = drawExportText(
-        context,
-        copy[key].replace("{current}", other.name),
-        EXPORT_MARGIN + 44,
-        y,
-        width - 44,
-        { size: 30, colour: "#262b2d", lineHeight: 44, maxLines: 3 },
-      );
-      y += 10;
-      y = drawExportText(context, otherElement.keywords, EXPORT_MARGIN + 44, y, width - 44, {
-        size: 26,
+      drawExportText(context, current.name.toUpperCase(), EXPORT_MARGIN + 44, y + 6, 620, {
+        size: 34,
         family: "sans",
-        colour: "#5c6568",
-        lineHeight: 36,
+        weight: 600,
+        colour: current.colourPaper,
+        lineHeight: 44,
         maxLines: 1,
       });
-      y += 46;
+      drawExportText(
+        context,
+        `${labels.supports} ${feeds ? feeds.name : ""} · ${labels.checks} ${checks ? checks.name : ""}`.toUpperCase(),
+        EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
+        y + 8,
+        width - 700,
+        { size: 24, family: "sans", colour: "#5c6568", align: "right", lineHeight: 34, maxLines: 1 },
+      );
+      y += 56;
+      y = drawExportText(context, current.pole.supports, EXPORT_MARGIN + 44, y, width - 44, {
+        size: 27,
+        colour: "#262b2d",
+        lineHeight: 39,
+        maxLines: 3,
+      });
+      y += 12;
+      y = drawExportText(context, current.pole.checks, EXPORT_MARGIN + 44, y, width - 44, {
+        size: 27,
+        colour: "#262b2d",
+        lineHeight: 39,
+        maxLines: 3,
+      });
+      y += 42;
     });
 
     drawExportRule(context, y, "#c1caca", 2);
-    y += 60;
+    y += 56;
     drawExportText(context, data.results.relationsNote, EXPORT_MARGIN, y, width, {
       size: 27,
       colour: "#4b5457",
@@ -635,45 +618,37 @@
     y += 20;
 
     /*
-     * The headline of a stretch is the line that sat furthest from the middle
-     * of the scale in it, named at the end it sat on. There is no leading
-     * contribution to print here any more, and a magnitude is the only thing
-     * five separate readings can be ranked by without inventing a total.
+     * The three stretches, named by when they were and nothing else.
+     *
+     * Each column used to headline the reading that sat furthest from the
+     * middle in that stretch — "Starting: The Wildwood, Under pressure: The
+     * Blade" — which is a single type per stretch by another name, printed at
+     * the top of a page whose whole subject is five lines moving separately.
+     * What moved is in the observations below and in the five tracks under
+     * them, per current, including the ones that held.
      */
-    const furthest = (phase) =>
-      phase.currents.reduce(
-        (best, entry) =>
-          Number.isFinite(entry.magnitude) &&
-          (!best || Math.abs(entry.magnitude) > Math.abs(best.magnitude))
-            ? entry
-            : best,
-        null,
-      );
-
     [
       ["Starting", profile.phases[0]],
       ["Under pressure", profile.phases[1]],
       ["After pressure", profile.phases[2]],
     ].forEach(([label, phase], index) => {
       const x = EXPORT_MARGIN + index * (columnWidth + 40);
-      const lead = furthest(phase);
       drawExportLabel(context, label, x, y, "#14181a");
-      const named = lead ? poleNameFor(lead, core.MAGNITUDE_CLEAR) : "";
-      drawExportText(context, named || "—", x, y + 74, columnWidth, {
-        size: 40,
-        colour: lead ? lead.colourPaper : "#14181a",
-        lineHeight: 50,
-        maxLines: 2,
+      drawExportText(context, phase.window, x, y + 62, columnWidth, {
+        size: 34,
+        colour: "#14181a",
+        lineHeight: 44,
+        maxLines: 1,
       });
-      drawExportText(context, phase.window, x, y + 178, columnWidth, {
+      drawExportText(context, phase.description || "", x, y + 116, columnWidth, {
         size: 25,
         family: "sans",
         colour: "#5c6568",
         lineHeight: 34,
-        maxLines: 1,
+        maxLines: 4,
       });
     });
-    y += 250;
+    y += 260;
     drawExportRule(context, y, "#c1caca", 2);
     y += 40;
 
@@ -698,6 +673,31 @@
         y += 24;
       });
     y += 30;
+
+    /*
+     * Then all five, named, including the ones that held — the same block the
+     * report prints, in the same order.
+     */
+    drawExportLabel(context, data.results.movementHeading, EXPORT_MARGIN, y, "#14181a");
+    y += 54;
+    core.movementPerCurrent(data, profile).forEach((entry) => {
+      drawExportText(context, entry.name, EXPORT_MARGIN, y, 280, {
+        size: 27,
+        family: "sans",
+        weight: 600,
+        colour: entry.colourPaper,
+        lineHeight: 38,
+        maxLines: 1,
+      });
+      y = drawExportText(context, entry.copy, EXPORT_MARGIN + 300, y, width - 300, {
+        size: 27,
+        colour: "#262b2d",
+        lineHeight: 38,
+        maxLines: 2,
+      });
+      y += 16;
+    });
+    y += 26;
 
     /*
      * Three rules per contribution, one for each stretch of the watch, each
@@ -809,15 +809,15 @@
    * put a pole against a distance of 0.04, which claims a side the responses
    * did not take. The report writes the same line the same way.
    */
-  function poleNameFor(current, clear) {
-    const distance = Math.abs(current.magnitude);
-    return distance >= clear && current.pole ? current.pole.name : "";
+  function poleNameFor(current) {
+    return current.situational || !current.pole ? "" : current.pole.name;
   }
 
-  function spectrumReadout(current, labels, clear) {
+  function spectrumReadout(current, labels) {
     const distance = Math.abs(current.magnitude);
-    const named = poleNameFor(current, clear);
-    return `${named ? `${named} · ` : ""}${distance.toFixed(2)} ${labels.fromCentre} · ${current.magnitudeLabel}`;
+    const named = poleNameFor(current);
+    const prefix = named ? `${named} · ` : "";
+    return `${prefix}${distance.toFixed(2)} ${labels.fromCentre} · ${current.magnitudeLabel}`;
   }
 
   /*
@@ -910,7 +910,7 @@
     y += 8;
     drawExportText(
       context,
-      spectrumReadout(current, labels, core.MAGNITUDE_CLEAR).toUpperCase(),
+      spectrumReadout(current, labels).toUpperCase(),
       EXPORT_MARGIN,
       y,
       width,
@@ -925,7 +925,7 @@
       current,
       trace,
       { min: profile.scaleMin, max: profile.scaleMax },
-      { centreBand: core.MAGNITUDE_CLEAR, firmness: current.firmness ? current.firmness.id : "" },
+      { centreBand: core.situationalReach(data), firmness: current.firmness ? current.firmness.id : "" },
     );
     y += 30;
 
@@ -942,6 +942,16 @@
     };
 
     block(labels.look, current.pole.look);
+
+    // Only written for a reading in the middle, where how it got there is the
+    // whole of the finding. The report prints the same block in the same place.
+    const movement = current.situational
+      ? core.middleMovementFor(data, profile, current.id)
+      : null;
+    if (movement) {
+      block(labels.underPressure, movement.copy);
+    }
+
     block(labels.misread, current.pole.misread);
     block(labels.advantage, current.guidance.advantage);
     block(labels.overextension, current.guidance.overextension);
@@ -950,24 +960,30 @@
     y += 56;
     drawExportLabel(context, labels.divides, EXPORT_MARGIN, y, trace);
     y += 56;
+    /*
+     * Each facet drawn as its own line with a name at each end, as the report
+     * draws them. Printed as "4.8 / 5" over a filled bar, three of them stood
+     * under a bipolar reading claiming it had a maximum.
+     */
     current.facets.forEach((facet) => {
-      drawExportText(context, facet.name, EXPORT_MARGIN, y + 30, width - 520, {
+      drawExportText(context, facet.name, EXPORT_MARGIN, y + 26, 620, {
         size: 30,
         weight: 600,
         colour: "#14181a",
         lineHeight: 40,
         maxLines: 1,
       });
-      drawExportText(
+      drawSpectrum(
         context,
-        `${facet.score.toFixed(1)} / ${profile.scaleMax}`,
-        EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
-        y + 30,
-        480,
-        { size: 30, family: "sans", weight: 600, colour: trace, align: "right", lineHeight: 40 },
+        EXPORT_MARGIN + 660,
+        y,
+        width - 660,
+        { score: facet.score, poles: { low: { name: facet.poles ? facet.poles.low : "" }, high: { name: facet.poles ? facet.poles.high : "" } } },
+        trace,
+        { min: profile.scaleMin, max: profile.scaleMax },
+        { centreBand: core.situationalReach(data) },
       );
-      drawScoreTrack(context, EXPORT_MARGIN, y + 54, width, facet.normalised, trace);
-      y += 108;
+      y += 130;
     });
     y += 16;
     y = drawExportText(context, current.divergence.copy, EXPORT_MARGIN, y, width, {
@@ -1055,7 +1071,7 @@
         lineHeight: 40,
         maxLines: 1,
       });
-      drawExportText(context, poleNameFor(current, core.MAGNITUDE_CLEAR) || "—", EXPORT_MARGIN + 420, y, 700, {
+      drawExportText(context, poleNameFor(current) || "—", EXPORT_MARGIN + 420, y, 700, {
         size: 28,
         colour: "#5c6568",
         lineHeight: 40,
