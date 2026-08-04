@@ -338,8 +338,13 @@
       plot.appendChild(label);
     });
 
-    /* The readings, which are also the accessible table of the instrument. */
+    /*
+     * The readings, which are also the accessible table of the instrument —
+     * and which had no accessible name, so a screen reader met a list of five
+     * unlabelled buttons next to a chart it could not see.
+     */
     const list = el("ul", "reading-list");
+    list.setAttribute("aria-label", copy.tableCaption);
     const rows = {};
     order.forEach((id) => {
       const line = data.assessment.spectra.currents[id];
@@ -527,7 +532,11 @@
      * a line that did not move is a finding as much as one that swung.
      */
     const movement = el("div", "guidance-block");
-    movement.appendChild(el("p", "mark", COPY.movementHeading));
+    movement.append(
+      el("p", "mark", COPY.movementHeading),
+      // What the block is, written when it was built and never rendered.
+      el("p", "mark mark-sentence", COPY.movementNote),
+    );
     const list = el("div", "movement-list");
     core.movementPerCurrent(data, profile).forEach((entry) => {
       const row = el("p", "movement-row");

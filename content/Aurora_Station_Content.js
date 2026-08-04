@@ -385,8 +385,6 @@ window.AURORA_STATION_DATA = {
         "id": "wood",
         "name": "Wood",
         "current": "wood",
-        "keywords": "Initiating, creative, unconventional, visionary",
-        "shadow": "Many ideas, and no one left to finalise them",
         "excess": {
           "feeding": "Wood feeds Fire, and a fire fed without limit consumes the wood that fed it. Every idea aired, and nothing left standing long enough to be built on.",
           "checking": "Wood restrains Earth the way roots break soil. Held to the evidence at every turn, the room stops offering arrangements at all — and an unoffered plan cannot be improved."
@@ -396,8 +394,6 @@ window.AURORA_STATION_DATA = {
         "id": "fire",
         "name": "Fire",
         "current": "fire",
-        "keywords": "Spreading, driving, energetic, active",
-        "shadow": "Impulsive and loud, and short of depth",
         "excess": {
           "feeding": "Fire feeds Earth as ash feeds soil, and buries it if it never stops. A room given more than it can absorb starts agreeing to be left alone.",
           "checking": "Fire restrains Metal by melting it. Pressed for a decision often enough, the structure stops being held at all and the commitment is made to end the pressure."
@@ -407,8 +403,6 @@ window.AURORA_STATION_DATA = {
         "id": "earth",
         "name": "Earth",
         "current": "earth",
-        "keywords": "Bonding, mediating, nurturing, steadying",
-        "shadow": "Avoids conflict, and is reluctant on the hard calls",
         "excess": {
           "feeding": "Earth feeds Metal as ore feeds a blade, and a seam mined without limit is a hole. Carry the plan for long enough and there is no ground left to plan on.",
           "checking": "Earth restrains Water by damming it. Take on enough of what other people are carrying and it stops moving anywhere — including through you."
@@ -418,8 +412,6 @@ window.AURORA_STATION_DATA = {
         "id": "metal",
         "name": "Metal",
         "current": "metal",
-        "keywords": "Disciplined, exacting, completing, quality-led",
-        "shadow": "Rigid and perfectionist, and slow to adapt",
         "excess": {
           "feeding": "Metal feeds Water as a vein carries a spring, and a channel cut too deep runs dry at the top. Structure that only serves what comes after it stops holding anything itself.",
           "checking": "Metal restrains Wood the way an axe fells a tree. Stop the search often enough and it stops starting, and the structure ends up protecting a route nobody checked."
@@ -429,8 +421,6 @@ window.AURORA_STATION_DATA = {
         "id": "water",
         "name": "Water",
         "current": "water",
-        "keywords": "Calm, analytical, deep, adaptable",
-        "shadow": "Passive and detached, and prone to over-analysis",
         "excess": {
           "feeding": "Water feeds Wood, and a flood is not irrigation. What you are carrying can give the unfamiliar its charge, or drown the part of you that was going to look at it.",
           "checking": "Water restrains Fire by putting it out. Keep the room's pitch down for long enough and the urgency never arrives, including the urgency that was warranted."
@@ -2423,8 +2413,6 @@ window.AURORA_STATION_DATA = {
       "checks": "Holds in check",
       "cycleGenerating": "Feeding",
       "cycleControlling": "Checking",
-      "keywords": "Reads as",
-      "shadow": "When it runs long"
     },
     "radar": {
       "heading": "The five currents across the watch",

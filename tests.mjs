@@ -1691,9 +1691,16 @@ check("the five currents carry the five elements", () => {
   assert.deepEqual(Object.keys(elements).sort(), Object.keys(currents).sort());
   Object.entries(elements).forEach(([elementId, element]) => {
     assert.equal(element.current, elementId, elementId);
-    assert.ok(element.keywords, `${elementId} keywords`);
-    assert.ok(element.shadow, `${elementId} shadow`);
     assert.ok(currents[elementId], `${elementId} has no current`);
+    /*
+     * An element carries the cycle and what it costs when a relationship runs
+     * long, and nothing else. It used to carry keywords and a shadow line too
+     * — one unipolar phrase per element, from before both ends were named.
+     * The pole tags say what the keywords said, per end rather than per
+     * element, and the excess blocks say what the shadow said with the
+     * mechanism attached.
+     */
+    assert.deepEqual(Object.keys(element).sort(), ["current", "excess", "id", "name"]);
   });
   // Every current carries the deck value plus a tone for each ground.
   Object.values(currents).forEach((current) => {
@@ -2534,6 +2541,45 @@ check("the export advances by what it drew, not by a guess", () => {
    */
   assert.doesNotMatch(resultsSource, /block\.scrollIntoView/);
   assert.match(resultsSource, /\(hover: hover\)/);
+});
+
+check("no copy is written that nothing renders", () => {
+  /*
+   * The mirror of the path check: that one fails when a surface reads a key
+   * the content file does not have, this one fails when the content file
+   * carries a key no surface reads.
+   *
+   * Orphan copy is worse than missing copy because it looks maintained. Four
+   * separate rewrites left some behind — the note explaining the movement
+   * block, the caption naming the instrument's reading list, and the keywords
+   * and shadow lines the pole tags and the excess blocks replaced. Two were
+   * work I had done and forgotten to render.
+   */
+  const sources = [coreSource, resultsSource, pdfSource, appSource, artworkSource].join("\n");
+  const structural = /^(id|colour|colourNight|colourPaper|name|order|domain|current)$/;
+
+  const orphans = [];
+  (function walk(node, path) {
+    if (node && typeof node === "object" && !Array.isArray(node)) {
+      Object.entries(node).forEach(([key, value]) => walk(value, [...path, key]));
+      return;
+    }
+    if (typeof node !== "string") {
+      return;
+    }
+    const key = path[path.length - 1];
+    if (structural.test(key)) {
+      return;
+    }
+    if (!new RegExp(`[.\\["']${key}\\b`).test(sources)) {
+      orphans.push(path.join("."));
+    }
+  })(
+    { results: data.results, spectra: data.assessment.spectra, elements: data.assessment.elements },
+    [],
+  );
+
+  assert.deepEqual(orphans, [], `copy nothing renders:\n  ${orphans.join("\n  ")}`);
 });
 
 check("every block on a current's page describes the same end", () => {
