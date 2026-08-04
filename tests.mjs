@@ -2134,38 +2134,46 @@ check("the five currents are switched inside their own section", () => {
   assert.ok(data.results.orientation.title);
 });
 
-check("no end is named for a reading that sits in the middle", () => {
+check("a hair off the middle is still a side, and the degree is said", () => {
   /*
-   * `poleFor` has to answer for every score, so a reading of exactly 3.00 is
-   * assigned the high pole and the readout printed "The Wildwood · 0.00 from
-   * centre". That names a side the responses did not take. Both surfaces name
-   * an end only once the reading has cleared the band the line shades.
+   * A fifth of the scale used to be called balanced, so a reading at 3.4 was
+   * given writing about being able to go either way when the responses had in
+   * fact leaned — and would lean the same way again. Any distance from the
+   * centre names an end; how far it leaned is carried by the intensity rather
+   * than by withholding the name.
+   *
+   * Dead centre is the one reading with no side, and it is the only case the
+   * middle block describes.
    */
-  const named = /current\.situational \|\| !current\.pole \? "" : current\.pole\.name/;
-  assert.match(resultsSource, named, "the report names a pole unconditionally");
-  assert.match(pdfSource, named, "the export names a pole unconditionally");
+  const wood = core.spectraDefinitions(data).wood;
+  assert.equal(core.bandedPoleFor(data, wood, 3.01).id, wood.poles.high.id);
+  assert.equal(core.bandedPoleFor(data, wood, 2.99).id, wood.poles.low.id);
+  assert.equal(core.bandedPoleFor(data, wood, 3.4).id, wood.poles.high.id);
+  assert.equal(core.bandedPoleFor(data, wood, 3).id, wood.poles.middle.id);
 
-  // The shaded band is that same distance, so the drawing, the naming and the
-  // writing cannot disagree about where the middle ends.
+  /*
+   * And the degree is a word, because "slightly toward discipline" and
+   * "strongly toward discipline" are the same side and not the same finding.
+   */
+  const words = data.assessment.spectra.intensities;
+  assert.equal(core.intensityFor(data, 0), words.balanced);
+  assert.equal(core.intensityFor(data, 0.2), words.slight);
+  assert.equal(core.intensityFor(data, 0.6), words.moderate);
+  assert.equal(core.intensityFor(data, 1.1), words.clear);
+  assert.equal(core.intensityFor(data, 1.9), words.strong);
+  // Read the same on both sides of the middle: a lean is a lean.
+  [0.2, 0.6, 1.1, 1.9].forEach((size) =>
+    assert.equal(core.intensityFor(data, -size), core.intensityFor(data, size)),
+  );
+  assert.equal(new Set(Object.values(words)).size, 5, "two degrees share a word");
+
+  // The shaded band on the drawing is a display rule and says so; it is no
+  // longer what decides whether an end gets named.
   assert.match(resultsSource, /core\.situationalReach\(data\) \/ span/);
-  assert.match(pdfSource, /centreBand: core\.situationalReach\(data\)/);
   assert.match(pdfSource, /settings\.centreBand \/ span/);
-  assert.equal(core.situationalReach(data), 0.49);
-
   // And the readout is written once per surface rather than per page.
   assert.equal((pdfSource.match(/function spectrumReadout/g) || []).length, 1);
   assert.equal((resultsSource.match(/function spectrumReadout/g) || []).length, 1);
-
-  /*
-   * The block a page prints follows the same band. A reading of 3.02 is a hair
-   * above the centre of a five-point scale; printing the far pole's writing
-   * there describes someone the responses did not describe.
-   */
-  const wood = core.spectraDefinitions(data).wood;
-  assert.equal(core.bandedPoleFor(data, wood, 3.02).id, wood.poles.middle.id);
-  assert.equal(core.bandedPoleFor(data, wood, 2.98).id, wood.poles.middle.id);
-  assert.equal(core.bandedPoleFor(data, wood, 4.2).id, wood.poles.high.id);
-  assert.equal(core.bandedPoleFor(data, wood, 1.8).id, wood.poles.low.id);
   /*
    * All three blocks of a line carry the same keys. The middle was added with
    * `look` and `misread` and without the four relation lines, so the relations
@@ -2237,6 +2245,41 @@ check("no chapter or page singles out one of the five", () => {
     assert.equal(entry.moved, false, `${entry.id} moved on a flat record`);
     assert.ok(entry.copy);
   });
+
+  /*
+   * A line sitting dead centre is written as balanced between its two ends,
+   * not given a third name. Naming the middle put "The Ore" alongside "The
+   * Gold" and "The Blade" as though a two-ended line had three places on it.
+   */
+  const middleNames = data.assessment.spectra.order.map(
+    (id) => data.assessment.spectra.currents[id].poles.middle.name,
+  );
+  still.forEach((entry) => {
+    middleNames.forEach((name) =>
+      assert.equal(entry.copy.includes(name), false, `${entry.id} names the middle`),
+    );
+    const poles = data.assessment.spectra.currents[entry.id].poles;
+    assert.ok(
+      entry.copy.includes(poles.low.name) && entry.copy.includes(poles.high.name),
+      `${entry.id} does not name both ends of a balanced reading`,
+    );
+  });
+
+  /*
+   * And every line says how far it leaned, not only which way. Half a point
+   * and two points are the same side and not the same finding.
+   */
+  const leaning = core.movementPerCurrent(
+    data,
+    core.scoreProfile(data, answerAll((index, item) => (item.reverse ? 2 : 4))),
+  );
+  const degrees = Object.values(data.assessment.spectra.intensities);
+  leaning.forEach((entry) =>
+    assert.ok(
+      degrees.some((word) => entry.copy.includes(word)),
+      `${entry.id} names a side without saying how far`,
+    ),
+  );
 });
 
 check("a relationship is written in both directions, working and overrun", () => {
@@ -2258,9 +2301,17 @@ check("a relationship is written in both directions, working and overrun", () =>
     assert.notEqual(element.excess.feeding, element.excess.fed, id);
     assert.notEqual(element.excess.checking, element.excess.checked, id);
   });
+  /*
+   * A current prints the two it does, never the two done to it. Every edge
+   * appears twice in a five-element cycle — Wood being fed too hard by Water
+   * is the same edge as Water feeding too hard — so printing all four per
+   * current said each of the ten edges twice under two headings.
+   */
   [resultsSource, pdfSource].forEach((source) => {
     assert.match(source, /excess\.feeding/);
-    assert.match(source, /excess\.checked/);
+    assert.match(source, /excess\.checking/);
+    assert.doesNotMatch(source, /excess\.fed\b/, "an edge is printed from both ends");
+    assert.doesNotMatch(source, /excess\.checked\b/, "an edge is printed from both ends");
   });
   assert.ok(data.results.relationsExcess.intro.length > 120);
 

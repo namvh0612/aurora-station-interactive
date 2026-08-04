@@ -508,6 +508,8 @@
         "data-current": node.id,
         tabindex: "0",
         role: "button",
+        // Its own colour, so the hover fill is this element's rather than ink.
+        style: `color: ${node.colour}`,
       });
       const title = shape("title", {});
       title.textContent = node.label;
@@ -520,11 +522,15 @@
           class: "art-cycle-target",
         }),
       );
+      const radius = 8 + weight * 5;
       group.appendChild(
         shape("circle", {
           cx: node.x.toFixed(1),
           cy: node.y.toFixed(1),
-          r: (8 + weight * 5).toFixed(1),
+          r: radius.toFixed(1),
+          // The drawn radius, so the hover size grows from a node's own weight
+          // rather than from a fixed number that would shrink the largest.
+          style: `--r: ${radius.toFixed(1)}px`,
           class: "art-cycle-node",
           // Filled means the reading cleared the middle band. Five outlines
           // and one fill used to mean "this one is you"; now the fill means

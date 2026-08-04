@@ -501,6 +501,13 @@ window.AURORA_STATION_DATA = {
         "clear": "clear",
         "pronounced": "pronounced"
       },
+      "intensities": {
+        "balanced": "evenly balanced",
+        "slight": "leaning slightly toward",
+        "moderate": "leaning toward",
+        "clear": "clearly toward",
+        "strong": "strongly toward"
+      },
       "firmness": {
         "firm": "Firm. Your twelve answers pointed the same way, so the reading above describes all of them.",
         "mixed": "Mixed. Most of the twelve pointed the same way and a few did not, which is what the facet lines above are showing you.",
@@ -518,7 +525,7 @@ window.AURORA_STATION_DATA = {
           "together": "All three sit at much the same place on their own lines, so the reading above describes each of them. How you meet the unfamiliar is one thing rather than three.",
           "poles": {
             "middle": {
-              "gloss": "either road, depending",
+              "gloss": "practicality and curiosity in equal measure",
               "action": "Say out loud which one you are taking and why, at the moment you take it. The choice is being made either way; only you can hear it.",
               "watchFor": "Choosing by mood rather than by the situation. The range is only worth having if what selects from it is the problem in front of you.",
               "id": "treeline",
@@ -534,7 +541,7 @@ window.AURORA_STATION_DATA = {
               "checkedBy": "Metal decides when the search stops. It has less to push against here, because you were not committed to searching or to settling."
             },
             "low": {
-              "gloss": "proven ground first",
+              "gloss": "practicality — you use what is known to work",
               "action": "Name the point at which you would go looking. Not a rule about curiosity — a condition: what would have to be unclear before the known route stops being the right one.",
               "watchFor": "A problem that has changed shape while the approach to it has not. The proven route is proven against the old version of it.",
               "id": "orchard",
@@ -547,7 +554,7 @@ window.AURORA_STATION_DATA = {
               "checkedBy": "Metal decides when the known route has to be committed to. Without it, the proven option can be revisited all night."
             },
             "high": {
-              "gloss": "the longer road, to see what is on it",
+              "gloss": "curiosity — you go and look before you settle",
               "action": "Set the evidence that would be enough, before you start looking. Not a deadline — a threshold, so the search has somewhere to stop that is not exhaustion.",
               "watchFor": "The interesting question quietly replacing the necessary one. Both are real work, and only one of them was asked for.",
               "id": "wildwood",
@@ -592,7 +599,7 @@ window.AURORA_STATION_DATA = {
           "together": "All three sit at much the same place on their own lines, so the reading above describes each of them. How you occupy a room is one thing rather than three.",
           "poles": {
             "middle": {
-              "gloss": "meets the room where it is",
+              "gloss": "reserve and presence in equal measure",
               "action": "Notice which rooms get the quiet version of you and which get the loud one, and check that the pattern is about the room rather than about who is in it.",
               "watchFor": "Reading as inconsistent to people who only ever see you in one kind of room.",
               "id": "hearth",
@@ -608,7 +615,7 @@ window.AURORA_STATION_DATA = {
               "checkedBy": "Water decides how a quiet stretch is heard. Sitting between the ends, you are less likely to be read as either withdrawn or relentless."
             },
             "low": {
-              "gloss": "speaks when there is something to say",
+              "gloss": "reserve — you speak when you have something",
               "action": "Say the thing early rather than well. A position offered at the start of a discussion changes it; the same position offered at the end only records it.",
               "watchFor": "Being read as agreement. A quiet room is assumed to be a settled one by anyone who leads with volume.",
               "id": "lantern",
@@ -621,7 +628,7 @@ window.AURORA_STATION_DATA = {
               "checkedBy": "Water decides whether your quiet reads as composure or as withdrawal. The room cannot always tell which."
             },
             "high": {
-              "gloss": "fills the room and warms it",
+              "gloss": "presence — you carry the room's energy",
               "action": "Leave one silence unfilled per discussion. What arrives in it is the thing the room could not say over you.",
               "watchFor": "A room that has stopped contributing because it does not need to. Agreement and absence look identical from the front.",
               "id": "sun",
@@ -666,7 +673,7 @@ window.AURORA_STATION_DATA = {
           "together": "All three sit at much the same place on their own lines, so the reading above describes each of them. How you hold ground with people is one thing rather than three.",
           "poles": {
             "middle": {
-              "gloss": "holds or gives, case by case",
+              "gloss": "candour and accommodation in equal measure",
               "action": "Write down what decided it, once. A judgement you can explain is a method; one you cannot is a mood with good outcomes so far.",
               "watchFor": "Being hard to predict. People plan around you more cautiously than they need to, because they cannot tell which way you will go.",
               "id": "gate",
@@ -682,7 +689,7 @@ window.AURORA_STATION_DATA = {
               "checkedBy": "Wood decides whether the arrangement everyone can live with is the first one or the third. You are not committed to either."
             },
             "low": {
-              "gloss": "holds the line",
+              "gloss": "candour — you hold your position",
               "action": "Separate the position from the person before you hold it. Most lines worth holding survive being held warmly, and hold better for it.",
               "watchFor": "Being right at a cost you are not counting. The line holds and the room stops bringing you things.",
               "id": "rampart",
@@ -695,7 +702,7 @@ window.AURORA_STATION_DATA = {
               "checkedBy": "Wood asks whether the line you are holding still describes the situation."
             },
             "high": {
-              "gloss": "gives ground and grows things on it",
+              "gloss": "accommodation — you give ground to keep people",
               "action": "Pick one thing you will not trade this week and say so early, while it still reads as a position rather than as a limit you hit.",
               "watchFor": "Goodwill becoming the only reason a plan survives. A plan the room likes and cannot execute costs more than one it argued about.",
               "id": "cropland",
@@ -740,7 +747,7 @@ window.AURORA_STATION_DATA = {
           "together": "All three sit at much the same place on their own lines, so the reading above describes each of them. How you commit is one thing rather than three.",
           "poles": {
             "middle": {
-              "gloss": "an edge that is available, not imposed",
+              "gloss": "flexibility and discipline in equal measure",
               "action": "Say which parts of a plan are fixed and which are open, at the start. The range is useful; the ambiguity about which mode you are in is not.",
               "watchFor": "A room that cannot tell whether a decision has been made. Available structure reads as no structure until it is named.",
               "id": "ore",
@@ -756,7 +763,7 @@ window.AURORA_STATION_DATA = {
               "checkedBy": "Fire decides when a commitment has to be made out loud. You can be moved to that point, and you do not arrive there on your own."
             },
             "low": {
-              "gloss": "workable, reshapes to fit",
+              "gloss": "flexibility — you reshape to fit",
               "action": "Fix one thing in advance and leave it fixed — the order of two steps, or where the record goes. Something that does not have to be re-decided under load.",
               "watchFor": "Work that only runs while you are running it. Adaptable and unhandoverable are easy to mistake for each other.",
               "id": "gold",
@@ -769,7 +776,7 @@ window.AURORA_STATION_DATA = {
               "checkedBy": "Fire is what closes you. In a quiet room nothing forces the call, so the time has to be set by you."
             },
             "high": {
-              "gloss": "clear rules, held to",
+              "gloss": "discipline — you hold to an order once it is set",
               "action": "Take one rule you keep and ask what it was originally protecting against. Some are still load-bearing; some are a scar from a night that already ended.",
               "watchFor": "Holding an order past the point the order fits. The structure was built for conditions, and conditions moved.",
               "id": "blade",
@@ -814,7 +821,7 @@ window.AURORA_STATION_DATA = {
           "together": "All three sit at much the same place on their own lines, so the reading above describes each of them. How feeling moves is one thing rather than three.",
           "poles": {
             "middle": {
-              "gloss": "moves with what is under it",
+              "gloss": "steadiness and responsiveness in equal measure",
               "action": "Check what the level is tracking. Moving with the situation is a working instrument; moving with the last conversation is a different thing wearing its clothes.",
               "watchFor": "Being read as detached, because a surface that moves with what is under it looks calm from any distance.",
               "id": "estuary",
@@ -830,7 +837,7 @@ window.AURORA_STATION_DATA = {
               "checkedBy": "Earth decides how much of what you carry stays yours. Sitting between the ends, less of it needs absorbing in the first place."
             },
             "low": {
-              "gloss": "still, and hard to read the depth of",
+              "gloss": "steadiness — the level stays where it is",
               "action": "Say the level out loud once, to one person, before it matters. Not as a confession — as a reading, the way you would report any other instrument.",
               "watchFor": "Being read as unbothered, and then being handed the load that assumption justifies.",
               "id": "deep-well",
@@ -843,7 +850,7 @@ window.AURORA_STATION_DATA = {
               "checkedBy": "Earth asks whether your level reading has been read by anyone else as coldness."
             },
             "high": {
-              "gloss": "feeling in motion, and visible",
+              "gloss": "responsiveness — what you feel moves and shows",
               "action": "Separate the reading from the decision. What you are carrying is information about the situation; it is not yet an instruction about what to do next.",
               "watchFor": "The room taking its level from yours. What you are carrying arrives before you have decided what it means.",
               "id": "open-sea",
@@ -2413,18 +2420,18 @@ window.AURORA_STATION_DATA = {
     "movementHeading": "Line by line",
     "movementNote": "Each line named where it sat, where the worst of the night put it, and where it was by the handover. A line that did not move is a finding as much as one that swung.",
     "movementCopy": {
-      "held": "read as {from} — {fromGloss} — through the ordinary hours, through the worst of the night, and again at the handover. Pressure did not move it.",
-      "heldMoved": "held at {from} — {fromGloss} — through the worst of the night, then drifted a little {direction} it once the pressure eased.",
-      "deepened": "read as {from} — {fromGloss} — and went further that way under pressure. The same end of the line, more of it. {recoveryClause}",
-      "eased": "read as {from} — {fromGloss} — and came back toward the middle under pressure without leaving that end. {recoveryClause}",
-      "middleMoved": "read as {from} — {fromGloss} — and moved under pressure without reaching either end of the line. The range held; what changed was where inside it you were sitting. {recoveryClause}",
-      "moved": "started at {from} — {fromGloss} — and moved to {to} under pressure: {toGloss}. {recoveryClause}",
-      "crossed": "started at {from} — {fromGloss} — and changed ends under pressure, reading as {to}: {toGloss}. This is the clearest kind of shift, because it is not a matter of degree but of which end of the line was describing you. {recoveryClause}",
-      "returned": "By the handover it was back at {after}.",
-      "stayed": "By the handover it was still reading as {after}.",
-      "settled": "By the handover it had settled at {after} — {afterGloss} — which is neither of the first two.",
-      "above": "above",
-      "below": "below"
+      "openBalanced": "You began the night evenly balanced between {low} and {high} — neither one describing you more than the other.",
+      "open": "You began the night {fromIntensity} {from}: {fromGloss}.",
+      "heldSteady": "Pressure did not move it. You were reading the same way through the worst of the night and again at the handover.",
+      "deepened": "Under pressure it went further that way — {toIntensity} {to} by the hardest hours. {recoveryClause}",
+      "eased": "Under pressure it eased back, still {to} but {toIntensity} it rather than the reading you started with. {recoveryClause}",
+      "crossed": "Under pressure it changed sides, reading {toIntensity} {to}: {toGloss}. That is the clearest kind of shift, because it is not a question of how much but of which of the two was describing you. {recoveryClause}",
+      "crossedFromBalance": "Under pressure the balance broke, and you read {toIntensity} {to}: {toGloss}. {recoveryClause}",
+      "toBalance": "Under pressure it came to rest evenly between the two, which reads as {from} being available rather than automatic. {recoveryClause}",
+      "returned": "By the handover you were back to where you started.",
+      "stayed": "By the handover you were still reading that way.",
+      "settled": "By the handover it had settled {afterIntensity} {after}: {afterGloss}. That is neither of the two readings before it.",
+      "settledBalanced": "By the handover it had come to rest evenly between {low} and {high}."
     },
     "returnCopy": {
       "returned": "By the closing Acts the pattern had come back towards the one you began with.",

@@ -1408,6 +1408,36 @@ body.report .art-grain {
   stroke-width: 2;
 }
 
+/*
+ * The node under the pointer grows and fills with its own colour, so the
+ * current being asked about is marked as well as its two edges.
+ *
+ * Grown by its radius rather than by a transform: `r` is a presentation
+ * attribute a stylesheet can set, so the circle stays centred where it was
+ * drawn without a transform box and origin having to agree about where its
+ * middle is. The drawn radius is carried in as a custom property so the hover
+ * size is relative to a node's own weight rather than a fixed number that
+ * would shrink the largest of them.
+ */
+/* The radius and the fill ease; the stroke snaps, which nobody sees under a
+ * circle that is growing anyway. */
+.art-cycle-node {
+  transition: r 160ms ease, fill 160ms ease;
+}
+
+.art-cycle-mark:hover .art-cycle-node,
+.art-cycle-mark:focus-visible .art-cycle-node {
+  r: calc(var(--r, 10px) + 5px);
+  fill: currentColor;
+  stroke-width: 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .art-cycle-node {
+    transition: none;
+  }
+}
+
 .art-cycle svg,
 svg.art-cycle {
   --lit: var(--ink-dim);
@@ -2158,7 +2188,13 @@ svg.art-cycle[data-focus="water"] .art-cycle-head[data-from="water"] {
   grid-column: 2;
 }
 
-.guidance-block > .mark {
+/*
+ * Only the first mark is the block's heading. A `.mark` further down is a
+ * note inside the block — scoped by class alone it was pulled into the left
+ * column and onto row one, so the calibration chart's caption was set on top
+ * of the words "How you used the scale".
+ */
+.guidance-block > .mark:first-child {
   grid-column: 1;
   grid-row: 1;
 }
@@ -2270,11 +2306,11 @@ body.report .action-quiet {
   }
 
   .guidance-block > *,
-  .guidance-block > .mark {
+  .guidance-block > .mark:first-child {
     grid-column: 1;
   }
 
-  .guidance-block > .mark {
+  .guidance-block > .mark:first-child {
     grid-row: auto;
   }
 

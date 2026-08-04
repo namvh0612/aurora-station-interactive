@@ -639,27 +639,27 @@
       });
       y += 56;
 
-      // Two columns of two, so a current's four failure modes read as one
-      // block rather than as a list four pages long.
+      /*
+       * The two this current does, side by side. Every edge appears twice in a
+       * five-element cycle, so printing what is done to it as well said each
+       * of the ten edges under two headings.
+       */
       let deepest = y;
       [
         [excess.feeding, element.excess.feeding],
-        [excess.fed, element.excess.fed],
         [excess.checking, element.excess.checking],
-        [excess.checked, element.excess.checked],
       ].forEach(([label, copy], index) => {
-        const x = EXPORT_MARGIN + (index % 2) * (columnWidth + 60);
-        const top = y + Math.floor(index / 2) * 190;
-        drawExportLabel(context, label, x, top, "#5c6568");
-        const bottom = drawExportText(context, copy, x, top + 44, columnWidth, {
+        const x = EXPORT_MARGIN + index * (columnWidth + 60);
+        drawExportLabel(context, label, x, y, "#5c6568");
+        const bottom = drawExportText(context, copy, x, y + 44, columnWidth, {
           size: 25,
           colour: "#262b2d",
           lineHeight: 37,
-          maxLines: 4,
+          maxLines: 5,
         });
         deepest = Math.max(deepest, bottom);
       });
-      y = deepest + 46;
+      y = deepest + 56;
     });
   }
 
@@ -1176,36 +1176,45 @@
     y += 40;
     drawExportLabel(context, copy.firmnessHeading, EXPORT_MARGIN, y, trace);
     y += 60;
+    /*
+     * The name, the word, and what the word means for that line. The middle
+     * column used to hold the pole name, which the download then repeated from
+     * five pages earlier and left blank for any reading in the middle — and
+     * the sentence that says what "provisional" costs you, which the report
+     * prints, was missing from the download entirely.
+     */
     profile.currents.forEach((current) => {
-      drawExportText(context, current.name, EXPORT_MARGIN, y, width - 900, {
+      drawExportText(context, current.name, EXPORT_MARGIN, y, 380, {
         size: 30,
         weight: 600,
         colour: "#14181a",
         lineHeight: 40,
         maxLines: 1,
       });
-      drawExportText(context, poleNameFor(current) || "—", EXPORT_MARGIN + 420, y, 700, {
-        size: 28,
-        colour: "#5c6568",
-        lineHeight: 40,
-        maxLines: 1,
-      });
       drawExportText(
         context,
         current.firmness ? current.firmness.id.toUpperCase() : "—",
-        EXPORT_PAGE_WIDTH - EXPORT_MARGIN,
+        EXPORT_MARGIN + 400,
         y,
-        600,
+        360,
         {
-          size: 28,
+          size: 26,
           family: "sans",
           weight: 600,
           colour: current.colourPaper || trace,
-          align: "right",
           lineHeight: 40,
+          maxLines: 1,
         },
       );
-      y += 62;
+      const bottom = drawExportText(
+        context,
+        current.firmness ? current.firmness.copy : "",
+        EXPORT_MARGIN + 800,
+        y,
+        width - 800,
+        { size: 25, colour: "#5c6568", lineHeight: 36, maxLines: 3 },
+      );
+      y = Math.max(y + 62, bottom + 24);
     });
   }
 

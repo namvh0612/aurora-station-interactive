@@ -628,22 +628,44 @@
   }
 
   /*
-   * The block a reading is actually described by. Inside the situational band
-   * that is the middle of the line, not the nearer end: at 3.02 the reader is
-   * a hair above the centre of a five-point scale, and printing the far pole's
-   * writing there describes someone the responses did not describe.
+   * The block a reading is described by.
    *
-   * The band is the one the content file defines, so the shaded middle of the
-   * drawn line, the decision to name an end, and the writing that gets printed
-   * are all the same width by construction.
+   * A hair off the middle is still a side. The band used to decide this was a
+   * fifth of the scale wide, so a reading at 3.4 was called balanced and given
+   * writing about being able to go either way — when the responses had in fact
+   * leaned, and would have leaned the same way again. Any distance from the
+   * centre names an end; how far it leaned is carried by the intensity, not by
+   * withholding the name.
+   *
+   * Dead centre is the one reading with no side to name, and it gets the
+   * middle block. That is rare and it is the only case the middle describes.
    */
   function bandedPoleFor(data, current, score) {
     if (!Number.isFinite(score)) {
       return null;
     }
-    return bandForScore(data, score).id === "situational"
-      ? current.poles.middle || poleFor(current, score)
-      : poleFor(current, score);
+    return score === CENTRE ? current.poles.middle || poleFor(current, score) : poleFor(current, score);
+  }
+
+  /*
+   * How far from the middle, as a word. A reading is always named at an end,
+   * so the degree has to be said rather than implied by which end got named —
+   * "slightly toward discipline" and "strongly toward discipline" are the same
+   * side and not the same finding.
+   */
+  function intensityFor(data, magnitude) {
+    const words = data.assessment.spectra.intensities;
+    const size = Math.abs(magnitude);
+    if (!Number.isFinite(size) || size === 0) {
+      return words.balanced;
+    }
+    if (size >= 1.5) {
+      return words.strong;
+    }
+    if (size >= 0.9) {
+      return words.clear;
+    }
+    return size >= 0.4 ? words.moderate : words.slight;
   }
 
   /* Half the width of the situational band, in scale points. */
@@ -813,7 +835,13 @@
           poles: current.poles,
           pole: bandedPoleFor(data, current, domain.score),
           nearer: poleFor(current, domain.score),
-          situational: domain.band === "situational",
+          /*
+           * Whether the middle block is the one describing this reading — not
+           * whether the score falls in the display band. The two used to be
+           * the same rule and are not any more: the band is a fifth of the
+           * scale wide and only dead centre has no side to name.
+           */
+          situational: bandedPoleFor(data, current, domain.score) === current.poles.middle,
           magnitude,
           magnitudeLabel: magnitudeLabelFor(data, magnitude),
           firmness: firmnessFor(data, state, domain.code),
@@ -1300,93 +1328,106 @@
     }
     const floor = data.assessment.shiftThresholds.ignore;
 
+    /*
+     * Two sentences per line: where you began, and what the night did to it.
+     * Both name a side and how far it leaned, because "toward discipline" and
+     * "strongly toward discipline" are the same side and not the same finding.
+     *
+     * Dead centre is the one reading with no side, and it is written as being
+     * balanced between the two rather than given a name of its own — a third
+     * name at the middle of a two-ended line reads as a third type.
+     */
     return profile.currents.map((current) => {
       const at = (phase) => phase.currents.find((entry) => entry.id === current.id);
       const from = at(baseline);
       const under = at(pressure);
       const after = at(recovery);
       const definition = data.assessment.spectra.currents[current.id];
-      /*
-       * The banded block, not the nearer end. A stretch that read as
-       * situational is described by the middle of the line, so a reading that
-       * moved from 3.1 to 3.4 is not reported as travelling between two poles
-       * it never reached.
-       */
       const block = (score) => bandedPoleFor(data, definition, score);
+      const centred = (score) => score === CENTRE;
+      const words = (score) => ({
+        name: block(score).name,
+        gloss: block(score).gloss,
+        intensity: intensityFor(data, magnitudeFor(score)),
+      });
       const fill = (template, values) =>
         Object.keys(values).reduce(
           (text, key) => text.split(`{${key}}`).join(values[key]),
           template,
         );
 
-      const delta = under.score - from.score;
-      const back = after.score - under.score;
-      const shared = {
-        id: current.id,
-        name: current.name,
-        colourPaper: current.colourPaper,
-      };
+      const ends = { low: definition.poles.low.name, high: definition.poles.high.name };
+      const start = words(from.score);
+      const pressed = words(under.score);
+      const ended = words(after.score);
 
+      const opening = centred(from.score)
+        ? fill(copy.openBalanced, ends)
+        : fill(copy.open, {
+            from: start.name,
+            fromGloss: start.gloss,
+            fromIntensity: start.intensity,
+          });
+
+      const delta = under.score - from.score;
       if (Math.abs(delta) < floor) {
-        const drifted = Math.abs(after.score - from.score) >= floor;
         return {
-          ...shared,
+          id: current.id,
+          name: current.name,
+          colourPaper: current.colourPaper,
           moved: false,
-          copy: fill(drifted ? copy.heldMoved : copy.held, {
-            from: block(from.score).name,
-            fromGloss: block(from.score).gloss,
-            direction: after.score > from.score ? copy.above : copy.below,
-          }),
+          copy: `${opening} ${copy.heldSteady}`,
         };
       }
 
       /*
-       * Where it ended is named rather than gestured at, and named by block
-       * rather than by distance. "Settled somewhere else again" was true of
-       * every reading that neither returned nor stayed, which makes it a
-       * category rather than a finding.
+       * Where it ended, judged against where it was rather than by distance
+       * alone. "Settled somewhere else again" was true of every reading that
+       * neither returned nor stayed, which makes it a category, not a finding.
        */
-      const landed =
-        block(after.score) === block(under.score)
-          ? copy.stayed
-          : block(after.score) === block(from.score)
-            ? copy.returned
-            : copy.settled;
+      const sameSide = (left, right) =>
+        centred(left) === centred(right) && block(left) === block(right);
+      const landed = sameSide(after.score, under.score)
+        ? copy.stayed
+        : sameSide(after.score, from.score)
+          ? copy.returned
+          : centred(after.score)
+            ? fill(copy.settledBalanced, ends)
+            : fill(copy.settled, {
+                after: ended.name,
+                afterGloss: ended.gloss,
+                afterIntensity: ended.intensity,
+              });
 
       /*
-       * A line can move a long way without changing which end describes it.
-       * Reported with the same template as a crossing it printed "started at
-       * The Lantern and moved to The Lantern", so the three cases are told
-       * apart: a crossing, more of the same end, or a step back toward the
-       * middle without leaving it.
+       * Four ways a night can move a line: it crossed, it went further the way
+       * it already leaned, it eased back without crossing, or it came to rest
+       * evenly between the two.
        */
-      const same = block(from.score) === block(under.score);
-      const deeper = Math.abs(under.score - CENTRE) > Math.abs(from.score - CENTRE);
-      // The middle is not an end, so it cannot be gone further into or eased
-      // back from — a move inside the band is a move inside the band.
-      const inMiddle = block(from.score) === definition.poles.middle;
-      const template = !same
-        ? copy.crossed
-        : inMiddle
-          ? copy.middleMoved
-          : deeper
-            ? copy.deepened
-            : copy.eased;
+      const template = centred(under.score)
+        ? copy.toBalance
+        : centred(from.score)
+          ? copy.crossedFromBalance
+          : block(from.score) !== block(under.score)
+            ? copy.crossed
+            : Math.abs(under.score - CENTRE) > Math.abs(from.score - CENTRE)
+              ? copy.deepened
+              : copy.eased;
+
       return {
-        ...shared,
+        id: current.id,
+        name: current.name,
+        colourPaper: current.colourPaper,
         moved: true,
-        copy: fill(template, {
-          from: block(from.score).name,
-          fromGloss: block(from.score).gloss,
-          to: block(under.score).name,
-          toGloss: block(under.score).gloss,
-          after: block(after.score).name,
-          afterGloss: block(after.score).gloss,
-          recoveryClause: fill(landed, {
-            after: block(after.score).name,
-            afterGloss: block(after.score).gloss,
-          }),
-        }),
+        copy: `${opening} ${fill(template, {
+          from: start.name,
+          fromGloss: start.gloss,
+          fromIntensity: start.intensity,
+          to: pressed.name,
+          toGloss: pressed.gloss,
+          toIntensity: pressed.intensity,
+          recoveryClause: landed,
+        })}`,
       };
     });
   }
@@ -1484,6 +1525,7 @@
     poleFor,
     bandedPoleFor,
     situationalReach,
+    intensityFor,
     middleMovementFor,
     movementPerCurrent,
     responseStyleFor,

@@ -823,11 +823,16 @@
        */
       if (element && element.excess) {
         const runs = el("div", "relations-excess");
+        /*
+         * Only the two this current does, not the two done to it. Every edge
+         * appears twice in a five-element cycle — Wood being fed too hard by
+         * Water is the same edge as Water feeding too hard — so printing all
+         * four per current said each of the ten edges twice under two headings
+         * and made twenty blocks out of ten findings.
+         */
         [
           [excess.feeding, element.excess.feeding],
-          [excess.fed, element.excess.fed],
           [excess.checking, element.excess.checking],
-          [excess.checked, element.excess.checked],
         ].forEach(([label, copy]) => {
           const line = el("div", "relations-excess-line");
           line.append(el("p", "mark", label), el("p", "", copy));
