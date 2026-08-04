@@ -2343,13 +2343,13 @@ window.AURORA_STATION_DATA = {
       },
       "balance": {
         "none": "No measurable lean. You neither agreed nor disagreed out of habit.",
-        "agree": "A lean toward agreeing. Because the statements run in both directions in equal number, this moves the readings less than it looks like it should — but your middle band is wider than most.",
-        "disagree": "A lean toward disagreeing. Because the statements run in both directions in equal number, this moves the readings less than it looks like it should — but your middle band is wider than most."
+        "agree": "A lean toward agreeing. Because each current runs six statements one way and six the other, a habit of agreeing pushes both halves the same way and they largely cancel — so this moves your five readings less than it looks like it should. Where it does show is in how much your own statements agreed with each other, recorded below.",
+        "disagree": "A lean toward disagreeing. Because each current runs six statements one way and six the other, a habit of disagreeing pushes both halves the same way and they largely cancel — so this moves your five readings less than it looks like it should. Where it does show is in how much your own statements agreed with each other, recorded below."
       },
       "ends": {
-        "sparing": "You stayed near the middle of the scale. The five currents read flatter than they would for someone who used the ends — the order among them is unaffected, only how far from centre they sit.",
+        "sparing": "You stayed near the middle of the scale. Your five readings sit closer to the middle than the same tendencies would if you had used the ends. Which way each line leans is unaffected; only how far it leans.",
         "usual": "You used the whole scale.",
-        "frequent": "You used the ends of the scale often. The five currents read as more pronounced than they would for someone who stayed near the middle. That is a difference in how the scale was used, not in how strong the tendencies are."
+        "frequent": "You used the ends of the scale often. Your five readings sit further from the middle than the same tendencies would if you had stayed near it. That is a difference in how the scale was used, not in how strong the tendencies are."
       },
       "middleNote": "You chose the midpoint often. Some of the five sit near the centre of their line for that reason rather than because the tendency itself is genuinely even-handed.",
       "agreementNote": "{held} of the fifteen facets held together, meaning their four statements pointed the same way. Where they did not, the current above them is marked accordingly.",

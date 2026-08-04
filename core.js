@@ -677,6 +677,24 @@
     return size >= 0.4 ? words.moderate : words.slight;
   }
 
+  /*
+   * Which of the three written bands describes a reading — chosen by the same
+   * rule that names its end, not by a separate threshold.
+   *
+   * These disagreed. A reading of 3.10 was named at The Blade and given The
+   * Blade's look, misread, action and watch-for, while its advantage and its
+   * question came from the situational band a fifth of the scale wide — so one
+   * page said "leaning slightly toward discipline" and, four blocks later,
+   * "you apply structure where it earns its cost and let it go where it does
+   * not", which is the writing for someone who did neither.
+   */
+  function bandForPole(current, pole) {
+    if (pole === current.poles.middle) {
+      return "situational";
+    }
+    return pole === current.poles.high ? "higher" : "lower";
+  }
+
   /* Half the width of the situational band, in scale points. */
   function situationalReach(data) {
     const bands = data.assessment.interpretationBands;
@@ -741,6 +759,13 @@
 
   function spellNumber(value) {
     return NUMBER_WORDS[value] || String(value);
+  }
+
+  /* For a count that opens a sentence: "fourteen of the fifteen" reads as a
+   * missing capital rather than as a style. */
+  function spellNumberLeading(value) {
+    const word = spellNumber(value);
+    return word.charAt(0).toUpperCase() + word.slice(1);
   }
 
   function spread(values) {
@@ -834,6 +859,10 @@
           (entry) => entry.domain === current.domain,
         );
         const magnitude = magnitudeFor(domain.score);
+        // One decision, used by everything on the page: which of the three
+        // blocks describes this reading.
+        const block = bandedPoleFor(data, current, domain.score);
+        const band = bandForPole(current, block);
         return {
           id: current.id,
           name: current.name,
@@ -846,9 +875,8 @@
           colourPaper: current.colourPaper,
           score: domain.score,
           normalised: domain.normalised,
-          band: domain.band,
           poles: current.poles,
-          pole: bandedPoleFor(data, current, domain.score),
+          pole: block,
           nearer: poleFor(current, domain.score),
           /*
            * Whether the middle block is the one describing this reading — not
@@ -856,11 +884,14 @@
            * the same rule and are not any more: the band is a fifth of the
            * scale wide and only dead centre has no side to name.
            */
-          situational: bandedPoleFor(data, current, domain.score) === current.poles.middle,
+          situational: block === current.poles.middle,
+          band,
           magnitude,
           firmness: firmnessFor(data, state, domain.code),
           divergence: divergenceFor(data, domain),
-          guidance: data.assessment.domains[domain.code].guidance[domain.band],
+          // Written for the end this reading was named at, so a page cannot
+          // name a pole in one block and describe the middle in the next.
+          guidance: data.assessment.domains[domain.code].guidance[band],
           /*
            * A facet is a line too, with a name at each end. Carrying only a
            * number left three of them on every page reading as a score out of
@@ -950,7 +981,7 @@
             ? copy.agreementAll
             : held === 0
               ? copy.agreementNone
-              : copy.agreementNote.replace("{held}", spellNumber(held)),
+              : copy.agreementNote.replace("{held}", spellNumberLeading(held)),
       },
     };
   }
@@ -1486,11 +1517,7 @@
     }
     // Spelled out. "3 of the five moved" mixes a numeral with a word in one
     // phrase, which is the same fault the facet count had.
-    const word = spellNumber(moved);
-    return (moved === 1 ? copy.one : copy.some).replace(
-      "{count}",
-      word.charAt(0).toUpperCase() + word.slice(1),
-    );
+    return (moved === 1 ? copy.one : copy.some).replace("{count}", spellNumberLeading(moved));
   }
 
   function summariseProfile(data, profile) {
@@ -1538,6 +1565,7 @@
     poleFor,
     bandedPoleFor,
     situationalReach,
+    bandForPole,
     intensityFor,
     middleMovementFor,
     movementPerCurrent,

@@ -2536,6 +2536,70 @@ check("the export advances by what it drew, not by a guess", () => {
   assert.match(resultsSource, /\(hover: hover\)/);
 });
 
+check("every block on a current's page describes the same end", () => {
+  /*
+   * Two rules decided which writing a page printed, and they disagreed. The
+   * name, the look, the misread, the action and the watch-for followed the
+   * pole; the advantage and the closing question followed a band a fifth of
+   * the scale wide. So a reading of 3.10 was headed "leaning slightly toward
+   * The Blade", given The Blade's writing four times, and then handed the
+   * middle's advantage — "you apply structure where it earns its cost and let
+   * it go where it does not", which describes someone who did neither.
+   */
+  const currents = core.spectraDefinitions(data);
+  const metal = currents.metal;
+  assert.equal(core.bandForPole(metal, metal.poles.low), "lower");
+  assert.equal(core.bandForPole(metal, metal.poles.middle), "situational");
+  assert.equal(core.bandForPole(metal, metal.poles.high), "higher");
+
+  // Walked over the whole scale: whichever block is named, the guidance for
+  // that page comes from the same one.
+  const answered = (target) =>
+    answerAll((index, item) => {
+      if (item.domain !== "conscientiousness") {
+        return 3;
+      }
+      const raw = target > 3 ? 4 : target < 3 ? 2 : 3;
+      return item.reverse ? 6 - raw : raw;
+    });
+  [2, 3, 4].forEach((target) => {
+    const current = core
+      .scoreProfile(data, answered(target))
+      .currents.find((entry) => entry.id === "metal");
+    const expected = core.bandForPole(currents.metal, current.pole);
+    assert.equal(current.band, expected, `score ${current.score} names one block and guides another`);
+    assert.equal(
+      current.guidance,
+      data.assessment.domains.conscientiousness.guidance[expected],
+      "the guidance comes from a different block than the name",
+    );
+  });
+  assert.match(coreSource, /guidance\[band\]/);
+  assert.doesNotMatch(coreSource, /guidance\[domain\.band\]/, "guidance still follows the old band");
+});
+
+check("the record never compares the reader with anyone", () => {
+  /*
+   * The report promises this outright — "They are not norms, and they do not
+   * compare you with anyone" — and then the calibration copy said "your middle
+   * band is wider than most", which is a claim about a population the record
+   * never saw. A comparison with the same reader answering differently is
+   * fine and is how the scale effects are explained; a comparison with other
+   * people is not.
+   */
+  assert.match(data.assessment.bandNote, /do not compare you with anyone/i);
+  const shown = JSON.stringify([data.results, data.assessment.spectra, data.assessment.elements]);
+  [
+    /than most\b/i,
+    /than average/i,
+    /than other people/i,
+    /\bpercentile/i,
+    /compared with others/i,
+    /\bthe population\b/i,
+    /higher than\s+(most|others|average)/i,
+  ].forEach((pattern) => assert.doesNotMatch(shown, pattern, String(pattern)));
+});
+
 check("the report never mixes a numeral and a spelled number in one phrase", () => {
   /*
    * "15 of fifteen facets held together" and "3 of the five moved" both read
@@ -2560,6 +2624,15 @@ check("the report never mixes a numeral and a spelled number in one phrase", () 
     ),
   ].forEach((state) => {
     phrases.push(core.summariseProfile(data, core.scoreProfile(data, state)).adaptation);
+  });
+
+  /*
+   * And a spelled count that opens a sentence takes a capital. "fourteen of
+   * the fifteen facets held together" reads as a missing one rather than as a
+   * style, which is exactly what the substitution produced.
+   */
+  phrases.forEach((phrase) => {
+    assert.match(phrase, /^[A-Z]/, `sentence opens in lower case: ${phrase}`);
   });
 
   const words = "one|two|three|four|five|six|ten|fifteen|sixty";
