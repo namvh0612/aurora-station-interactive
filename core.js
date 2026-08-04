@@ -604,7 +604,16 @@
   const PROVISIONAL_LIMIT = 1.2;
   /* One full point between a domain's highest and lowest facet. Below that the
    * difference is inside what a four-statement facet can resolve. */
-  const DIVERGENCE_LIMIT = 1;
+  /*
+   * How far apart the three facets can sit before the domain average stops
+   * describing all of them.
+   *
+   * This was a whole scale point, which is a quarter of the width of the drawn
+   * line — so a page could show one mark plainly to the right of the other two
+   * and print "all three sit at much the same place" underneath it. The
+   * threshold has to be tight enough that the sentence and the picture agree.
+   */
+  const DIVERGENCE_LIMIT = 0.6;
 
   function spectraDefinitions(data) {
     return data.assessment.spectra.currents;
@@ -1514,6 +1523,7 @@
     CENTRE,
     MAGNITUDE_CLEAR,
     STEADY_CHANGE,
+    DIVERGENCE_LIMIT,
     compareCurrents,
     contextPhaseFor,
     currentForDomain,

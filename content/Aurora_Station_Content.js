@@ -389,9 +389,7 @@ window.AURORA_STATION_DATA = {
         "shadow": "Many ideas, and no one left to finalise them",
         "excess": {
           "feeding": "Wood feeds Fire, and a fire fed without limit consumes the wood that fed it. Every idea aired, and nothing left standing long enough to be built on.",
-          "fed": "Water feeds Wood, and too much water rots a root. When there is a great deal in motion, the search stops being curiosity and becomes somewhere to put it.",
-          "checking": "Wood restrains Earth the way roots break soil. Held to the evidence at every turn, the room stops offering arrangements at all — and an unoffered plan cannot be improved.",
-          "checked": "Metal restrains Wood the way an axe fells a tree. Under too much of it the search never opens, and the known route is taken because it was the only one on the table."
+          "checking": "Wood restrains Earth the way roots break soil. Held to the evidence at every turn, the room stops offering arrangements at all — and an unoffered plan cannot be improved."
         }
       },
       "fire": {
@@ -402,9 +400,7 @@ window.AURORA_STATION_DATA = {
         "shadow": "Impulsive and loud, and short of depth",
         "excess": {
           "feeding": "Fire feeds Earth as ash feeds soil, and buries it if it never stops. A room given more than it can absorb starts agreeing to be left alone.",
-          "fed": "Wood feeds Fire, and unlimited fuel is not a gift. Given more to say than a room can take, what you say stops landing and starts arriving.",
-          "checking": "Fire restrains Metal by melting it. Pressed for a decision often enough, the structure stops being held at all and the commitment is made to end the pressure.",
-          "checked": "Water restrains Fire by putting it out. Under enough of it the room goes quiet and stays quiet, and the quiet is read as having nothing to add."
+          "checking": "Fire restrains Metal by melting it. Pressed for a decision often enough, the structure stops being held at all and the commitment is made to end the pressure."
         }
       },
       "earth": {
@@ -415,9 +411,7 @@ window.AURORA_STATION_DATA = {
         "shadow": "Avoids conflict, and is reluctant on the hard calls",
         "excess": {
           "feeding": "Earth feeds Metal as ore feeds a blade, and a seam mined without limit is a hole. Carry the plan for long enough and there is no ground left to plan on.",
-          "fed": "Fire feeds Earth, and too much of it bakes the ground hard. A room given more energy than it can hold stops absorbing anything.",
-          "checking": "Earth restrains Water by damming it. Take on enough of what other people are carrying and it stops moving anywhere — including through you.",
-          "checked": "Wood restrains Earth. Held to the evidence too often, the ground stops offering arrangements, and goodwill withdraws rather than being spent badly."
+          "checking": "Earth restrains Water by damming it. Take on enough of what other people are carrying and it stops moving anywhere — including through you."
         }
       },
       "metal": {
@@ -428,9 +422,7 @@ window.AURORA_STATION_DATA = {
         "shadow": "Rigid and perfectionist, and slow to adapt",
         "excess": {
           "feeding": "Metal feeds Water as a vein carries a spring, and a channel cut too deep runs dry at the top. Structure that only serves what comes after it stops holding anything itself.",
-          "fed": "Earth feeds Metal, and a seam given more than it needs is buried. A plan the room keeps adding to is a plan nobody can execute.",
-          "checking": "Metal restrains Wood the way an axe fells a tree. Stop the search often enough and it stops starting, and the structure ends up protecting a route nobody checked.",
-          "checked": "Fire restrains Metal by melting it. Pressed hard enough and often enough, the order gives way at the moment it was most needed."
+          "checking": "Metal restrains Wood the way an axe fells a tree. Stop the search often enough and it stops starting, and the structure ends up protecting a route nobody checked."
         }
       },
       "water": {
@@ -441,9 +433,7 @@ window.AURORA_STATION_DATA = {
         "shadow": "Passive and detached, and prone to over-analysis",
         "excess": {
           "feeding": "Water feeds Wood, and a flood is not irrigation. What you are carrying can give the unfamiliar its charge, or drown the part of you that was going to look at it.",
-          "fed": "Metal feeds Water, and a channel cut too deep only fills. Structure that exists to manage the level becomes the level's argument for staying high.",
-          "checking": "Water restrains Fire by putting it out. Keep the room's pitch down for long enough and the urgency never arrives, including the urgency that was warranted.",
-          "checked": "Earth restrains Water by damming it. Absorbed too readily by other people, what you carry stops being yours to read, and stops telling you anything."
+          "checking": "Water restrains Fire by putting it out. Keep the room's pitch down for long enough and the urgency never arrives, including the urgency that was warranted."
         }
       }
     },
@@ -522,10 +512,11 @@ window.AURORA_STATION_DATA = {
           "name": "Wood",
           "domain": "openMindedness",
           "axis": "how you meet the unfamiliar",
-          "together": "All three sit at much the same place on their own lines, so the reading above describes each of them. How you meet the unfamiliar is one thing rather than three.",
+          "together": "The three lines sit close together, so the reading above describes each of them. How you meet the unfamiliar is one thing here rather than three.",
           "poles": {
             "middle": {
               "gloss": "practicality and curiosity in equal measure",
+              "tag": "Practical · Exploratory",
               "action": "Say out loud which one you are taking and why, at the moment you take it. The choice is being made either way; only you can hear it.",
               "watchFor": "Choosing by mood rather than by the situation. The range is only worth having if what selects from it is the problem in front of you.",
               "id": "treeline",
@@ -535,56 +526,52 @@ window.AURORA_STATION_DATA = {
               "held": "It sat here through the whole watch. Neither end pulled hard enough to describe you, which reads as a genuine range rather than a reading the record could not resolve.",
               "arrivedFrom": "It began the night nearer {from} and came in toward the middle as conditions got harder. Read that as range under pressure: what was a settled way of working became a choice you were making.",
               "leftFor": "It began the night in the middle and moved out toward {to} as conditions got harder. The range was there; pressure is what picked a side of it.",
-              "supports": "What you hand Fire is sometimes proven ground and sometimes new, and Fire gets whichever the situation asked for rather than whichever you prefer.",
-              "supportedBy": "Water sets how much unmapped ground you have any appetite for, and you meet it where it is rather than pushing past it.",
-              "checks": "You hold Earth to the evidence without insisting the evidence be new, which is a slower brake than either end and a harder one to argue with.",
-              "checkedBy": "Metal decides when the search stops. It has less to push against here, because you were not committed to searching or to settling."
+              "supports": "Wood feeds Fire. Its mix of practicality and curiosity means Fire gets proven ground or new ground, whichever the situation asked for.",
+              "checks": "Wood holds Earth in check. It asks Earth for evidence without insisting the evidence be novel, which is a slower brake and a harder one to argue with."
             },
             "low": {
               "gloss": "practicality — you use what is known to work",
+              "tag": "Practical · Proven",
               "action": "Name the point at which you would go looking. Not a rule about curiosity — a condition: what would have to be unclear before the known route stops being the right one.",
               "watchFor": "A problem that has changed shape while the approach to it has not. The proven route is proven against the old version of it.",
               "id": "orchard",
               "name": "The Orchard",
               "look": "You would rather use the route that worked last time than find out whether a better one exists. Not from incuriosity — from the arithmetic of a night that has to end well.",
               "misread": "As a shortage of imagination. What it usually is, is a preference for methods that have already survived contact with a bad night.",
-              "supports": "You hand Fire proven ground to stand on, so what gets said in the room has something behind it.",
-              "supportedBy": "What Water is carrying decides how much unfamiliar ground you have any appetite for.",
-              "checks": "You hold Earth to what has actually worked, which keeps goodwill from becoming the only reason a plan survives.",
-              "checkedBy": "Metal decides when the known route has to be committed to. Without it, the proven option can be revisited all night."
+              "supports": "Wood feeds Fire. Its practicality gives Fire proven ground to speak from, so what the room hears has something behind it.",
+              "checks": "Wood holds Earth in check. Its preference for what has worked keeps Earth's warmth from becoming the only reason a plan survives."
             },
             "high": {
               "gloss": "curiosity — you go and look before you settle",
+              "tag": "Curious · Exploratory",
               "action": "Set the evidence that would be enough, before you start looking. Not a deadline — a threshold, so the search has somewhere to stop that is not exhaustion.",
               "watchFor": "The interesting question quietly replacing the necessary one. Both are real work, and only one of them was asked for.",
               "id": "wildwood",
               "name": "The Wildwood",
               "look": "You will take the longer road to see what is on it. Given a working answer and an interesting one, you have to choose — and the choosing is not automatic.",
               "misread": "As restlessness, or as not taking the problem seriously. The interest is usually in the problem rather than away from it.",
-              "supports": "You give Fire something worth saying, so the room gets ideas and not only volume.",
-              "supportedBy": "Water sets how much unmapped ground you can hold at once. When it runs high, the open questions stack up.",
-              "checks": "You keep Earth from settling on the first arrangement everyone can live with.",
-              "checkedBy": "Metal is what stops the search. Without it the frame stays open past the point a decision was needed."
+              "supports": "Wood feeds Fire. Its curiosity gives Fire something worth saying, so the room gets ideas and not only volume.",
+              "checks": "Wood holds Earth in check. Its appetite for the unexamined keeps Earth from settling on the first arrangement everyone can live with."
             }
           },
           "facets": {
             "Intellectual Curiosity": {
               "low": "Applied Focus",
               "high": "Theoretical Focus",
-              "above": "Of the three, this one sits furthest toward Theoretical Focus. You want to know how a thing works before you want to build with it or be moved by it — which means the mechanism can hold you after the practical question has been answered.",
-              "below": "Of the three, this one sits furthest toward Applied Focus. You will use a thing without needing to open it, which is fast where the mechanism does not matter and expensive on the night it does."
+              "above": "The widest lean here is toward Theoretical Focus: you want to know how a thing works before you build with it or are moved by it. The mechanism can hold you after the practical question has been answered.",
+              "below": "The widest lean here is toward Applied Focus: you will use a thing without needing to open it. That is fast where the mechanism does not matter, and expensive on the night it does."
             },
             "Aesthetic Sensitivity": {
               "low": "Functional Mindset",
               "high": "Experiential Mindset",
-              "above": "Of the three, this one sits furthest toward an Experiential Mindset. Some of what registered tonight will never reduce to a reading, and you are not inclined to force it to.",
-              "below": "Of the three, this one sits furthest toward a Functional Mindset. A room is a room and an instrument is an instrument, which keeps attention on the problem and lets some information about it pass unremarked."
+              "above": "The widest lean here is toward an Experiential Mindset: some of what registered tonight will never reduce to a reading, and you are not inclined to force it to.",
+              "below": "The widest lean here is toward a Functional Mindset: a room is a room and an instrument is an instrument. That keeps attention on the problem and lets some information about it pass unremarked."
             },
             "Creative Imagination": {
               "low": "Realistic Thinking",
               "high": "Conceptual Thinking",
-              "above": "Of the three, this one sits furthest toward Conceptual Thinking. The option that was not on the list arrives before you have finished examining the ones that were.",
-              "below": "Of the three, this one sits furthest toward Realistic Thinking. You work the options in front of you rather than generating new ones, which is why the ones you take tend to be executable."
+              "above": "The widest lean here is toward Conceptual Thinking: the option that was not on the list arrives before you have finished examining the ones that were.",
+              "below": "The widest lean here is toward Realistic Thinking: you work the options in front of you rather than generating new ones, which is why the ones you take tend to be executable."
             }
           }
         },
@@ -596,10 +583,11 @@ window.AURORA_STATION_DATA = {
           "name": "Fire",
           "domain": "extraversion",
           "axis": "how you occupy a room",
-          "together": "All three sit at much the same place on their own lines, so the reading above describes each of them. How you occupy a room is one thing rather than three.",
+          "together": "The three lines sit close together, so the reading above describes each of them. How you occupy a room is one thing here rather than three.",
           "poles": {
             "middle": {
               "gloss": "reserve and presence in equal measure",
+              "tag": "Reserved · Expressive",
               "action": "Notice which rooms get the quiet version of you and which get the loud one, and check that the pattern is about the room rather than about who is in it.",
               "watchFor": "Reading as inconsistent to people who only ever see you in one kind of room.",
               "id": "hearth",
@@ -609,56 +597,52 @@ window.AURORA_STATION_DATA = {
               "held": "It sat here through the whole watch. How much space you took was decided by the room each time, not by a level you hold.",
               "arrivedFrom": "It began the night nearer {from} and came in toward the middle as conditions got harder. Under pressure you stopped holding a level and started reading the room.",
               "leftFor": "It began the night in the middle and moved out toward {to} as conditions got harder. Pressure is what settled the question of how much space to take.",
-              "supports": "Earth gets a room it can work with: neither so loud that positions harden nor so quiet that nothing is on the table to repair.",
-              "supportedBy": "Wood decides whether what you bring to a room is new ground or proven ground, and you will carry either.",
-              "checks": "You press Metal to commit when the room needs it and let it wait when it does not, which reads as judgement rather than as pace.",
-              "checkedBy": "Water decides how a quiet stretch is heard. Sitting between the ends, you are less likely to be read as either withdrawn or relentless."
+              "supports": "Fire feeds Earth. Its range gives Earth a room it can work with: neither so loud that positions harden nor so quiet that nothing is on the table.",
+              "checks": "Fire holds Metal in check. It presses Metal to commit when the room needs it and lets Metal wait when it does not."
             },
             "low": {
               "gloss": "reserve — you speak when you have something",
+              "tag": "Reserved · Selective",
               "action": "Say the thing early rather than well. A position offered at the start of a discussion changes it; the same position offered at the end only records it.",
               "watchFor": "Being read as agreement. A quiet room is assumed to be a settled one by anyone who leads with volume.",
               "id": "lantern",
               "name": "The Lantern",
               "look": "You do not fill a room and you do not avoid one. You speak when you have something, and people tend to notice that you meant it.",
               "misread": "As reluctance. A quiet room reads as an uncertain one to anyone who leads with volume, so the moment you do take a position it lands harder than you intended.",
-              "supports": "What you do say lands with weight, and Earth has less to repair afterwards.",
-              "supportedBy": "Wood decides whether your few contributions are new ground or proven ground.",
-              "checks": "You do not press Metal to commit before it is ready. That is patience, and sometimes it is delay.",
-              "checkedBy": "Water decides whether your quiet reads as composure or as withdrawal. The room cannot always tell which."
+              "supports": "Fire feeds Earth. Its selectiveness means what does get said lands with weight, so Earth has less to repair afterwards.",
+              "checks": "Fire holds Metal in check. Its reserve does not press Metal to commit before Metal is ready — patience, and sometimes delay."
             },
             "high": {
               "gloss": "presence — you carry the room's energy",
+              "tag": "Expressive · Energising",
               "action": "Leave one silence unfilled per discussion. What arrives in it is the thing the room could not say over you.",
               "watchFor": "A room that has stopped contributing because it does not need to. Agreement and absence look identical from the front.",
               "id": "sun",
               "name": "The Sun",
               "look": "The room knows where things stand because you put them there. Silence in a working room reads to you as something still waiting to be resolved.",
               "misread": "As needing the attention. More often it is a low tolerance for a room where nobody has yet said the obvious thing.",
-              "supports": "You keep the room in contact with itself, which is most of what Earth needs in order to work.",
-              "supportedBy": "Wood decides whether the momentum you generate is pointed anywhere.",
-              "checks": "You press Metal for a decision, which is often the only reason one arrives while it still matters.",
-              "checkedBy": "Water sets your pitch. When it runs high the room hears an urgency you did not mean to send."
+              "supports": "Fire feeds Earth. Its energy gives Earth a room with something in it, so there is warmth to work with rather than silence to interpret.",
+              "checks": "Fire holds Metal in check. Its pace pushes Metal to decide, which is momentum when the moment is right and pressure when it is not."
             }
           },
           "facets": {
             "Sociability": {
               "low": "Independent",
               "high": "Network-Oriented",
-              "above": "Of the three, this one sits furthest toward Network-Oriented. You want the room more than you want to lead it or set its pace.",
-              "below": "Of the three, this one sits furthest toward Independent. You will take a position and set a pace without needing the room around you to do it in."
+              "above": "The widest lean here is toward Network-Oriented: you want the room more than you want to lead it or set its pace.",
+              "below": "The widest lean here is toward Independent: you will take a position and set a pace without needing the room around you to do it in."
             },
             "Assertiveness": {
               "low": "Collaborative",
               "high": "Directive",
-              "above": "Of the three, this one sits furthest toward Directive. A position gets taken without needing the room and without needing to fill it.",
-              "below": "Of the three, this one sits furthest toward Collaborative. You are in the room and carrying its pace without being the one who decides its direction."
+              "above": "The widest lean here is toward Directive: a position gets taken without needing the room and without needing to fill it.",
+              "below": "The widest lean here is toward Collaborative: you are in the room and carrying its pace without being the one who decides its direction."
             },
             "Energy Level": {
               "low": "Low-Key",
               "high": "High-Energy",
-              "above": "Of the three, this one sits furthest toward High-Energy. There is more drive here than there is appetite for company or for taking a position.",
-              "below": "Of the three, this one sits furthest toward Low-Key. The company and the position are there; the pace behind them is deliberate rather than driven."
+              "above": "The widest lean here is toward High-Energy: there is more drive here than there is appetite for company or for taking a position.",
+              "below": "The widest lean here is toward Low-Key: the company and the position are there, and the pace behind them is deliberate rather than driven."
             }
           }
         },
@@ -670,10 +654,11 @@ window.AURORA_STATION_DATA = {
           "name": "Earth",
           "domain": "agreeableness",
           "axis": "how you hold ground with people",
-          "together": "All three sit at much the same place on their own lines, so the reading above describes each of them. How you hold ground with people is one thing rather than three.",
+          "together": "The three lines sit close together, so the reading above describes each of them. How you hold ground with people is one thing here rather than three.",
           "poles": {
             "middle": {
               "gloss": "candour and accommodation in equal measure",
+              "tag": "Candid · Accommodating",
               "action": "Write down what decided it, once. A judgement you can explain is a method; one you cannot is a mood with good outcomes so far.",
               "watchFor": "Being hard to predict. People plan around you more cautiously than they need to, because they cannot tell which way you will go.",
               "id": "gate",
@@ -683,56 +668,52 @@ window.AURORA_STATION_DATA = {
               "held": "It sat here through the whole watch. Whether you held or gave was decided case by case, which is a working method rather than an absence of one.",
               "arrivedFrom": "It began the night nearer {from} and came in toward the middle as conditions got harder. Pressure made the question live again rather than settled.",
               "leftFor": "It began the night in the middle and moved out toward {to} as conditions got harder. What had been case by case became a position.",
-              "supports": "Metal gets a room that will carry a plan without having agreed to it in advance, which is a harder thing to arrange than agreement.",
-              "supportedBy": "Fire decides how much there is to hold together. You will meet a loud room and a quiet one on the same terms.",
-              "checks": "You take on what Water is carrying when that helps and leave it where it lies when it does not, which is a check the room rarely notices.",
-              "checkedBy": "Wood decides whether the arrangement everyone can live with is the first one or the third. You are not committed to either."
+              "supports": "Earth feeds Metal. Its judgement about when to hold and when to give means Metal gets a room that will carry a plan without having agreed to it in advance.",
+              "checks": "Earth holds Water in check. It takes on what Water is carrying when that helps and leaves it where it lies when it does not."
             },
             "low": {
               "gloss": "candour — you hold your position",
+              "tag": "Candid · Firm",
               "action": "Separate the position from the person before you hold it. Most lines worth holding survive being held warmly, and hold better for it.",
               "watchFor": "Being right at a cost you are not counting. The line holds and the room stops bringing you things.",
               "id": "rampart",
               "name": "The Rampart",
               "look": "You will hold a position after it has stopped being comfortable to hold. Agreement is not the thing you are solving for; being right about the risk is.",
               "misread": "As coldness, or as enjoying the friction. Usually it is a plain refusal to let a decision pass because disagreeing would be awkward.",
-              "supports": "You hand Metal a decision that has already been argued with, so less of it gets rebuilt later.",
-              "supportedBy": "Fire decides whether your objection reaches the room or stays a private reservation.",
-              "checks": "You keep Water from setting the terms. What is felt gets a vote rather than a veto.",
-              "checkedBy": "Wood asks whether the line you are holding still describes the situation."
+              "supports": "Earth feeds Metal. Its candour gives Metal a plan that has been argued with, so what gets built is what the room actually agreed to.",
+              "checks": "Earth holds Water in check. Its firmness keeps what Water is carrying from setting the room's level for everyone."
             },
             "high": {
               "gloss": "accommodation — you give ground to keep people",
+              "tag": "Accommodating · Warm",
               "action": "Pick one thing you will not trade this week and say so early, while it still reads as a position rather than as a limit you hit.",
               "watchFor": "Goodwill becoming the only reason a plan survives. A plan the room likes and cannot execute costs more than one it argued about.",
               "id": "cropland",
               "name": "The Cropland",
               "look": "You keep the working relationship intact, on the reasoning that most of what has to happen tonight happens through other people.",
               "misread": "As avoidance. It is usually a calculation that a room still able to talk to itself at four in the morning is worth more than winning the argument at ten.",
-              "supports": "You give Metal a room that will actually carry the plan out.",
-              "supportedBy": "Fire decides how much of the room you are able to hold together at once.",
-              "checks": "You absorb what Water is carrying, which is why other people's nights go better near you.",
-              "checkedBy": "Wood asks whether keeping the room level is still the most useful thing you could be doing."
+              "supports": "Earth feeds Metal. Its warmth gives Metal a room that will actually carry the plan out, which is worth more than a plan nobody disputes.",
+              "checks": "Earth holds Water in check. Its readiness to absorb what Water is carrying is why other people's nights go better nearby — and why some of it becomes Earth's to hold."
             }
           },
           "facets": {
             "Compassion": {
               "low": "Objective",
               "high": "People-Centric",
-              "above": "Of the three, this one sits furthest toward People-Centric. What a decision costs a person reaches you before what it costs the plan.",
-              "below": "Of the three, this one sits furthest toward Objective. The plan is read on its own terms first, which is clearer and lands harder than you intend it to."
+              "above": "The widest lean here is toward People-Centric: what a decision costs a person reaches you before what it costs the plan.",
+              "below": "The widest lean here is toward Objective: the plan is read on its own terms first, which is clearer and lands harder than you intend it to."
             },
             "Respectfulness": {
               "low": "Candid",
               "high": "Diplomatic",
-              "above": "Of the three, this one sits furthest toward Diplomatic. The courtesy holds even where the sympathy and the trust do not, which buys time and can be mistaken for agreement.",
-              "below": "Of the three, this one sits furthest toward Candid. What you think arrives without much packaging, and people know where they stand sooner than they are comfortable with."
+              "above": "The widest lean here is toward Diplomatic: the courtesy holds even where the sympathy and the trust do not. That buys time, and it can be mistaken for agreement.",
+              "below": "The widest lean here is toward Candid: what you think arrives without much packaging, and people know where they stand sooner than they are comfortable with."
             },
             "Trust": {
               "low": "Vigilant",
               "high": "Trust-First",
-              "above": "Of the three, this one sits furthest toward Trust-First. People are taken at their word further than they are extended sympathy or ceremony.",
-              "below": "Of the three, this one sits furthest toward Vigilant. The claim is checked before it is acted on, which catches what the goodwill would have carried."
+              "above": "The widest lean here is toward Trust-First: people are taken at their word further than they are extended sympathy or ceremony.",
+              "below": "The widest lean here is toward Vigilant: the claim is checked before it is acted on, which catches what the goodwill would have carried."
             }
           }
         },
@@ -744,10 +725,11 @@ window.AURORA_STATION_DATA = {
           "name": "Metal",
           "domain": "conscientiousness",
           "axis": "how you commit",
-          "together": "All three sit at much the same place on their own lines, so the reading above describes each of them. How you commit is one thing rather than three.",
+          "together": "The three lines sit close together, so the reading above describes each of them. How you commit is one thing here rather than three.",
           "poles": {
             "middle": {
               "gloss": "flexibility and discipline in equal measure",
+              "tag": "Flexible · Structured",
               "action": "Say which parts of a plan are fixed and which are open, at the start. The range is useful; the ambiguity about which mode you are in is not.",
               "watchFor": "A room that cannot tell whether a decision has been made. Available structure reads as no structure until it is named.",
               "id": "ore",
@@ -757,56 +739,52 @@ window.AURORA_STATION_DATA = {
               "held": "It sat here through the whole watch. Structure was picked up where it earned its cost and left where it did not, from start to finish.",
               "arrivedFrom": "It began the night nearer {from} and came in toward the middle as conditions got harder. Read that as readiness rather than as slippage: under pressure you became workable, and kept the edge available.",
               "leftFor": "It began the night in the middle and moved out toward {to} as conditions got harder. The range was there; pressure is what drew it into an edge.",
-              "supports": "Water gets a structure that is available rather than imposed: enough order to lean on, not so much that a change of conditions breaks it.",
-              "supportedBy": "Earth decides whether the room will carry the plan. You will adapt the plan or hold it, depending on what the room can take.",
-              "checks": "You stop Wood's search when the search has stopped earning, and let it run when it has not. The line you draw moves.",
-              "checkedBy": "Fire decides when a commitment has to be made out loud. You can be moved to that point, and you do not arrive there on your own."
+              "supports": "Metal feeds Water. Its available structure gives Water enough order to lean on without so much that a change of conditions breaks it.",
+              "checks": "Metal holds Wood in check. It stops Wood's search when the search has stopped earning and lets it run when it has not; the line it draws moves."
             },
             "low": {
               "gloss": "flexibility — you reshape to fit",
+              "tag": "Flexible · Adaptable",
               "action": "Fix one thing in advance and leave it fixed — the order of two steps, or where the record goes. Something that does not have to be re-decided under load.",
               "watchFor": "Work that only runs while you are running it. Adaptable and unhandoverable are easy to mistake for each other.",
               "id": "gold",
               "name": "The Gold",
               "look": "You keep the decision open while the facts are still arriving, and you are comfortable a long way into a night without a settled plan.",
               "misread": "As disorganisation. What it usually is, is an unwillingness to commit to a sequence written before anyone knew what the night was going to be.",
-              "supports": "You hand Water options rather than a settled plan. That is room to move, and it is also something left open.",
-              "supportedBy": "Earth buys you the time you work best in — and, when it is generous, more of it than the decision needed.",
-              "checks": "You do not prune an idea of Wood's; you decline to commit until it has been tried. A real brake, arriving after the effort.",
-              "checkedBy": "Fire is what closes you. In a quiet room nothing forces the call, so the time has to be set by you."
+              "supports": "Metal feeds Water. Its flexibility gives Water structure that bends rather than breaks, so a change in conditions does not raise the level on its own.",
+              "checks": "Metal holds Wood in check. Its willingness to reshape means Wood's search is stopped late, if at all."
             },
             "high": {
               "gloss": "discipline — you hold to an order once it is set",
+              "tag": "Disciplined · Structured",
               "action": "Take one rule you keep and ask what it was originally protecting against. Some are still load-bearing; some are a scar from a night that already ended.",
               "watchFor": "Holding an order past the point the order fits. The structure was built for conditions, and conditions moved.",
               "id": "blade",
               "name": "The Blade",
               "look": "You fix the order before you start, and hold it when the middle step wants to jump the queue. What you leave behind can be used by someone who was not there.",
               "misread": "As rigidity. More often it is having seen what an unrecorded night costs the person who inherits it.",
-              "supports": "You hand Water a finished plan, which is one fewer open question for it to carry.",
-              "supportedBy": "Earth decides whether your sequence gets followed or merely filed.",
-              "checks": "You prune Wood by sequence and deadline, which is what turns exploring into something that finished.",
-              "checkedBy": "Fire asks whether the sequence still fits the night. Sometimes the answer is no."
+              "supports": "Metal feeds Water. Its discipline gives Water something fixed underneath, which is what makes a hard hour survivable rather than only endured.",
+              "checks": "Metal holds Wood in check. Its commitment is what stops the search, without which Wood's frame stays open past the point a decision was needed."
             }
           },
           "facets": {
             "Organization": {
               "low": "Adaptive",
               "high": "Systematic",
-              "above": "Of the three, this one sits furthest toward Systematic. The order is in better shape than the output — the shelves are tidy and the list is long.",
-              "below": "Of the three, this one sits furthest toward Adaptive. The order is assembled as needed rather than kept, which travels well and hands over badly."
+              "above": "The widest lean here is toward Systematic: your order is in better shape than your output. The shelves are tidy and the list is long.",
+              "below": "The widest lean here is toward Adaptive: the order is assembled as needed rather than kept. That travels well and hands over badly."
             },
             "Productiveness": {
               "low": "Leisure-Paced",
               "high": "Goal-Oriented",
-              "above": "Of the three, this one sits furthest toward Goal-Oriented. Things get finished without the system that was meant to help finish them, which works until the volume outgrows the memory holding it.",
-              "below": "Of the three, this one sits furthest toward Leisure-Paced. Completion is not the pressure the other two are under, which leaves room for the work to be done well rather than only done."
+              "above": "The widest lean here is toward Goal-Oriented: things get finished without the system that was meant to help finish them. That works until the volume outgrows the memory holding it.",
+              "below": "The widest lean here is toward Leisure-Paced: completion is not the pressure the other two are under, which leaves room for the work to be done well rather than only done."
             },
             "Responsibility": {
               "low": "Autonomy-Seeking",
               "high": "Duty-Bound",
-              "above": "Of the three, this one sits furthest toward Duty-Bound. The word is kept whether or not the system or the appetite is there to make keeping it easy.",
-              "below": "Of the three, this one sits furthest toward Autonomy-Seeking. What you take on stays a choice rather than becoming an obligation, which protects the work you did agree to."
+              "above": "The widest lean here is toward Duty-Bound: the word is kept whether or not the system or the appetite is there to make keeping it easy.",
+              "below": "The widest lean here is toward Autonomy-Seeking: what you take on stays a choice rather than becoming an obligation, which protects the work you did agree to."
             }
           }
         },
@@ -818,10 +796,11 @@ window.AURORA_STATION_DATA = {
           "name": "Water",
           "domain": "negativeEmotionality",
           "axis": "how feeling moves",
-          "together": "All three sit at much the same place on their own lines, so the reading above describes each of them. How feeling moves is one thing rather than three.",
+          "together": "The three lines sit close together, so the reading above describes each of them. How feeling moves is one thing here rather than three.",
           "poles": {
             "middle": {
               "gloss": "steadiness and responsiveness in equal measure",
+              "tag": "Steady · Responsive",
               "action": "Check what the level is tracking. Moving with the situation is a working instrument; moving with the last conversation is a different thing wearing its clothes.",
               "watchFor": "Being read as detached, because a surface that moves with what is under it looks calm from any distance.",
               "id": "estuary",
@@ -831,56 +810,52 @@ window.AURORA_STATION_DATA = {
               "held": "It sat here through the whole watch. What you were carrying stayed in view without taking the wheel, at the start and at the worst of it.",
               "arrivedFrom": "It began the night nearer {from} and came in toward the middle as conditions got harder. Under pressure the level found a working depth rather than an extreme.",
               "leftFor": "It began the night in the middle and moved out toward {to} as conditions got harder. Pressure is what set the level.",
-              "supports": "Wood is free to look at the unfamiliar without first managing how it feels, because what you are carrying stays in view without taking the wheel.",
-              "supportedBy": "Metal decides how much structure is holding under you. With less of it, the level moves more than it does here.",
-              "checks": "You set the room's pitch by what the situation is actually doing rather than by a level you hold, so Fire is neither damped nor amplified by habit.",
-              "checkedBy": "Earth decides how much of what you carry stays yours. Sitting between the ends, less of it needs absorbing in the first place."
+              "supports": "Water feeds Wood. Its responsiveness gives Wood a live sense of the situation without flooding the part of Wood that was going to examine it.",
+              "checks": "Water holds Fire in check. It sets Fire's pitch from what the situation is doing rather than from a level it holds, so the room is neither damped nor amplified by habit."
             },
             "low": {
               "gloss": "steadiness — the level stays where it is",
+              "tag": "Steady · Contained",
               "action": "Say the level out loud once, to one person, before it matters. Not as a confession — as a reading, the way you would report any other instrument.",
               "watchFor": "Being read as unbothered, and then being handed the load that assumption justifies.",
               "id": "deep-well",
               "name": "The Deep Well",
               "look": "Your level does not change much with the surface weather. When the readings move you move with them, rather than ahead of them.",
               "misread": "As not caring. Steadiness and distance look identical from outside, and a room under strain often needs the strain named before it can be absorbed.",
-              "supports": "You leave Wood free to look at the unfamiliar without first having to manage how it feels.",
-              "supportedBy": "How Metal commits decides how little there is to carry.",
-              "checks": "You keep the room's pitch down. Sometimes that is calm, and sometimes it is the urgency never arriving.",
-              "checkedBy": "Earth asks whether your level reading has been read by anyone else as coldness."
+              "supports": "Water feeds Wood. Its steadiness leaves Wood free to look at the unfamiliar without first having to manage how the looking feels.",
+              "checks": "Water holds Fire in check. Its containment keeps Fire's pitch down — sometimes that is composure, and sometimes it is urgency that never arrives."
             },
             "high": {
               "gloss": "responsiveness — what you feel moves and shows",
+              "tag": "Responsive · Attuned",
               "action": "Separate the reading from the decision. What you are carrying is information about the situation; it is not yet an instruction about what to do next.",
               "watchFor": "The room taking its level from yours. What you are carrying arrives before you have decided what it means.",
               "id": "open-sea",
               "name": "The Open Sea",
               "look": "You feel the change before the panel shows it. What arrives is real information, and it arrives with weight.",
               "misread": "As instability. The early signal and the cost of carrying it are the same faculty — you do not get one without the other.",
-              "supports": "You bring Wood the sense that something is off before there is evidence for it, which is where the good questions start.",
-              "supportedBy": "How Metal commits decides how much you end up carrying. Open plans are heavier than finished ones.",
-              "checks": "You raise the room's pitch. That is early warning, and it is also urgency the room may not be able to use.",
-              "checkedBy": "Earth is where you put it down. Without that, everything stays carried."
+              "supports": "Water feeds Wood. Its attunement gives Wood the sense that something is off before there is evidence for it, which is where the good questions start.",
+              "checks": "Water holds Fire in check. Its responsiveness raises Fire's pitch — early warning, and also urgency the room may not be able to use."
             }
           },
           "facets": {
             "Anxiety": {
               "low": "Risk-Tolerant",
               "high": "Risk-Sensitive",
-              "above": "Of the three, this one sits furthest toward Risk-Sensitive. What moves is anticipation rather than flatness or sudden reaction — the failure gets modelled before it happens, sometimes usefully.",
-              "below": "Of the three, this one sits furthest toward Risk-Tolerant. An unbounded situation does not raise the level much, which holds a room steady and can leave a real warning under-weighted."
+              "above": "The widest lean here is toward Risk-Sensitive: what moves is anticipation rather than flatness or sudden reaction. The failure gets modelled before it happens, sometimes usefully.",
+              "below": "The widest lean here is toward Risk-Tolerant: an unbounded situation does not raise the level much. That holds a room steady and can leave a real warning under-weighted."
             },
             "Depression": {
               "low": "Forward-Looking",
               "high": "Introspective",
-              "above": "Of the three, this one sits furthest toward Introspective. What the night costs shows afterwards as flatness rather than during it as alarm.",
-              "below": "Of the three, this one sits furthest toward Forward-Looking. Attention goes to what happens next rather than to what the last stretch took, which keeps momentum and skips the accounting."
+              "above": "The widest lean here is toward Introspective: what the night costs shows afterwards as flatness rather than during it as alarm.",
+              "below": "The widest lean here is toward Forward-Looking: attention goes to what happens next rather than to what the last stretch took. That keeps momentum and skips the accounting."
             },
             "Emotional Volatility": {
               "low": "Even-Tempered",
               "high": "Context-Responsive",
-              "above": "Of the three, this one sits furthest toward Context-Responsive. The movement is quick and it passes; it does not accumulate as anticipation or as flatness.",
-              "below": "Of the three, this one sits furthest toward Even-Tempered. The level does not track the hour, which is steadying to be near and slower to register that conditions changed."
+              "above": "The widest lean here is toward Context-Responsive: the movement is quick and it passes. It does not accumulate as anticipation or as flatness.",
+              "below": "The widest lean here is toward Even-Tempered: the level does not track the hour, which is steadying to be near and slower to register that conditions changed."
             }
           }
         }
@@ -2410,9 +2385,7 @@ window.AURORA_STATION_DATA = {
       "tryThis": "One thing to try",
       "fromCentre": "from centre",
       "supports": "Feeds",
-      "supportedBy": "Fed by",
-      "checks": "Checks",
-      "checkedBy": "Checked by"
+      "checks": "Checks"
     },
     "overviewLabel": "The five currents at a glance",
     "shiftIntro": "The same five lines, read separately across three stretches of the watch. The instrument holds one scale throughout; only the distance along each axis changes.",
@@ -2446,26 +2419,15 @@ window.AURORA_STATION_DATA = {
       "heading": "When a relationship runs long",
       "intro": "Both relationships have a failure mode, and they are opposites. A current that feeds without limit is drained by what it feeds; a current that restrains without limit stops the other working at all. Neither is a fault in the current — both are the same relationship, run past the point it was helping.",
       "feeding": "Feeding too hard",
-      "fed": "Fed too hard",
-      "checking": "Checking too hard",
-      "checked": "Checked too hard"
+      "checking": "Checking too hard"
     },
     "relationsLabels": {
-      "supports": "Your current tends to feed",
-      "supportedBy": "Tends to be fed by",
-      "checks": "You tend to hold in check",
-      "checkedBy": "Tends to hold you in check",
+      "supports": "Feeds",
+      "checks": "Holds in check",
       "cycleGenerating": "Feeding",
       "cycleControlling": "Checking",
       "keywords": "Reads as",
-      "shadow": "When it runs long",
-      "yours": "Yours"
-    },
-    "relationsCopy": {
-      "supports": "When your current is running well, it tends to create the conditions {current} needs. Offering it deliberately is usually more useful than waiting to be asked.",
-      "supportedBy": "{current} tends to create the conditions yours needs. When your own reading feels thin, this is the line worth having near you.",
-      "checks": "Your current tends to restrain {current} when that one runs long. Used well this is a useful brake; used constantly it becomes friction.",
-      "checkedBy": "{current} tends to restrain yours when yours runs long. That is a check rather than an obstacle, and it is easier to accept before it is needed than during."
+      "shadow": "When it runs long"
     },
     "radar": {
       "heading": "The five currents across the watch",

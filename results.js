@@ -165,15 +165,25 @@
     mark.style.setProperty("--at", `${placeOn(current.score).toFixed(2)}%`);
     track.append(el("span", "spectrum-centre"), mark);
 
+    /*
+     * The name, and under it two words for what the name means. A reader
+     * meeting "The Gold" for the first time should not have to hold the
+     * metaphor in their head to know which way the line runs.
+     */
+    const endName = (pole, className) => {
+      const node = el("div", className);
+      node.append(el("p", "spectrum-pole", pole.name), el("p", "spectrum-tag", pole.tag || ""));
+      return node;
+    };
     const ends = el("div", "spectrum-ends");
     ends.append(
-      el("p", "spectrum-pole", current.poles.low.name),
+      endName(current.poles.low, "spectrum-end"),
       el(
         "p",
         "spectrum-firmness",
         settings.firmness && current.firmness ? current.firmness.id : "",
       ),
-      el("p", "spectrum-pole spectrum-pole-high", current.poles.high.name),
+      endName(current.poles.high, "spectrum-end spectrum-end-high"),
     );
 
     line.append(track, ends);
@@ -575,8 +585,53 @@
       if (options && options.silent) {
         return;
       }
+      if (options && options.reveal) {
+        /*
+         * Back to the top of the chapter, not the top of the page and not the
+         * top of this rail — a reader who has just switched current wants the
+         * section heading and the switcher both in view, and the chapter rail
+         * is sticky, so its height comes off the target or the heading arrives
+         * underneath it.
+         */
+        const chapterNode = rail.closest(".chapter");
+        const pager = document.querySelector(".pager-rail");
+        const top = chapterNode.getBoundingClientRect().top + window.scrollY;
+        const clearance = pager ? pager.getBoundingClientRect().height + 8 : 0;
+        window.scrollTo({
+          top: Math.max(0, Math.round(top - clearance)),
+          behavior: stillMotion() ? "auto" : "smooth",
+        });
+      }
       say(`${pages[to].current.name}. ${to + 1} of ${pages.length}.`);
     }
+
+    /*
+     * A step to the current before and the current after, under the writing
+     * rather than above it. The rail at the top of the chapter is easy to
+     * scroll past and easier still to finish a page without ever looking back
+     * at, so the next one is offered where the reader actually finishes.
+     */
+    pages.forEach(({ page }, index) => {
+      const foot = el("nav", "current-step");
+      foot.setAttribute("aria-label", chapter("detail").title);
+      [
+        ["previous", (index - 1 + pages.length) % pages.length, "‹"],
+        ["next", (index + 1) % pages.length, "›"],
+      ].forEach(([side, target, arrow]) => {
+        const other = pages[target].current;
+        const button = el("button", `current-step-link current-step-${side}`);
+        button.type = "button";
+        button.style.setProperty("--trace", other.colourPaper);
+        const label = side === "previous" ? `${arrow} ${other.name}` : `${other.name} ${arrow}`;
+        button.append(
+          el("span", "current-step-name", label),
+          el("span", "current-step-pole", poleNameFor(other)),
+        );
+        button.addEventListener("click", () => show(target, { reveal: true }));
+        foot.appendChild(button);
+      });
+      page.appendChild(foot);
+    });
 
     /*
      * Arrow keys move between the five, as they do on the chapter rail. The

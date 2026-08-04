@@ -1606,8 +1606,10 @@ check("the export prints the report, not a summary of it", () => {
   // The retired contribution page is gone rather than merely unreferenced.
   assert.doesNotMatch(pdfSource, /drawProfileRolePage/);
   // Both ends of every line are drawn, so the export cannot imply a maximum.
-  assert.match(pdfSource, /poles\.low\.name/);
-  assert.match(pdfSource, /poles\.high\.name/);
+  assert.match(pdfSource, /current\.poles\.low,/);
+  assert.match(pdfSource, /current\.poles\.high,/);
+  assert.match(pdfSource, /pole\.name\.toUpperCase\(\)/);
+  assert.match(pdfSource, /pole\.tag/);
 });
 
 check("an export names itself by watchkeeper and by night", () => {
@@ -1758,10 +1760,39 @@ check("the relationships read outward from the leading contribution", () => {
 });
 
 check("the relationships chapter suggests, and never rates", () => {
-  const copy = data.results.relationsCopy;
-  ["supports", "supportedBy", "checks", "checkedBy"].forEach((key) => {
-    assert.ok(copy[key].includes("{current}"), `${key} template`);
+  /*
+   * The relation lines are written per pole rather than filled from one
+   * template per edge, so the chapter reads in the elements' own voice: which
+   * element, doing what, to which other one. A generic template with the other
+   * current's name substituted in said the same sentence fifty times.
+   */
+  const written = [];
+  data.assessment.spectra.order.forEach((id) => {
+    const poles = data.assessment.spectra.currents[id].poles;
+    ["low", "middle", "high"].forEach((end) => {
+      ["supports", "checks"].forEach((key) => {
+        const line = poles[end][key];
+        assert.ok(line, `${id}.${end} ${key}`);
+        // The element is the subject, not the reader: this describes a
+        // relationship between two readings, not an instruction to a person.
+        assert.match(
+          line,
+          new RegExp(`^${data.assessment.spectra.currents[id].name}\\b`),
+          `${id}.${end} ${key} does not open with the element`,
+        );
+        // And the element on the other end is named, so the reader can see
+        // which relationship is being described without counting arrows.
+        const other = core.relationsFor(data, id)[key === "supports" ? "supports" : "checks"];
+        assert.ok(
+          line.includes(data.assessment.spectra.currents[other].name),
+          `${id}.${end} ${key} never names ${other}`,
+        );
+        written.push(line);
+      });
+    });
   });
+  assert.equal(new Set(written).size, 30, "a relation line is reused");
+
   // No pair score, no cohesion figure, no compatibility rating.
   [resultsSource, pdfSource].forEach((source) => {
     assert.doesNotMatch(source, /cohesion/i);
@@ -1770,7 +1801,7 @@ check("the relationships chapter suggests, and never rates", () => {
   const relationCopy = [
     data.results.relationsIntro,
     data.results.relationsNote,
-    ...Object.values(copy),
+    ...written,
   ].join(" ");
   // These words may appear only where the copy is denying them, the way the
   // report already denies being a diagnosis.
@@ -2024,7 +2055,7 @@ check("both ends of every current carry their own writing", () => {
    */
   const currents = Object.values(data.assessment.spectra.currents);
   assert.equal(currents.length, 5);
-  const required = ["name", "look", "misread", "supports", "supportedBy", "checks", "checkedBy"];
+  const required = ["name", "look", "misread", "supports", "checks"];
   currents.forEach((current) => {
     assert.ok(current.axis, `${current.id} has no axis description`);
     assert.ok(current.together, `${current.id} has no undivided reading`);
@@ -2180,7 +2211,7 @@ check("a hair off the middle is still a side, and the degree is said", () => {
    * chapter printed a heading and nothing under it for any current that read
    * as situational — a blank block rather than a visible failure.
    */
-  const shared = ["name", "look", "misread", "supports", "supportedBy", "checks", "checkedBy"];
+  const shared = ["name", "look", "misread", "supports", "checks"];
   data.assessment.spectra.order.forEach((id) => {
     const poles = data.assessment.spectra.currents[id].poles;
     ["low", "middle", "high"].forEach((end) => {
@@ -2290,23 +2321,25 @@ check("a relationship is written in both directions, working and overrun", () =>
    * feed without limit drains you, and what you restrain without limit stops
    * working at all. Both are written, for every current.
    */
+  /*
+   * Ten edges, ten blocks. A current carries what it does to the two it is
+   * pointed at, and nothing about what is done to it — every edge appears
+   * twice in a five-element cycle, so Wood being fed too hard by Water is the
+   * same edge as Water feeding too hard, and writing both said each finding
+   * under two headings.
+   */
+  const overruns = [];
   data.assessment.spectra.order.forEach((id) => {
     const element = Object.values(data.assessment.elements).find((entry) => entry.current === id);
     assert.ok(element, `${id} has no element`);
-    ["feeding", "fed", "checking", "checked"].forEach((key) => {
-      assert.ok(element.excess[key], `${id} excess ${key}`);
+    assert.deepEqual(Object.keys(element.excess), ["feeding", "checking"], `${id} excess`);
+    ["feeding", "checking"].forEach((key) => {
       assert.ok(element.excess[key].length > 80, `${id} excess ${key} is a stub`);
+      overruns.push(element.excess[key]);
     });
-    // The two directions of one relationship, not the same sentence twice.
-    assert.notEqual(element.excess.feeding, element.excess.fed, id);
-    assert.notEqual(element.excess.checking, element.excess.checked, id);
   });
-  /*
-   * A current prints the two it does, never the two done to it. Every edge
-   * appears twice in a five-element cycle — Wood being fed too hard by Water
-   * is the same edge as Water feeding too hard — so printing all four per
-   * current said each of the ten edges twice under two headings.
-   */
+  assert.equal(new Set(overruns).size, 10, "an overrun line is reused");
+
   [resultsSource, pdfSource].forEach((source) => {
     assert.match(source, /excess\.feeding/);
     assert.match(source, /excess\.checking/);
@@ -2359,6 +2392,90 @@ check("an action and a watch-for belong to an end, not to a band", () => {
       /guidance\.overextension/,
       "a band still supplies the watch-for",
     );
+  });
+});
+
+check("a pole name is never the only thing a reader has to go on", () => {
+  /*
+   * "The Gold" and "The Blade" are memorable and mean nothing on first
+   * meeting. Two words under each name say which way the line runs, and both
+   * sides name a way of working — neither is the absence of the other.
+   */
+  const tags = new Set();
+  data.assessment.spectra.order.forEach((id) => {
+    const poles = data.assessment.spectra.currents[id].poles;
+    ["low", "middle", "high"].forEach((end) => {
+      const tag = poles[end].tag;
+      assert.ok(tag, `${id}.${end} has no tag`);
+      assert.ok(tag.length <= 30, `${id}.${end} tag is too long to sit under a name`);
+      assert.equal(tags.has(tag), false, `${id}.${end} reuses a tag`);
+      tags.add(tag);
+      // A tag names something, never the lack of something.
+      assert.doesNotMatch(tag, /\b(un|non|less|not|no)\b|\bun[a-z]/i, `${id}.${end} tag is a negation`);
+    });
+    // The middle borrows from both ends rather than inventing a third thing.
+    const [low, high] = [poles.low.tag, poles.high.tag].map((tag) => tag.split(" · "));
+    const middle = poles.middle.tag.split(" · ");
+    assert.ok(
+      middle.some((word) => low.includes(word)) && middle.some((word) => high.includes(word)),
+      `${id}.middle does not draw on both ends`,
+    );
+  });
+  assert.equal(tags.size, 15);
+  assert.match(resultsSource, /pole\.tag/);
+});
+
+check("a reader can step to the next current from where they finish", () => {
+  /*
+   * The rail sits at the top of the chapter, which is easy to scroll past and
+   * easier still to finish a page without looking back at. The step to the
+   * current before and after is offered under the writing, and it lands on the
+   * chapter heading rather than the top of the page.
+   */
+  assert.match(resultsSource, /current-step/);
+  assert.match(resultsSource, /reveal: true/);
+  assert.match(resultsSource, /rail\.closest\("\.chapter"\)/);
+  // The pager is sticky, so its height comes off the target or the heading
+  // arrives underneath it.
+  assert.match(resultsSource, /pager-rail/);
+  assert.match(resultsSource, /clearance/);
+  // It wraps, so the fifth current offers the first rather than a dead end.
+  assert.match(resultsSource, /\(index - 1 \+ pages\.length\) % pages\.length/);
+  assert.match(resultsSource, /\(index \+ 1\) % pages\.length/);
+});
+
+check("the facet reading and the facet drawing agree", () => {
+  /*
+   * The divergence limit was a whole scale point — a quarter of the width of
+   * the drawn line — so a page could show one mark plainly to the right of the
+   * other two and print "all three sit at much the same place" underneath it.
+   */
+  assert.ok(core.DIVERGENCE_LIMIT <= 0.6, "a visible split can still read as agreement");
+
+  const profile = core.scoreProfile(data, answerAll((index) => (index % 5) + 1));
+  profile.currents.forEach((current) => {
+    const scores = current.facets.map((facet) => facet.score);
+    const spread = Math.max(...scores) - Math.min(...scores);
+    assert.equal(
+      current.divergence.diverges,
+      spread >= core.DIVERGENCE_LIMIT,
+      `${current.id} spread ${spread.toFixed(2)} disagrees with its own copy`,
+    );
+  });
+
+  /*
+   * And the sentence identifies its own line. "Of the three, this one sits
+   * furthest toward Trust-First" sat under three unlabelled tracks with
+   * nothing connecting it to any of them.
+   */
+  Object.values(data.assessment.spectra.currents).forEach((current) => {
+    Object.entries(current.facets).forEach(([name, copy]) => {
+      ["above", "below"].forEach((side) => {
+        assert.doesNotMatch(copy[side], /\bthis one\b/i, `${name} ${side} says "this one"`);
+        assert.ok(copy[side].includes(current.facets[name][side === "above" ? "high" : "low"]),
+          `${name} ${side} never names the end it leans toward`);
+      });
+    });
   });
 });
 

@@ -1847,8 +1847,16 @@ svg.art-cycle[data-focus="water"] .art-cycle-head[data-from="water"] {
   text-transform: uppercase;
 }
 
+.spectrum-end-high,
 .spectrum-pole-high {
   text-align: right;
+}
+
+/* Two words for what the name means, under the name. */
+.spectrum-tag {
+  margin-top: 0.15rem;
+  font-size: var(--step-note);
+  color: var(--ink-faint);
 }
 
 .spectrum-firmness {
@@ -2110,6 +2118,53 @@ svg.art-cycle[data-focus="water"] .art-cycle-head[data-from="water"] {
   padding: 3rem 0 4rem;
 }
 
+/*
+ * The step to the current before and after, where the reader finishes rather
+ * than where they started. The rail at the top of the chapter is easy to
+ * scroll past and easier still never to look back at.
+ */
+.current-step {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: var(--rule) solid var(--paper-line);
+}
+
+.current-step-link {
+  display: grid;
+  gap: 0.2rem;
+  min-height: var(--tap);
+  padding: 0.5rem 0;
+  border: 0;
+  background: none;
+  color: var(--trace, var(--ink));
+  cursor: pointer;
+  text-align: left;
+}
+
+.current-step-next {
+  text-align: right;
+}
+
+.current-step-name {
+  font-family: var(--type-operational);
+  font-size: var(--step-mark);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.current-step-pole {
+  font-size: var(--step-note);
+  color: var(--ink-dim);
+}
+
+.current-step-link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
 .current-head {
   display: grid;
   gap: 1.5rem 3rem;
@@ -2138,11 +2193,15 @@ svg.art-cycle[data-focus="water"] .art-cycle-head[data-from="water"] {
  * each end. Set as a name, a number and a filled bar it read as a score with
  * a maximum, and three of those under a bipolar reading contradicted it.
  */
+/*
+ * No rule between facets. Three lines separated by a fourth horizontal line
+ * the same weight as the tracks read as four bars rather than three, and the
+ * separator was the one the eye landed on first.
+ */
 .facet-row {
   display: grid;
   gap: 0.25rem;
   padding: 1.1rem 0;
-  border-bottom: var(--rule) solid var(--paper-line);
 }
 
 .facet-track {

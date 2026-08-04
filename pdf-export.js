@@ -920,15 +920,36 @@
     context.fill();
     context.restore();
 
+    /*
+     * The name, and under it two words for what the name means — a reader
+     * meeting "The Gold" for the first time should not have to hold the
+     * metaphor in their head to know which way the line runs. The report sets
+     * them the same way.
+     */
     const names = line + 46;
-    drawExportText(context, current.poles.low.name.toUpperCase(), x, names, width * 0.36, {
-      size: 26,
-      family: "sans",
-      weight: 600,
-      colour: "#5c6568",
-      lineHeight: 34,
-      maxLines: 1,
-    });
+    const end = (pole, at, align) => {
+      drawExportText(context, pole.name.toUpperCase(), at, names, width * 0.36, {
+        size: 26,
+        family: "sans",
+        weight: 600,
+        colour: "#5c6568",
+        align,
+        lineHeight: 34,
+        maxLines: 1,
+      });
+      if (pole.tag) {
+        drawExportText(context, pole.tag, at, names + 36, width * 0.36, {
+          size: 23,
+          family: "sans",
+          colour: "#5c6568",
+          align,
+          lineHeight: 30,
+          maxLines: 1,
+        });
+      }
+    };
+    end(current.poles.low, x, "left");
+    end(current.poles.high, x + width, "right");
     if (settings.firmness) {
       drawExportText(context, settings.firmness.toUpperCase(), x + width / 2, names, width * 0.26, {
         size: 26,
@@ -939,17 +960,8 @@
         maxLines: 1,
       });
     }
-    drawExportText(context, current.poles.high.name.toUpperCase(), x + width, names, width * 0.36, {
-      size: 26,
-      family: "sans",
-      weight: 600,
-      colour: "#5c6568",
-      align: "right",
-      lineHeight: 34,
-      maxLines: 1,
-    });
 
-    return names + 44;
+    return names + 80;
   }
 
   function drawProfileCurrentPage(context, data, profile, current, core, pageNumber, pageCount) {
@@ -2014,14 +2026,19 @@
         ),
       );
     }
+    /*
+     * Section IV before Section V, as the report reads them. Calibration was
+     * printing between the five currents and the cycle that relates them, so
+     * the download ran III, V, IV, VI.
+     */
     await capture(pageCount - 3, () =>
-      drawProfileCalibrationPage(context, data, profile, core, pageCount - 3, pageCount),
+      drawProfileRelationsPage(context, data, profile, summary, core, pageCount - 3, pageCount),
     );
     await capture(pageCount - 2, () =>
-      drawProfileRelationsPage(context, data, profile, summary, core, pageCount - 2, pageCount),
+      drawProfileExcessPage(context, data, profile, core, pageCount - 2, pageCount),
     );
     await capture(pageCount - 1, () =>
-      drawProfileExcessPage(context, data, profile, core, pageCount - 1, pageCount),
+      drawProfileCalibrationPage(context, data, profile, core, pageCount - 1, pageCount),
     );
     await capture(pageCount, () =>
       drawProfileHandoverPage(context, data, profile, summary, pageCount, pageCount),
