@@ -365,13 +365,14 @@
     });
 
     placed.forEach((node) => {
-      const weight = Math.max(0, Math.min(1, Number(node.weight) || 0));
+      // Five identical outlines, as the report draws them. Nothing on this
+      // figure carries a reading; it carries the relationships.
       context.beginPath();
-      context.arc(node.x, node.y, 17 + weight * 10, 0, Math.PI * 2);
-      context.fillStyle = node.filled ? node.colour : "#e6eaeb";
+      context.arc(node.x, node.y, 19, 0, Math.PI * 2);
+      context.fillStyle = "#e6eaeb";
       context.fill();
       context.strokeStyle = node.colour;
-      context.lineWidth = node.filled ? 5 : 3;
+      context.lineWidth = 3;
       context.stroke();
 
       const out = 58;
@@ -385,7 +386,7 @@
         {
           size: 26,
           family: "sans",
-          weight: node.filled ? 600 : 400,
+          weight: 400,
           colour: "#4b5457",
           align: Math.abs(horizontal) < 0.35 ? "center" : horizontal > 0 ? "left" : "right",
           lineHeight: 34,
@@ -518,22 +519,14 @@
     );
 
     const width = EXPORT_PAGE_WIDTH - EXPORT_MARGIN * 2;
-    const reach = core.situationalReach(data);
 
-    // The same figure the report draws, with every node at the weight its own
-    // distance from the middle earns and none of them the subject.
+    // The same figure the report draws: five identical outlines, none of them
+    // the subject and none of them carrying a reading.
     const cycleNodes = data.assessment.cycles.generating.map((elementId) => {
       const named = profile.currents.find(
         (entry) => entry.id === data.assessment.elements[elementId].current,
       );
-      const distance = Math.abs(named.magnitude);
-      return {
-        id: named.id,
-        label: named.name,
-        colour: named.colourPaper,
-        weight: distance / (profile.scaleMax - (profile.scaleMin + profile.scaleMax) / 2),
-        filled: distance >= reach,
-      };
+      return { id: named.id, label: named.name, colour: named.colourPaper };
     });
     /*
      * The ring is centred on its own y, not offset from it — placed at `y + 30`

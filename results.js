@@ -828,24 +828,19 @@
     body.appendChild(el("p", "chapter-intro", COPY.relationsIntro));
 
     /*
-     * No current is the subject of this chapter. The figure used to fill the
-     * one furthest from the middle and read the cycle outward from it, which
-     * announced a leading element in a report that has none; every node now
-     * carries its own reading and the cycle is drawn whole.
+     * No current is the subject of this chapter, and no node is drawn
+     * differently from the others. The figure carries the relationships; a
+     * reader comparing circle sizes is reading the one thing it does not say.
      */
-    const reach = core.situationalReach(data);
     const figure = el("div", "relations-figure");
     if (art) {
       const nodes = data.assessment.cycles.generating.map((elementId) => {
         const element = data.assessment.elements[elementId];
         const entry = currentById(element.current);
-        const distance = entry ? Math.abs(entry.magnitude) : 0;
         return {
           id: element.current,
           label: entry ? entry.name : element.name,
           colour: entry ? entry.colourPaper : null,
-          weight: distance / (profile.scaleMax - core.CENTRE),
-          filled: distance >= reach,
         };
       });
       figure.appendChild(art.elementCycle(nodes));

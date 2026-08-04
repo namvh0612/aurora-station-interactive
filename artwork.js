@@ -406,15 +406,16 @@
    * roles the reader relates to.
    */
   /*
-   * The cycle, with all five present and none of them the subject.
+   * The cycle, with all five present, none of them the subject, and none of
+   * them drawn differently from the others.
    *
-   * It used to pick the reading furthest from the middle, draw that node
-   * filled and larger, brighten the four edges touching it and dim the rest —
-   * which said "you are Earth" in a report whose whole argument is that there
-   * is no such reading. Every node is drawn instead at the weight its own
-   * distance from the middle earns: a pronounced line is filled and a little
-   * larger, a situational one is an outline. Nothing is dimmed, because every
-   * edge is as true as every other.
+   * It first picked the reading furthest from the middle and drew that node
+   * filled and larger, which said "you are Earth" in a report whose whole
+   * argument is that there is no such reading. Sizing every node by its own
+   * distance instead was the same mistake spread across five: the figure is
+   * the relationships, and a reader comparing circles is reading the one thing
+   * this drawing does not carry. Five identical outlines, and the only thing
+   * that ever changes is which one the reader is pointing at.
    */
   function elementCycle(nodes) {
     const size = 300;
@@ -497,23 +498,25 @@
     });
 
     placed.forEach((node) => {
-      const weight = Math.max(0, Math.min(1, Number(node.weight) || 0));
       /*
        * Each node is its own focusable group with a generous invisible target
        * over it, so pointing at a current does not require hitting a circle
-       * eight pixels across and a keyboard can reach every one of the five.
+       * nine pixels across and a keyboard can reach every one of the five.
+       *
+       * The name goes on the group as an accessible label rather than in a
+       * `<title>`, which the browser also renders as a tooltip — a grey box
+       * appearing beside the figure on every hover, saying what the label
+       * under the node already said.
        */
       const group = shape("g", {
         class: "art-cycle-mark",
         "data-current": node.id,
         tabindex: "0",
         role: "button",
+        "aria-label": node.label,
         // Its own colour, so the hover fill is this element's rather than ink.
         style: `color: ${node.colour}`,
       });
-      const title = shape("title", {});
-      title.textContent = node.label;
-      group.appendChild(title);
       group.appendChild(
         shape("circle", {
           cx: node.x.toFixed(1),
@@ -522,22 +525,15 @@
           class: "art-cycle-target",
         }),
       );
-      const radius = 8 + weight * 5;
       group.appendChild(
         shape("circle", {
           cx: node.x.toFixed(1),
           cy: node.y.toFixed(1),
-          r: radius.toFixed(1),
-          // The drawn radius, so the hover size grows from a node's own weight
-          // rather than from a fixed number that would shrink the largest.
-          style: `--r: ${radius.toFixed(1)}px`,
+          r: 9,
           class: "art-cycle-node",
-          // Filled means the reading cleared the middle band. Five outlines
-          // and one fill used to mean "this one is you"; now the fill means
-          // "this line took a side", which can be true of all five or none.
-          fill: node.filled ? node.colour : "var(--paper)",
+          fill: "var(--paper)",
           stroke: node.colour,
-          "stroke-width": node.filled ? 2.5 : 1.5,
+          "stroke-width": 1.5,
         }),
       );
       figure.appendChild(group);

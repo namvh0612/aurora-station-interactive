@@ -1409,25 +1409,25 @@ body.report .art-grain {
 }
 
 /*
- * The node under the pointer grows and fills with its own colour, so the
- * current being asked about is marked as well as its two edges.
+ * All five are drawn identically. The one under the pointer grows and fills
+ * with its own colour — the only difference between any two nodes is which
+ * one is being asked about.
  *
  * Grown by its radius rather than by a transform: `r` is a presentation
  * attribute a stylesheet can set, so the circle stays centred where it was
  * drawn without a transform box and origin having to agree about where its
- * middle is. The drawn radius is carried in as a custom property so the hover
- * size is relative to a node's own weight rather than a fixed number that
- * would shrink the largest of them.
+ * middle is.
+ *
+ * The radius and the fill ease; the stroke snaps, which nobody sees under a
+ * circle that is growing anyway.
  */
-/* The radius and the fill ease; the stroke snaps, which nobody sees under a
- * circle that is growing anyway. */
 .art-cycle-node {
   transition: r 160ms ease, fill 160ms ease;
 }
 
 .art-cycle-mark:hover .art-cycle-node,
 .art-cycle-mark:focus-visible .art-cycle-node {
-  r: calc(var(--r, 10px) + 5px);
+  r: 14px;
   fill: currentColor;
   stroke-width: 3;
 }

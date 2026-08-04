@@ -2241,13 +2241,27 @@ check("no chapter or page singles out one of the five", () => {
     assert.doesNotMatch(source, /leadId/, "a figure still takes a lead");
     assert.doesNotMatch(source, /\bconst (lead|primary) =/, "a page still picks one current");
   });
-  // The figure takes nodes and nothing else, and each node carries its own
-  // reading rather than being told whether it is the chosen one.
+  /*
+   * The figure takes nodes and nothing else, and every node is drawn the same
+   * as every other. Sizing each one by its own distance from the middle was
+   * the leading-element mistake spread across five: the drawing carries the
+   * relationships, and a reader comparing circles is reading the one thing it
+   * does not say. The only thing that ever differs is which node is being
+   * pointed at.
+   */
   assert.match(artworkSource, /function elementCycle\(nodes\)/);
   assert.match(pdfSource, /function drawElementCycle\(context, centreX, centreY, radius, nodes\)/);
-  [resultsSource, pdfSource].forEach((source) => {
-    assert.match(source, /filled: distance >= reach/);
+  [artworkSource, pdfSource, resultsSource].forEach((source) => {
+    assert.doesNotMatch(source, /node\.filled/, "a node is drawn from a reading");
+    assert.doesNotMatch(source, /node\.weight/, "a node is sized from a reading");
   });
+  // The five node ids reach the figure, and nothing else about them does.
+  const nodeKeys = resultsSource.slice(
+    resultsSource.indexOf("cycles.generating.map"),
+    resultsSource.indexOf("art.elementCycle(nodes)"),
+  );
+  ["id:", "label:", "colour:"].forEach((key) => assert.ok(nodeKeys.includes(key), key));
+  assert.doesNotMatch(nodeKeys, /magnitude|score|reach|band/, "a reading reaches the figure");
 
   /*
    * And the movement chapter accounts for all five, not only the one that
